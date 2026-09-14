@@ -38,7 +38,17 @@ function applyTheme(){
 function render(){
  applyTheme(); const box=$("#chat"); box.innerHTML="";
  const c=cur();
- if(!c.messages.length){box.appendChild($("#empty").cloneNode(true));$("#empty").classList.remove("hidden");$("#empty").querySelector("#heroAvatar").src=avatarData(settings.gAvatar,settings.gName);$("#empty").querySelector("#heroName").textContent=settings.gName;$("#empty").querySelector("#heroBio").textContent=settings.gBio;return}
+ if(!c.messages.length){
+   const empty=document.createElement("div");
+   empty.className="empty";
+   empty.innerHTML=`<div class="hero-avatar"><img id="heroAvatar" alt=""></div><h1 id="heroName"></h1><p id="heroBio"></p>`;
+   empty.querySelector("#heroAvatar").src=avatarData(settings.gAvatar,settings.gName);
+   empty.querySelector("#heroName").textContent=settings.gName;
+   empty.querySelector("#heroBio").textContent=settings.gBio;
+   box.appendChild(empty);
+   renderChats();
+   return;
+ }
  c.messages.forEach((m,i)=>{
    const row=document.createElement("div");row.className="msg "+(m.role==="user"?"mine":"theirs");
    const im=document.createElement("img");im.className="avatar";im.src=avatarData(m.role==="user"?settings.myAvatar:settings.gAvatar,m.role==="user"?settings.myName:settings.gName);
