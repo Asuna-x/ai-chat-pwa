@@ -207,3 +207,8 @@ body.no-motion .typingStatus,body.no-motion .typingDots i{animation:none}
 .settingsActionGroup{padding:0}.settingsAction{width:100%;display:flex;align-items:center;justify-content:space-between;border:0;background:transparent;color:var(--ink);padding:15px 15px;text-align:left;font-size:12px}.settingsAction+.settingsAction{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}.settingsAction em{font-style:normal;color:var(--muted);font-size:23px}.settingsAction.danger{color:#a95b52}.settingsNote{font-size:10px;color:var(--muted);line-height:1.5;margin:12px 5px 0}
 .settingsFooter{padding:10px 17px max(13px,env(safe-area-inset-bottom));background:color-mix(in srgb,var(--card) 88%,transparent);border-top:1px solid color-mix(in srgb,var(--line) 65%,transparent);backdrop-filter:blur(18px)}.settingsFooter .save{box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 15%,transparent)}
 @media(max-width:799px){dialog#settings{width:calc(100vw - 0px);max-width:none;height:min(92vh,760px);max-height:none;margin:auto;border-radius:26px 26px 0 0}.settingsShell{max-height:92vh}.settingsPages{max-height:calc(92vh - 124px);padding:16px 14px 22px}.settingsTopbar{min-height:62px}.settingsProfileCard{border-radius:19px}.settingsRow{min-height:64px}.settingsSectionTitle{margin-top:20px}}
+
+/* v4.4 — sending is independent from the visual layer; the same button becomes Stop. */
+.send.stop{font-size:15px!important;opacity:1!important;transform:none!important;display:grid;place-items:center}
+.send.stop:before{display:none!important;content:none!important}
+.send.stop:active{transform:scale(.94)!important}

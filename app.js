@@ -35,11 +35,12 @@ function renderTopAvatar(){const mode=state.settings.topAvatar||"user";document.
 function renderAvatarPreviews(){$("#userAvatarPreview").innerHTML=avatarHTML("user");$("#aiAvatarPreview").innerHTML=avatarHTML("ai")}
 function showErr(t){const e=$("#error");e.textContent=t;e.classList.remove("hidden");clearTimeout(showErr.t);showErr.t=setTimeout(()=>e.classList.add("hidden"),7000)}
 function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}
-function base(u){return String(u||"").trim().replace(/\/+$/,"" ).replace(/\/chat\/completions$/i,"")}
-function finishBusy(){state.busy=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading")}updateTyping();save()}
-function apiHint(){const api=String(state.settings.apiBase||"").trim();if(!api)return"未设置 Base URL";try{const u=new URL(api);return u.origin+u.pathname.replace(/\/+$/,"" )+"/chat/completions"}catch{return"Base URL 格式不正确"}}
+function base(u){return window.GChatAPI?window.GChatAPI.normalizeBase(u):String(u||"").trim().replace(/\/+$/,"" ).replace(/\/chat\/completions$/i,"")}
+function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading","stop");b.textContent="↑";b.title="发送"}updateTyping();save()}
+function apiHint(){return window.GChatAPI?window.GChatAPI.requestUrl(state.settings.apiBase):base(state.settings.apiBase)+"/chat/completions"}
+function stopThinking(){if(!state.busy||!state._abort)return;state.stopRequested=true;try{state._abort.abort()}catch{};showErr("已停止这次回复。你的消息已经保留在聊天记录里。")}
 async function send(){
- if(state.busy)return;
+ if(state.busy){stopThinking();return;}
  const i=$("#input"),text=i.value.trim();
  if(!text)return;
  if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
@@ -47,26 +48,19 @@ async function send(){
  c.messages.push({role:"user",content:text,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
  i.value="";resize();save();render();
- state.busy=true;const sendBtn=$("#send");sendBtn.disabled=true;sendBtn.classList.add("loading");updateTyping();
+ state.busy=true;state.stopRequested=false;const sendBtn=$("#send");sendBtn.disabled=false;sendBtn.classList.add("stop");sendBtn.classList.remove("loading");sendBtn.textContent="■";sendBtn.title="停止回复";updateTyping();
  const controller=new AbortController();state._abort=controller;
  const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  try{
   const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);
-  const url=base(state.settings.apiBase)+"/chat/completions";
-  const body={model:state.settings.model,messages:ms,temperature:Number(state.settings.temperature??.7),stream:false};
-  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+state.settings.apiKey},body:JSON.stringify(body),signal:controller.signal});
-  if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
-  const o=await r.json();
-  let ans=o.choices?.[0]?.message?.content;
-  if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
-  if(typeof ans!=="string"||!ans.trim())throw new Error("API 没有返回文字内容，请检查模型、API Key 和 Base URL。");
-  c.messages.push({role:"assistant",content:ans,timestamp:Date.now()});save();
+  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal});
+  c.messages.push({role:"assistant",content:result.answer,timestamp:Date.now()});save();
  }catch(e){
-  if(e?.name==="AbortError")showErr("请求等待超过 60 秒。请检查 API Base URL、模型和网络连接。\n请求地址："+base(state.settings.apiBase)+"/chat/completions");
+  if(e?.name==="AbortError") { if(!state.stopRequested) showErr("请求等待超过 60 秒。请检查 API Base URL、模型和网络连接。\n请求地址："+apiHint()); }
   else showErr(e.message||String(e));
  }finally{
   clearTimeout(timeout);if(state._abort===controller)state._abort=null;
-  state.busy=false;sendBtn.disabled=false;sendBtn.classList.remove("loading");updateTyping();save();render();
+  finishBusy();render();
  }
 }
 function chatMenu(id){const c=state.chats.find(x=>x.id===id);if(!c)return;const action=prompt("输入操作：1 重命名  2 删除","");if(action==="1"){const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}else if(action==="2"&&confirm("确定删除这个对话吗？")){state.chats=state.chats.filter(x=>x.id!==id);if(state.current===id)state.current=state.chats[0]?.id||null;ensure();save();render()}}
@@ -83,4 +77,4 @@ $("#exportAll").onclick=exportAll;$("#importAll").onclick=()=>$("#importFile").c
 document.querySelectorAll("[data-settings-page]").forEach(b=>b.onclick=()=>settingsOpenPage(b.dataset.settingsPage));
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(console.error);state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";ensure();ensureDates();save();render();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js?v=4.4",{updateViaCache:"none"}).then(r=>r.update()).catch(console.error);state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";ensure();ensureDates();save();render();
