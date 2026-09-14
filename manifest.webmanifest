@@ -1,9 +1,1 @@
-{
-  "name":"G Chat",
-  "short_name":"G Chat",
-  "start_url":"./",
-  "display":"standalone",
-  "background_color":"#f7f2ea",
-  "theme_color":"#f7f2ea",
-  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
-}
+{"name":"G Chat","short_name":"G Chat","start_url":"./","display":"standalone","background_color":"#f6f2ec","theme_color":"#f6f2ec","lang":"zh-Hant","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}

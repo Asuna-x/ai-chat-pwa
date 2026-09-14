@@ -1,122 +1,35 @@
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const KEY="gchat_settings", CHATS="gchat_chats", CUR="gchat_current";
-const defaults={
-  myName:"我", myAvatar:"", gName:"G", gBio:"随时都可以来聊聊。", gAvatar:"",
-  baseUrl:"https://api.deepseek.com", apiKey:"", model:"deepseek-chat",
-  systemPrompt:"你是 G。请自然、温柔、直接地和用户聊天。", temperature:.7,
-  theme:"cream", background:"plain", chatBg:"", bgOpacity:18, bubble:"soft", animations:true
-};
-const themes={
- cream:["#f7f2ea","#fffdf9","#b48762","#eadbcb","#e9d8c8"],
- blue:["#eef4f7","#fbfeff","#66889b","#d9e8ee","#d9e8ee"],
- lavender:["#f2eef7","#fffDff","#8c76a8","#e4d9ef","#e4d9ef"],
- pink:["#f8eef0","#fffdfd","#b56f82","#eed8de","#efd9df"],
- sage:["#eff3ed","#fcfffb","#71886d","#dce7d8","#dce7d8"],
- midnight:["#17181d","#202127","#a58bb8","#30313a","#2d2a35"]
-};
-const bgs={plain:"none",paper:"linear-gradient(135deg,#f7f0e5,#fffaf3)",mist:"radial-gradient(circle at 20% 20%,#ffffff,#e9eef4 60%,#e5dce8)",lilac:"linear-gradient(135deg,#f3edf8,#eee9f5)",sage:"linear-gradient(135deg,#eef4eb,#f8fbf5)",morning:"linear-gradient(135deg,#fff1df,#f5e6ee)"};
-let settings={...defaults,...JSON.parse(localStorage.getItem(KEY)||"{}")};
-let chats=JSON.parse(localStorage.getItem(CHATS)||"[]");
-if(!chats.length) chats=[{id:crypto.randomUUID(),title:"新的聊天",messages:[]}];
-let current=localStorage.getItem(CUR)||chats[0].id;
-if(!chats.some(c=>c.id===current))current=chats[0].id;
-
-function save(){localStorage.setItem(KEY,JSON.stringify(settings));localStorage.setItem(CHATS,JSON.stringify(chats));localStorage.setItem(CUR,current)}
-function cur(){return chats.find(c=>c.id===current)}
-function initials(name){return (name||"G").trim().slice(0,1).toUpperCase()}
-function avatarData(src,name){return src||`data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" rx="28" fill="${themes[settings.theme][3]}"/><text x="50%" y="56%" text-anchor="middle" font-size="55" fill="${themes[settings.theme][2]}" font-family="Arial">${initials(name)}</text></svg>`)}`
-}
-function applyTheme(){
- const t=themes[settings.theme]||themes.cream; let r=document.documentElement;
- r.style.setProperty("--bg",t[0]);r.style.setProperty("--panel",t[1]);r.style.setProperty("--accent",t[2]);r.style.setProperty("--accent2",t[3]);r.style.setProperty("--mine",t[4]);r.style.setProperty("--chat-bg",settings.chatBg?`url("${settings.chatBg}")`:bgs[settings.background]||"none");r.style.setProperty("--bg-opacity",settings.bgOpacity/100);
- document.body.classList.toggle("noanim",!settings.animations);
- document.body.classList.remove("glass","minimal","pill");document.body.classList.add(settings.bubble);
- $("#headAvatar").src=avatarData(settings.gAvatar,settings.gName);$("#heroAvatar").src=avatarData(settings.gAvatar,settings.gName);$("#typingAvatar").style.backgroundImage=`url("${avatarData(settings.gAvatar,settings.gName)}")`;$("#typingAvatar").style.backgroundSize="cover";$("#typingAvatar").style.width="24px";$("#typingAvatar").style.height="24px";$("#typingAvatar").style.borderRadius="8px";
- $("#headName").textContent=settings.gName;$("#heroName").textContent=settings.gName;$("#heroBio").textContent=settings.gBio;
- document.querySelector('meta[name="theme-color"]').setAttribute("content",t[0]);
-}
-function render(){
- applyTheme(); const box=$("#chat"); box.innerHTML="";
- const c=cur();
- if(!c.messages.length){
-   const empty=document.createElement("div");
-   empty.className="empty";
-   empty.innerHTML=`<div class="hero-avatar"><img id="heroAvatar" alt=""></div><h1 id="heroName"></h1><p id="heroBio"></p>`;
-   empty.querySelector("#heroAvatar").src=avatarData(settings.gAvatar,settings.gName);
-   empty.querySelector("#heroName").textContent=settings.gName;
-   empty.querySelector("#heroBio").textContent=settings.gBio;
-   box.appendChild(empty);
-   renderChats();
-   return;
- }
- c.messages.forEach((m,i)=>{
-   const row=document.createElement("div");row.className="msg "+(m.role==="user"?"mine":"theirs");
-   const im=document.createElement("img");im.className="avatar";im.src=avatarData(m.role==="user"?settings.myAvatar:settings.gAvatar,m.role==="user"?settings.myName:settings.gName);
-   const b=document.createElement("div");b.className="bubble";b.textContent=m.content;b.title="长按可复制";
-   b.addEventListener("contextmenu",e=>{e.preventDefault();navigator.clipboard?.writeText(m.content)});
-   row.append(im,b);box.appendChild(row);
- });
- box.scrollTop=box.scrollHeight;
- renderChats();
-}
-function renderChats(){
- const list=$("#chatList");list.innerHTML="";
- chats.forEach(c=>{
-   const d=document.createElement("div");d.className="chat-item "+(c.id===current?"active":"");
-   const left=document.createElement("div");left.style.flex="1";left.innerHTML=`<b>${escapeHtml(c.title)}</b><small>${c.messages.length?escapeHtml(c.messages.at(-1).content.slice(0,28)):"还没有消息"}</small>`;
-   const more=document.createElement("button");more.textContent="⋯";more.onclick=e=>{e.stopPropagation();const n=prompt("聊天名称",c.title);if(n){c.title=n;save();renderChats()}};
-   d.onclick=()=>{current=c.id;save();closeDrawer();render()};d.append(left,more);list.appendChild(d)
- })
-}
-function escapeHtml(s){return s.replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]))}
-function openDrawer(){renderChats();$("#drawer").classList.add("open");$("#backdrop").classList.remove("hidden")}
-function closeDrawer(){$("#drawer").classList.remove("open");$("#backdrop").classList.add("hidden")}
-function fillSettings(){
- $("#myName").value=settings.myName;$("#gName").value=settings.gName;$("#gBio").value=settings.gBio;$("#baseUrl").value=settings.baseUrl;$("#apiKey").value=settings.apiKey;$("#model").value=settings.model;$("#systemPrompt").value=settings.systemPrompt;$("#temperature").value=settings.temperature;$("#tempOut").value=settings.temperature;$("#chatTitle").value=cur().title;$("#bgOpacity").value=settings.bgOpacity;$("#opacityOut").value=settings.bgOpacity+"%";$("#myAvatarPreview").src=avatarData(settings.myAvatar,settings.myName);
- $$("#bubbleStyle button").forEach(x=>x.classList.toggle("active",x.dataset.v===settings.bubble));
- $("#animations").checked=settings.animations;
- $("#themes").innerHTML=Object.entries(themes).map(([k,v])=>`<button class="theme ${k===settings.theme?"selected":""}" data-theme="${k}"><div class="swatch" style="background:${v[0]};border:5px solid ${v[3]}"></div>${({cream:"奶油",blue:"雾蓝",lavender:"薰衣草",pink:"柔粉",sage:"鼠尾草",midnight:"午夜"})[k]}</button>`).join("");
- $("#backgrounds").innerHTML=Object.entries(bgs).map(([k,v])=>`<button class="bgchoice ${k===settings.background&&!settings.chatBg?"selected":""}" data-bg="${k}"><div class="swatch" style="background:${v==="none"?"var(--bg)":v}"></div>${({plain:"纯净",paper:"纸张",mist:"柔雾",lilac:"淡紫",sage:"浅绿",morning:"晨光"})[k]}</button>`).join("");
- $$(".theme").forEach(x=>x.onclick=()=>{settings.theme=x.dataset.theme;save();fillSettings();applyTheme();render()});
- $$(".bgchoice").forEach(x=>x.onclick=()=>{settings.background=x.dataset.bg;settings.chatBg="";save();fillSettings();applyTheme()});
-}
-function openSettings(){fillSettings();$("#settingsModal").classList.remove("hidden")}
-function closeSettings(){$("#settingsModal").classList.add("hidden")}
-async function fileToData(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
-async function send(){
- const inp=$("#input"), text=inp.value.trim();if(!text)return;
- const c=cur();c.messages.push({role:"user",content:text});inp.value="";resize();save();render();
- if(!settings.apiKey||!settings.baseUrl||!settings.model){alert("请先在 设置 → AI 中填写 API Base URL、API Key 和模型。");return}
- $("#typing").classList.remove("hidden");
- try{
-  const headers={"Content-Type":"application/json","Authorization":"Bearer "+settings.apiKey};
-  const body={model:settings.model,messages:[{role:"system",content:settings.systemPrompt},...c.messages],temperature:Number(settings.temperature),stream:false};
-  const url=settings.baseUrl.replace(/\/+$/,"")+"/chat/completions";
-  const res=await fetch(url,{method:"POST",headers,body:JSON.stringify(body)});
-  const data=await res.json();if(!res.ok)throw new Error(data?.error?.message||"API 请求失败");
-  c.messages.push({role:"assistant",content:data.choices?.[0]?.message?.content||"没有收到有效回复。"});save();render();
- }catch(e){c.messages.push({role:"assistant",content:"连接失败：\n"+e.message});save();render()}
- finally{$("#typing").classList.add("hidden")}
-}
-function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,120)+"px"}
-$("#sendBtn").onclick=send;$("#input").addEventListener("input",resize);$("#input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
-$("#menuBtn").onclick=openDrawer;$("#closeDrawer").onclick=closeDrawer;$("#backdrop").onclick=closeDrawer;
-$("#newChat").onclick=()=>{const c={id:crypto.randomUUID(),title:"新的聊天",messages:[]};chats.unshift(c);current=c.id;save();closeDrawer();render()};
-$("#settingsBtn").onclick=openSettings;$("#closeSettings").onclick=closeSettings;$("#saveSettings").onclick=()=>{settings.myName=$("#myName").value.trim()||"我";settings.gName=$("#gName").value.trim()||"G";settings.gBio=$("#gBio").value.trim()||"随时都可以来聊聊。";settings.baseUrl=$("#baseUrl").value.trim();settings.apiKey=$("#apiKey").value.trim();settings.model=$("#model").value.trim();settings.systemPrompt=$("#systemPrompt").value;settings.temperature=Number($("#temperature").value);settings.bgOpacity=Number($("#bgOpacity").value);settings.animations=$("#animations").checked;save();closeSettings();render()};
-$("#temperature").oninput=e=>$("#tempOut").value=e.target.value;$("#bgOpacity").oninput=e=>$("#opacityOut").value=e.target.value+"%";
-$$(".tab").forEach(t=>t.onclick=()=>{$$(".tab").forEach(x=>x.classList.remove("active"));$$(".panel").forEach(x=>x.classList.remove("active"));t.classList.add("active");$(`.panel[data-panel="${t.dataset.tab}"]`).classList.add("active")});
-$("#bubbleStyle").onclick=e=>{if(e.target.dataset.v){settings.bubble=e.target.dataset.v;fillSettings();applyTheme()}};
-$("#myAvatar").onchange=async e=>{if(e.target.files[0]){settings.myAvatar=await fileToData(e.target.files[0]);$("#myAvatarPreview").src=settings.myAvatar;save()}};
-$("#gAvatar").onchange=async e=>{if(e.target.files[0]){settings.gAvatar=await fileToData(e.target.files[0]);save();fillSettings();applyTheme();render()}};
-$("#chatBg").onchange=async e=>{if(e.target.files[0]){settings.chatBg=await fileToData(e.target.files[0]);save();fillSettings();applyTheme()}};
-$("#renameBtn").onclick=()=>{cur().title=$("#chatTitle").value.trim()||"新的聊天";save();renderChats();alert("已保存")};
-$("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(cur(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(cur().title||"chat")+".json";a.click();URL.revokeObjectURL(a.href)};
-$("#clearBtn").onclick=()=>{if(confirm("确定清空当前聊天吗？")){cur().messages=[];save();closeSettings();render()}};
-$("#deleteBtn").onclick=()=>{if(chats.length<2){alert("至少保留一个聊天。");return}if(confirm("确定删除当前聊天吗？")){chats=chats.filter(c=>c.id!==current);current=chats[0].id;save();closeSettings();render()}};
-$("#profileBtn").onclick=()=>{$("#profileAvatar").src=avatarData(settings.gAvatar,settings.gName);$("#profileName").textContent=settings.gName;$("#profileBio").textContent=settings.gBio;$("#profileModel").textContent=settings.model||"未设置";$("#profileTheme").textContent=({cream:"奶油",blue:"雾蓝",lavender:"薰衣草",pink:"柔粉",sage:"鼠尾草",midnight:"午夜"})[settings.theme];$("#profileModal").classList.remove("hidden")};
-$("#closeProfile").onclick=()=>$("#profileModal").classList.add("hidden");$("#profileChat").onclick=()=>$("#profileModal").classList.add("hidden");
-$("#voiceBtn").onclick=()=>{
- const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("当前浏览器不支持语音输入，请用最新版 Safari。");return}
- const r=new SR();r.lang="zh-CN";r.interimResults=false;r.onresult=e=>{$("#input").value+=(($("#input").value?" ":"")+e.results[0][0].transcript);resize()};r.onerror=()=>{};r.start()
-};
-save();render();
+const $=s=>document.querySelector(s);const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+const themes={cream:{name:"奶油米",bg:"#f6f2ec",card:"#fffdf9",ink:"#282522",muted:"#9a948c",line:"#e8e0d6",soft:"#eee8df",user:"#ded5c8",accent:"#2d2925",accent2:"#fff"},blue:{name:"雾蓝",bg:"#eef3f6",card:"#fbfdff",ink:"#263039",muted:"#8c98a1",line:"#dce5ea",soft:"#e5edf1",user:"#d8e5eb",accent:"#355565",accent2:"#fff"},lavender:{name:"雾紫",bg:"#f2eff6",card:"#fcfaff",ink:"#302b36",muted:"#9b93a5",line:"#e3ddea",soft:"#ebe5f0",user:"#e3d9e9",accent:"#554563",accent2:"#fff"},pink:{name:"柔粉",bg:"#f8eff1",card:"#fffafb",ink:"#35292c",muted:"#a18f94",line:"#eadcdf",soft:"#f0e4e7",user:"#ecd8dd",accent:"#65434d",accent2:"#fff"},green:{name:"鼠尾草",bg:"#eff3ee",card:"#fbfdfb",ink:"#29302b",muted:"#909b92",line:"#dce4dd",soft:"#e4ebe5",user:"#d9e4db",accent:"#3e5645",accent2:"#fff"},night:{name:"深夜",bg:"#17191b",card:"#222528",ink:"#f0efeb",muted:"#9ca2a6",line:"#34393d",soft:"#2d3337",user:"#344049",accent:"#f0efeb",accent2:"#17191b"}};
+const backgrounds={plain:{name:"纯净",value:"none"},paper:{name:"纸张",value:"radial-gradient(circle at 50% -10%,#fffdf9 0,#f6f2ec 45%)"},mist:{name:"柔雾",value:"radial-gradient(circle at 20% 15%,rgba(255,255,255,.85),transparent 35%),radial-gradient(circle at 85% 75%,rgba(220,230,235,.55),transparent 38%)"},lav:{name:"淡紫",value:"radial-gradient(circle at 15% 20%,rgba(225,214,236,.65),transparent 40%),radial-gradient(circle at 80% 75%,rgba(242,231,239,.8),transparent 40%)"},sage:{name:"浅绿",value:"radial-gradient(circle at 20% 20%,rgba(215,230,218,.7),transparent 40%),radial-gradient(circle at 80% 70%,rgba(235,240,226,.8),transparent 42%)"},sun:{name:"晨光",value:"radial-gradient(circle at 70% 15%,rgba(255,231,187,.6),transparent 38%),radial-gradient(circle at 20% 75%,rgba(248,222,210,.55),transparent 40%)"}};
+const state={chats:JSON.parse(localStorage.getItem("gchat_chats")||"[]"),current:localStorage.getItem("gchat_current")||null,settings:JSON.parse(localStorage.getItem("gchat_settings")||"{}"),busy:false,selectedBubble:null,recognition:null};
+const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings))};
+const chat=()=>state.chats.find(x=>x.id===state.current);
+function ensure(){if(!chat()){const c={id:crypto.randomUUID(),title:"新对话",messages:[]};state.chats.unshift(c);state.current=c.id;save()}}
+function applyLook(){const t=themes[state.settings.theme]||themes.cream;const r=document.documentElement;Object.entries(t).forEach(([k,v])=>{if(k!=="name")r.style.setProperty("--"+({bg:"bg",card:"card",ink:"ink",muted:"muted",line:"line",soft:"soft",user:"user",accent:"accent",accent2:"accent2"}[k]||k),v)});r.style.setProperty("--bg-image-opacity",String((state.settings.bgOpacity??18)/100));r.style.setProperty("--bg-image",state.settings.bgCustom?`url(${state.settings.bgCustom})`:(backgrounds[state.settings.bg||"paper"]?.value||backgrounds.paper.value));document.querySelector('meta[name="theme-color"]').setAttribute("content",t.bg);document.body.classList.remove("bubble-soft","bubble-glass","bubble-minimal","bubble-pill");document.body.classList.add("bubble-"+(state.settings.bubble||"soft"));document.body.classList.toggle("no-motion",state.settings.animations===false)}
+function avatarHTML(type){const src=type==="user"?state.settings.userAvatar:state.settings.aiAvatar;return src?`<img src="${src}" alt="">`:(type==="user"?"你":"G")}
+function render(){applyLook();const c=chat();$("#title").textContent=c?.title||"新对话";$("#modelName").textContent=state.settings.model||"未設定模型";$("#brandAvatar").innerHTML=avatarHTML("ai");const l=$("#chatList");l.innerHTML="";state.chats.forEach(x=>{const row=document.createElement("div");row.className="itemRow";const b=document.createElement("button");b.className="item"+(x.id===state.current?" active":"");b.textContent=x.title||"新对话";b.onclick=()=>{state.current=x.id;save();render();closeDrawer()};const m=document.createElement("button");m.className="itemMore";m.textContent="⋯";m.onclick=e=>{e.stopPropagation();chatMenu(x.id)};row.append(b,m);l.appendChild(row)});const box=$("#messages");box.innerHTML="";if(!c||!c.messages.length){box.innerHTML=`<div class="empty"><div><div class="avatar">${avatarHTML("ai")}</div><h1>${escapeHtml(state.settings.gName||"G")}</h1><p>${escapeHtml(state.settings.gBio||"你的私人 AI 对话空间")}</p></div></div>`;return}c.messages.forEach(m=>bubble(m.role,m.content));scroll()}
+function bubble(role,text,streaming=false){const r=document.createElement("div");r.className="message "+role;if(role==="assistant"){const a=document.createElement("div");a.className="msgavatar";a.innerHTML=avatarHTML("ai");r.appendChild(a)}const b=document.createElement("div");b.className="bubble"+(streaming?" streaming":"");b.textContent=text;b.dataset.text=text;r.appendChild(b);if(role==="user"){const a=document.createElement("div");a.className="msgavatar";a.innerHTML=avatarHTML("user");r.appendChild(a)}$("#messages").appendChild(r);bindLongPress(b);return b}
+function bindLongPress(el){let timer;const start=e=>{clearTimeout(timer);timer=setTimeout(()=>showBubbleAction(el),550)};const cancel=()=>clearTimeout(timer);el.addEventListener("pointerdown",start);["pointerup","pointercancel","pointerleave"].forEach(x=>el.addEventListener(x,cancel));el.addEventListener("contextmenu",e=>{e.preventDefault();showBubbleAction(el)})}
+function showBubbleAction(el){state.selectedBubble=el;const a=$("#bubbleAction");a.classList.remove("hidden");const rect=el.getBoundingClientRect();a.style.left=Math.max(8,Math.min(innerWidth-90,rect.left))+'px';a.style.top=Math.max(8,rect.top-48)+'px'}
+function scroll(){requestAnimationFrame(()=>$("#messages").scrollTop=$("#messages").scrollHeight)}
+function openDrawer(){$("#drawer").classList.add("open");$("#shade").classList.remove("hidden")}function closeDrawer(){$("#drawer").classList.remove("open");$("#shade").classList.add("hidden")}
+function settings(){fillSettings();$("#settings").showModal()}
+function fillSettings(){$("#myName").value=state.settings.myName||"你";$("#gName").value=state.settings.gName||"G";$("#gBio").value=state.settings.gBio||"你的私人 AI 对话空间";["apiBase","apiKey","model"].forEach(k=>$("#"+k).value=state.settings[k]||"");$("#systemPrompt").value=state.settings.systemPrompt??"你是一个有帮助的助手。";$("#temperature").value=state.settings.temperature??.7;renderModels();renderThemes();renderBackgrounds();renderAvatarPreviews();$("bgOpacity").value=state.settings.bgOpacity??18;$("bgOpacityOut").value=(state.settings.bgOpacity??18)+"%";$("animations").checked=state.settings.animations!==false;renderBubbleStyles()}
+function renderModels(){const sel=$("#modelSelect");sel.innerHTML="";const models=[...(state.settings.models||[])];if(state.settings.model&&!models.includes(state.settings.model))models.unshift(state.settings.model);models.forEach(x=>{const o=document.createElement("option");o.value=x;o.textContent=x;sel.appendChild(o)});if(models.length){sel.value=state.settings.model||models[0];sel.onchange=()=>$("#model").value=sel.value}}
+function renderThemes(){const box=$("#themeGrid");box.innerHTML="";Object.entries(themes).forEach(([k,t])=>{const b=document.createElement("button");b.className="themeChoice"+(state.settings.theme===k?" active":"");b.style.background=`linear-gradient(135deg,${t.bg} 0 55%,${t.accent} 55% 100%)`;b.innerHTML=`<span>${t.name}</span>`;b.onclick=()=>{state.settings.theme=k;applyLook();renderThemes()};box.appendChild(b)})}
+function renderBackgrounds(){const box=$("#bgGrid");box.innerHTML="";Object.entries(backgrounds).forEach(([k,bg])=>{const b=document.createElement("button");b.className="bgChoice"+(state.settings.bg===k&&!state.settings.bgCustom?" active":"");b.style.background=bg.value==="none"?(themes[state.settings.theme||"cream"].bg):bg.value;b.innerHTML=`<span>${bg.name}</span>`;b.onclick=()=>{state.settings.bg=k;state.settings.bgCustom="";applyLook();renderBackgrounds()};box.appendChild(b)})}
+function renderBubbleStyles(){document.querySelectorAll("#bubbleGrid [data-bubble]").forEach(b=>b.classList.toggle("active",b.dataset.bubble===(state.settings.bubble||"soft")))}
+function renderAvatarPreviews(){$("#userAvatarPreview").innerHTML=avatarHTML("user");$("#aiAvatarPreview").innerHTML=avatarHTML("ai")}
+function showErr(t){const e=$("#error");e.textContent=t;e.classList.remove("hidden");clearTimeout(showErr.t);showErr.t=setTimeout(()=>e.classList.add("hidden"),7000)}
+function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}function base(u){return u.trim().replace(/\/+$/,"",).replace(/\/chat\/completions$/i,"")}
+async function send(){if(state.busy)return;const i=$("#input"),text=i.value.trim();if(!text)return;if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}ensure();const c=chat();c.messages.push({role:"user",content:text});if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);i.value="";resize();render();const out=bubble("assistant","",true);state.busy=true;$("#send").disabled=true;try{const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);const r=await fetch(base(state.settings.apiBase)+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+state.settings.apiKey},body:JSON.stringify({model:state.settings.model,messages:ms,temperature:Number(state.settings.temperature??.7),stream:true})});if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);if(!r.body)throw new Error("API 没有提供串流回應。");const rd=r.body.getReader(),d=new TextDecoder();let buf="",ans="";while(true){const q=await rd.read();if(q.done)break;buf+=d.decode(q.value,{stream:true});const lines=buf.split("\n");buf=lines.pop()||"";for(const raw of lines){const line=raw.trim();if(!line.startsWith("data:"))continue;const p=line.slice(5).trim();if(p==="[DONE]")continue;try{const o=JSON.parse(p),delta=o.choices?.[0]?.delta?.content;if(delta){ans+=delta;out.textContent=ans;out.dataset.text=ans;scroll()}}catch{}}}if(!ans)throw new Error("API 没有回傳文字内容，请检查模型与 API 设置。");out.classList.remove("streaming");c.messages.push({role:"assistant",content:ans});save()}catch(e){out.remove();showErr(e.message||String(e))}finally{state.busy=false;$("#send").disabled=false;save();render()}}
+function chatMenu(id){const c=state.chats.find(x=>x.id===id);if(!c)return;const action=prompt("输入操作：1 重命名  2 删除","");if(action==="1"){const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}else if(action==="2"&&confirm("确定删除这个对话吗？")){state.chats=state.chats.filter(x=>x.id!==id);if(state.current===id)state.current=state.chats[0]?.id||null;ensure();save();render()}}
+function renameCurrent(){const c=chat();if(!c)return;const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}
+function exportChat(){const c=chat();if(!c)return;const text=[`# ${c.title||"新对话"}`,"",...c.messages.map(m=>`${m.role==="user"?"你":"G"}：\n${m.content}\n`)].join("\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(c.title||"chat")+".txt";a.click();URL.revokeObjectURL(url)}
+function imageToData(file,max=600,quality=.78){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",quality))};im.onerror=rej;im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(file)})}
+async function uploadImage(input,target,max,quality){const f=input.files?.[0];if(!f)return;try{state.settings[target]=await imageToData(f,max,quality);save();applyLook();renderAvatarPreviews();render()}catch{showErr("图片处理失败，请换一张图片。")}}
+function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showErr("当前 Safari 不支持语音识别，请尝试系统听写或其他浏览器。");return}if(state.recognition){state.recognition.stop();state.recognition=null;$("#mic").classList.remove("active");return}const r=new SR();r.lang="zh-TW";r.continuous=false;r.interimResults=true;state.recognition=r;$("#mic").classList.add("active");r.onresult=e=>{$("#input").value=Array.from(e.results).map(x=>x[0].transcript).join("");resize()};r.onerror=e=>{showErr("语音识别失败："+(e.error||"未知错误"));$("#mic").classList.remove("active");state.recognition=null};r.onend=()=>{$("#mic").classList.remove("active");state.recognition=null}}
+$("#openDrawer").onclick=openDrawer;$("#closeDrawer").onclick=closeDrawer;$("#shade").onclick=closeDrawer;$("#newChat").onclick=()=>{const c={id:crypto.randomUUID(),title:"新对话",messages:[]};state.chats.unshift(c);state.current=c.id;save();render();closeDrawer()};$("#openSettings").onclick=settings;$("#headerSettings").onclick=settings;$("#closeSettings").onclick=()=>$("#settings").close();$("#saveSettings").onclick=()=>{state.settings={...state.settings,myName:$("#myName").value.trim()||"你",gName:$("#gName").value.trim()||"G",gBio:$("#gBio").value.trim()||"你的私人 AI 对话空间",apiBase:$("#apiBase").value.trim(),apiKey:$("#apiKey").value.trim(),model:$("#model").value.trim(),systemPrompt:$("#systemPrompt").value,temperature:Number($("#temperature").value),bgOpacity:Number($("#bgOpacity").value),animations:$("#animations").checked};save();$("#settings").close();render()};$("#addModel").onclick=()=>{const m=$("#model").value.trim();if(!m)return;state.settings.models=[...new Set([...(state.settings.models||[]),m])];save();renderModels();$("#modelSelect").value=m};$("#removeModel").onclick=()=>{const m=$("#model").value.trim();state.settings.models=(state.settings.models||[]).filter(x=>x!==m);save();renderModels()};$("#modelSelect").onchange=()=>$("#model").value=$("#modelSelect").value;$("#renameCurrent").onclick=renameCurrent;$("#exportChat").onclick=exportChat;$("#clearCurrent").onclick=()=>{const c=chat();if(c&&confirm("确定清空当前对话吗？")){c.messages=[];c.title="新对话";save();render();$("#settings").close()}};$("#deleteCurrent").onclick=()=>{const c=chat();if(c&&confirm("确定删除当前对话吗？")){state.chats=state.chats.filter(x=>x.id!==c.id);state.current=state.chats[0]?.id||null;ensure();save();render();$("#settings").close()}};
+$("#uploadUserAvatar").onclick=()=>$("#userAvatarFile").click();$("#userAvatarFile").onchange=()=>uploadImage($("#userAvatarFile"),"userAvatar",320,.8);$("#clearUserAvatar").onclick=()=>{state.settings.userAvatar="";save();renderAvatarPreviews();render()};$("#uploadAiAvatar").onclick=()=>$("#aiAvatarFile").click();$("#aiAvatarFile").onchange=()=>uploadImage($("#aiAvatarFile"),"aiAvatar",320,.8);$("#clearAiAvatar").onclick=()=>{state.settings.aiAvatar="";save();renderAvatarPreviews();render()};$("#uploadBg").onclick=()=>$("#bgFile").click();$("#bgFile").onchange=async()=>{const f=$("#bgFile").files?.[0];if(!f)return;try{state.settings.bgCustom=await imageToData(f,1200,.7);save();applyLook();renderBackgrounds();render()}catch{showErr("背景图片处理失败。")}};$("#clearBg").onclick=()=>{state.settings.bgCustom="";save();applyLook();renderBackgrounds();render()};$("#bgOpacity").oninput=e=>{state.settings.bgOpacity=Number(e.target.value);$("#bgOpacityOut").value=e.target.value+"%";applyLook()};document.querySelectorAll("#bubbleGrid [data-bubble]").forEach(b=>b.onclick=()=>{state.settings.bubble=b.dataset.bubble;save();renderBubbleStyles();applyLook()});$("#openProfile").onclick=()=>{const d=$("#profile");$("#profileAvatar").innerHTML=avatarHTML("ai");$("#profileName").textContent=state.settings.gName||"G";$("#profileBio").textContent=state.settings.gBio||"你的私人 AI 对话空间";$("#profileModel").textContent=state.settings.model||"未设置";$("#profileTheme").textContent=themes[state.settings.theme||"cream"].name;d.showModal()};$("#closeProfile").onclick=()=>$("#profile").close();$("#profileStart").onclick=()=>$("#profile").close();
+$("#mic").onclick=setupVoice;$("#send").onclick=send;$("#input").oninput=resize;$("#input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("#copyBubble").onclick=async()=>{if(!state.selectedBubble)return;try{await navigator.clipboard.writeText(state.selectedBubble.dataset.text||state.selectedBubble.textContent);$("#bubbleAction").classList.add("hidden")}catch{showErr("复制失败，请长按文字手动复制。")}};document.addEventListener("pointerdown",e=>{if(!e.target.closest(".bubbleAction")&&!e.target.closest(".bubble"))$("#bubbleAction").classList.add("hidden")});document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tabbody").forEach(x=>x.classList.add("hidden"));b.classList.add("active");$("#"+b.dataset.tab).classList.remove("hidden")});
+if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(console.error);state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";ensure();save();render();
