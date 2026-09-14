@@ -16,7 +16,7 @@ function ensureDates(){let changed=false;const now=Date.now();state.chats.forEac
 function welcomeText(){const h=new Date().getHours();if(h<6)return"夜深了，慢慢聊。";if(h<11)return"早安，今天也陪你。";if(h<14)return"午间好，坐下来聊会儿。";if(h<18)return"下午好，今天过得怎么样？";if(h<23)return"晚上好，回来啦。";return"晚安，想说什么都可以。"}
 function renderChatList(){const l=$("#chatList");if(!l)return;l.innerHTML="";const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();const yesterday=today-86400000;let lastGroup="";const groups={};state.chats.forEach(x=>{const t=x.createdAt||0;const key=t>=today?"今天":t>=yesterday?"昨天":"更早";(groups[key]??=[]).push(x)});["今天","昨天","更早"].forEach(key=>{if(!groups[key]?.length)return;const g=document.createElement("div");g.className="chatGroup";g.innerHTML=`<div class="chatGroupTitle">${key}</div>`;groups[key].forEach(x=>{const row=document.createElement("div");row.className="itemRow";const b=document.createElement("button");b.className="item"+(x.id===state.current?" active":"");b.innerHTML=`<span class="itemTitle">${escapeHtml(x.title||"新对话")}</span><span class="itemTime">${formatTime(x.createdAt)}</span>`;b.onclick=()=>{state.current=x.id;save();render();closeDrawer()};const m=document.createElement("button");m.className="itemMore";m.textContent="⋯";m.onclick=e=>{e.stopPropagation();chatMenu(x.id)};row.append(b,m);g.appendChild(row)});l.appendChild(g)});const count=$("#chatCount");if(count)count.textContent=state.chats.length?state.chats.length+" 个":""}
 function iFill(text){const i=$("#input");i.value=text;resize();i.focus();document.querySelector("footer")?.scrollIntoView({block:"end",behavior:"smooth"})}
-function updateTyping(){return}
+function updateTyping(){const status=$("#typingStatus"),model=$("#modelStatus");if(!status||!model)return;status.classList.toggle("hidden",!state.busy);model.classList.toggle("hidden",state.busy)}
 function render(){applyLook();const c=chat();$("#title").textContent=c?.title||"新对话";$("#modelName").textContent=state.settings.model||"未設定模型";$("#headerTime").textContent=c?.messages?.length?" · "+formatTime(c.messages[c.messages.length-1].timestamp):"";updateTyping();const topAvatar=$("#headAvatar"),topMode=state.settings.topAvatar||"user";topAvatar.classList.toggle("is-hidden",topMode==="none");$("#openProfile").classList.toggle("avatar-hidden",topMode==="none");if(topMode!=="none")topAvatar.innerHTML=avatarHTML(topMode);$("#brandAvatar").innerHTML=avatarHTML("ai");renderChatList();const box=$("#messages");box.innerHTML="";if(!c||!c.messages.length){box.innerHTML=`<div class="empty"><div><div class="avatar">${avatarHTML("ai")}</div><span class="welcomeKicker">${welcomeText()}</span><h1>${escapeHtml(state.settings.gName||"G")}</h1><p>${escapeHtml(state.settings.gBio||"你的私人 AI 对话空间")}</p><div class="quickPrompts"><button data-prompt="帮我规划一下今天的安排">规划今天</button><button data-prompt="陪我聊聊，轻松一点">陪我聊聊</button><button data-prompt="帮我整理一下最近的想法">整理思绪</button></div></div></div>`;box.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{iFill(b.dataset.prompt)});return}c.messages.forEach(m=>bubble(m.role,m.content,false,m.timestamp));scroll()}
 function bubble(role,text,streaming=false,timestamp=null){const r=document.createElement("div");r.className="message "+role;const tm=timestamp?document.createElement("span"):null;if(tm){tm.className="msgTime";tm.textContent=formatTime(timestamp)}if(role==="assistant"){const a=document.createElement("div");a.className="msgavatar";a.innerHTML=avatarHTML("ai");r.appendChild(a)}if(role==="user"&&tm)r.appendChild(tm);const b=document.createElement("div");b.className="bubble";b.textContent=text;b.dataset.text=text;r.appendChild(b);if(role==="assistant"&&tm)r.appendChild(tm);if(role==="user"){const a=document.createElement("div");a.className="msgavatar";a.innerHTML=avatarHTML("user");r.appendChild(a)}$("#messages").appendChild(r);bindLongPress(b);return b}
 function bindLongPress(el){let timer;const start=e=>{clearTimeout(timer);timer=setTimeout(()=>showBubbleAction(el),550)};const cancel=()=>clearTimeout(timer);el.addEventListener("pointerdown",start);["pointerup","pointercancel","pointerleave"].forEach(x=>el.addEventListener(x,cancel));el.addEventListener("contextmenu",e=>{e.preventDefault();showBubbleAction(el)})}
@@ -40,50 +40,29 @@ function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#sen
 function apiHint(){return window.GChatAPI?window.GChatAPI.requestUrl(state.settings.apiBase):base(state.settings.apiBase)+"/chat/completions"}
 function stopThinking(){if(!state.busy||!state._abort)return;state.stopRequested=true;try{state._abort.abort()}catch{};showErr("已停止这次回复。你的消息已经保留在聊天记录里。")}
 async function send(){
- if(state.busy)return;
+ if(state.busy){stopThinking();return;}
  const i=$("#input"),text=i.value.trim();
  if(!text)return;
  if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
- ensure();
- const c=chat();
+ ensure();const c=chat();
  c.messages.push({role:"user",content:text,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
  i.value="";resize();save();render();
- state.busy=true;
- const sendBtn=$("#send");
- sendBtn.disabled=true;
- sendBtn.textContent="…";
- const controller=new AbortController();
- state._abort=controller;
- const timeout=setTimeout(()=>controller.abort(),60000);
+ state.busy=true;state.stopRequested=false;const sendBtn=$("#send");sendBtn.disabled=false;sendBtn.classList.add("stop");sendBtn.classList.remove("loading");sendBtn.textContent="■";sendBtn.title="停止回复";updateTyping();
+ const controller=new AbortController();state._abort=controller;
+ const timeout=setTimeout(()=>{try{controller.abort()}catch{}},45000);
  try{
-   const messages=[];
-   if(state.settings.systemPrompt)messages.push({role:"system",content:state.settings.systemPrompt});
-   // Strip UI-only timestamp fields before the request.
-   messages.push(...c.messages.map(m=>({role:m.role,content:String(m.content??"")})));
-   const result=await window.GChatAPI.chat({
-     baseUrl:state.settings.apiBase,
-     apiKey:state.settings.apiKey,
-     model:state.settings.model,
-     messages,
-     temperature:state.settings.temperature,
-     signal:controller.signal
-   });
-   c.messages.push({role:"assistant",content:result.answer,timestamp:Date.now()});
-   save();
-   render();
+  const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);
+  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal});
+  c.messages.push({role:"assistant",content:result.answer,timestamp:Date.now()});save();
  }catch(e){
-   if(e?.name==="AbortError")showErr("请求等待超过 60 秒。请检查 API Base URL、API Key、模型和网络连接。\n请求地址："+apiHint());
-   else showErr(e.message||String(e));
+  if(e?.name==="AbortError") { if(!state.stopRequested) showErr("请求等待超过 45 秒。请检查 API Base URL、模型和网络连接。\n请求地址："+apiHint()); }
+  else showErr(e.message||String(e));
  }finally{
-   clearTimeout(timeout);
-   if(state._abort===controller)state._abort=null;
-   state.busy=false;
-   sendBtn.disabled=false;
-   sendBtn.textContent="↑";
+  clearTimeout(timeout);if(state._abort===controller)state._abort=null;
+  finishBusy();render();
  }
 }
-
 function chatMenu(id){const c=state.chats.find(x=>x.id===id);if(!c)return;const action=prompt("输入操作：1 重命名  2 删除","");if(action==="1"){const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}else if(action==="2"&&confirm("确定删除这个对话吗？")){state.chats=state.chats.filter(x=>x.id!==id);if(state.current===id)state.current=state.chats[0]?.id||null;ensure();save();render()}}
 function renameCurrent(){const c=chat();if(!c)return;const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}
 function exportChat(){const c=chat();if(!c)return;const text=[`# ${c.title||"新对话"}`,"",...c.messages.map(m=>`${m.role==="user"?"你":"G"}：\n${m.content}\n`)].join("\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(c.title||"chat")+".txt";a.click();URL.revokeObjectURL(url)}
