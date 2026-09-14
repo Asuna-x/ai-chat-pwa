@@ -1,12 +1,1 @@
-{
-  "name": "AI Chat",
-  "short_name": "AI Chat",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#f7f7f5",
-  "theme_color": "#f7f7f5",
-  "lang": "zh-Hant",
-  "icons": [
-    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
-  ]
-}
+{"name":"G Chat","short_name":"G Chat","start_url":"./","display":"standalone","background_color":"#f6f2ec","theme_color":"#f6f2ec","lang":"zh-Hant","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}

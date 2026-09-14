@@ -1,85 +1,11 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#f7f7f5" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="AI Chat" />
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="./icon.svg" />
-  <title>AI Chat</title>
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <div id="app">
-    <aside id="sidebar" class="sidebar">
-      <div class="sidebar-head">
-        <strong>AI Chat</strong>
-        <button id="closeSidebar" class="icon-btn" aria-label="關閉">×</button>
-      </div>
-      <button id="newChat" class="new-chat">＋ 新對話</button>
-      <div id="chatList" class="chat-list"></div>
-      <div class="sidebar-foot">
-        <button id="settingsBtn" class="menu-btn">⚙ 設定</button>
-      </div>
-    </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <button id="menuBtn" class="icon-btn" aria-label="選單">☰</button>
-        <div class="title-wrap">
-          <div id="chatTitle">新對話</div>
-          <div id="modelLabel" class="model-label">尚未設定模型</div>
-        </div>
-        <button id="settingsTop" class="icon-btn" aria-label="設定">⚙</button>
-      </header>
-
-      <section id="messages" class="messages"></section>
-
-      <div id="errorBar" class="error-bar hidden"></div>
-
-      <footer class="composer-wrap">
-        <div class="composer">
-          <textarea id="input" rows="1" placeholder="輸入訊息…" autocomplete="off"></textarea>
-          <button id="sendBtn" class="send-btn" aria-label="送出">↑</button>
-        </div>
-        <div class="hint">Enter 送出 · Shift + Enter 換行</div>
-      </footer>
-    </main>
-  </div>
-
-  <div id="overlay" class="overlay hidden"></div>
-
-  <dialog id="settings">
-    <div class="dialog-head">
-      <h2>設定</h2>
-      <button id="closeSettings" class="icon-btn">×</button>
-    </div>
-    <div class="form">
-      <label>API Base URL
-        <input id="apiBase" placeholder="https://example.com/v1" />
-      </label>
-      <label>API Key
-        <input id="apiKey" type="password" placeholder="sk-…" />
-      </label>
-      <label>模型
-        <input id="model" placeholder="例如 gpt-5.6" />
-      </label>
-      <label>System Prompt
-        <textarea id="systemPrompt" rows="4" placeholder="你是一個有幫助的助手。"></textarea>
-      </label>
-      <label>Temperature
-        <input id="temperature" type="number" min="0" max="2" step="0.1" value="0.7" />
-      </label>
-      <div class="settings-note">
-        設定會儲存在這台裝置的瀏覽器本機。API Key 不會被上傳到這個專案自己的伺服器。
-      </div>
-      <button id="saveSettings" class="primary-btn">儲存設定</button>
-    </div>
-  </dialog>
-
-  <script src="./app.js"></script>
-</body>
-</html>
+<!doctype html><html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f6f2ec"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="G Chat">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icon.svg"><title>G Chat</title><link rel="stylesheet" href="./style.css"></head>
+<body><div class="app"><aside id="drawer" class="drawer"><div class="drawer-top"><div class="brand"><div class="brand-mark">G</div><div><b>G Chat</b><small>私人 AI 對話</small></div></div><button class="round" id="closeDrawer">×</button></div>
+<button class="new" id="newChat">＋ 新對話</button><div class="section">對話</div><div id="chatList" class="list"></div><div class="bottom"><button id="openSettings">⚙ API 與聊天設定</button><small>聊天記錄只保存在這台裝置</small></div></aside>
+<main class="main"><header><button class="round" id="openDrawer">☰</button><div class="head"><b id="title">新對話</b><small id="modelName">未設定模型</small></div><button class="round" id="headerSettings">⚙</button></header>
+<section id="messages" class="messages"></section><div id="error" class="error hidden"></div><footer><div class="composer"><button class="plus" id="quickSettings">＋</button><textarea id="input" rows="1" placeholder="和 AI 說點什麼…"></textarea><button class="send" id="send">↑</button></div><div class="hint">Enter 送出　·　Shift + Enter 換行</div></footer></main></div><div id="shade" class="shade hidden"></div>
+<dialog id="settings"><div class="modalhead"><div><b>聊天設定</b><small>OpenAI-compatible API</small></div><button class="round" id="closeSettings">×</button></div><div class="form">
+<label>API Base URL<input id="apiBase" placeholder="https://api.deepseek.com"></label><label>API Key<input id="apiKey" type="password" placeholder="sk-…"></label><label>模型<input id="model" placeholder="deepseek-chat"></label><label>System Prompt<textarea id="systemPrompt" rows="5" placeholder="你是一個有幫助的助手。"></textarea></label><label>Temperature<input id="temperature" type="number" min="0" max="2" step=".1"></label>
+<button class="save" id="saveSettings">保存設定</button><p>API Key 與聊天記錄會留在本機瀏覽器，不會上傳到本專案伺服器。</p></div></dialog><script src="./app.js"></script></body></html>
