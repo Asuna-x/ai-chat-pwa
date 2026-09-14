@@ -22,7 +22,39 @@ function renderBubbleStyles(){document.querySelectorAll("#bubbleGrid [data-bubbl
 function renderAvatarPreviews(){$("#userAvatarPreview").innerHTML=avatarHTML("user");$("#aiAvatarPreview").innerHTML=avatarHTML("ai")}
 function showErr(t){const e=$("#error");e.textContent=t;e.classList.remove("hidden");clearTimeout(showErr.t);showErr.t=setTimeout(()=>e.classList.add("hidden"),7000)}
 function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}function base(u){return u.trim().replace(/\/+$/,"",).replace(/\/chat\/completions$/i,"")}
-async function send(){if(state.busy)return;const i=$("#input"),text=i.value.trim();if(!text)return;if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}ensure();const c=chat();c.messages.push({role:"user",content:text});if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);i.value="";resize();render();const out=bubble("assistant","",true);state.busy=true;$("#send").disabled=true;try{const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);const r=await fetch(base(state.settings.apiBase)+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+state.settings.apiKey},body:JSON.stringify({model:state.settings.model,messages:ms,temperature:Number(state.settings.temperature??.7),stream:true})});if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);if(!r.body)throw new Error("API 没有提供串流回應。");const rd=r.body.getReader(),d=new TextDecoder();let buf="",ans="";while(true){const q=await rd.read();if(q.done)break;buf+=d.decode(q.value,{stream:true});const lines=buf.split("\n");buf=lines.pop()||"";for(const raw of lines){const line=raw.trim();if(!line.startsWith("data:"))continue;const p=line.slice(5).trim();if(p==="[DONE]")continue;try{const o=JSON.parse(p),delta=o.choices?.[0]?.delta?.content;if(delta){ans+=delta;out.textContent=ans;out.dataset.text=ans;scroll()}}catch{}}}if(!ans)throw new Error("API 没有回傳文字内容，请检查模型与 API 设置。");out.classList.remove("streaming");c.messages.push({role:"assistant",content:ans});save()}catch(e){out.remove();showErr(e.message||String(e))}finally{state.busy=false;$("#send").disabled=false;save();render()}}
+async function send(){
+ if(state.busy)return;
+ const i=$("#input"),text=i.value.trim();
+ if(!text)return;
+ if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
+ ensure();const c=chat();
+ c.messages.push({role:"user",content:text});
+ if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
+ i.value="";resize();render();
+ const out=bubble("assistant","",true);state.busy=true;$("#send").disabled=true;
+ const timeout=setTimeout(()=>{try{state._abort?.abort()}catch{}},45000);
+ const controller=new AbortController();state._abort=controller;
+ try{
+  const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);
+  const url=base(state.settings.apiBase)+"/chat/completions";
+  const body={model:state.settings.model,messages:ms,temperature:Number(state.settings.temperature??.7),stream:false};
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+state.settings.apiKey},body:JSON.stringify(body),signal:controller.signal});
+  if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
+  const o=await r.json();
+  let ans=o.choices?.[0]?.message?.content;
+  if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
+  if(typeof ans!=="string"||!ans.trim())throw new Error("API 没有返回文字内容，请检查模型、API Key 和 Base URL。");
+  out.textContent=ans;out.dataset.text=ans;out.classList.remove("streaming");
+  c.messages.push({role:"assistant",content:ans});save();
+ }catch(e){
+  out.remove();
+  if(e?.name==="AbortError")showErr("请求等待超过 45 秒。请检查 API Base URL、模型和网络连接。");
+  else showErr(e.message||String(e));
+ }finally{
+  clearTimeout(timeout);if(state._abort===controller)state._abort=null;
+  state.busy=false;$("#send").disabled=false;save();render();
+ }
+}
 function chatMenu(id){const c=state.chats.find(x=>x.id===id);if(!c)return;const action=prompt("输入操作：1 重命名  2 删除","");if(action==="1"){const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}else if(action==="2"&&confirm("确定删除这个对话吗？")){state.chats=state.chats.filter(x=>x.id!==id);if(state.current===id)state.current=state.chats[0]?.id||null;ensure();save();render()}}
 function renameCurrent(){const c=chat();if(!c)return;const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}
 function exportChat(){const c=chat();if(!c)return;const text=[`# ${c.title||"新对话"}`,"",...c.messages.map(m=>`${m.role==="user"?"你":"G"}：\n${m.content}\n`)].join("\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(c.title||"chat")+".txt";a.click();URL.revokeObjectURL(url)}
