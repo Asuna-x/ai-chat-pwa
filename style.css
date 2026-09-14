@@ -152,3 +152,58 @@ header:after{content:"";position:absolute;left:12%;right:12%;bottom:-1px;height:
 .chatGroupTitle{position:sticky;top:0;z-index:2;background:linear-gradient(var(--card),color-mix(in srgb,var(--card) 82%,transparent));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .modalhead{position:sticky;top:0;z-index:3}.save{transition:transform .16s ease,box-shadow .16s ease}.save:active{transform:scale(.98)}
 @media(max-width:799px){.quickPrompts{padding:0 2px}.quickPrompts button{font-size:10px;padding:8px 10px}.empty>div{border-radius:28px}.headAvatar:after{width:6px;height:6px}}
+
+/* v3.8: message timestamps live outside the bubbles, with a chat-like layout. */
+.message{align-items:flex-end;gap:7px}
+.message .msgavatar{align-self:flex-end;margin-top:0;margin-bottom:1px}
+.message .bubble{flex:0 1 auto}
+.message .msgTime{flex:none;align-self:flex-end;margin:0 1px 5px;color:var(--muted);font-size:9px;line-height:1;letter-spacing:.01em;opacity:.72;white-space:nowrap}
+.message.user .msgTime{order:0;text-align:left}
+.message.user .bubble{order:1}
+.message.user .msgavatar{order:2}
+.message.assistant .msgavatar{order:0}
+.message.assistant .bubble{order:1}
+.message.assistant .msgTime{order:2;text-align:left}
+
+/* The old in-bubble cursor is intentionally gone; the status now lives in the header. */
+.bubble.streaming:after{display:none!important}
+.typingStatus{display:inline-flex;align-items:center;gap:2px;color:var(--accent);font-weight:650;letter-spacing:.01em;animation:typingFade 1.4s ease-in-out infinite}
+.typingDots{display:inline-flex;gap:2px;margin-left:1px;align-items:center}
+.typingDots i{width:3px;height:3px;border-radius:50%;background:currentColor;opacity:.35;animation:typingDot 1.15s ease-in-out infinite}
+.typingDots i:nth-child(2){animation-delay:.16s}
+.typingDots i:nth-child(3){animation-delay:.32s}
+@keyframes typingFade{0%,100%{opacity:.68}50%{opacity:1}}
+@keyframes typingDot{0%,70%,100%{transform:translateY(0);opacity:.28}35%{transform:translateY(-2px);opacity:1}}
+body.no-motion .typingStatus,body.no-motion .typingDots i{animation:none}
+
+.head small{min-height:14px;display:flex;align-items:center;justify-content:center;gap:3px}
+#modelStatus{display:inline-flex;align-items:center;min-width:0}
+#headerTime{font-style:normal}
+@media(max-width:799px){
+  .message .msgTime{font-size:8px;margin-bottom:5px}
+  .message{gap:6px}
+  .head small{font-size:9px}
+}
+
+/* v3.9 Settings — iOS-inspired grouped sheet */
+.settingsShell{display:flex;flex-direction:column;max-height:88vh;background:var(--card)}
+.settingsTopbar{min-height:66px;padding:10px 14px 9px;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;border-bottom:1px solid color-mix(in srgb,var(--line) 72%,transparent);background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:blur(18px);position:sticky;top:0;z-index:5}
+.settingsTopTitle{text-align:center;min-width:0}.settingsTopTitle b{display:block;font-size:18px;letter-spacing:-.2px}.settingsTopTitle small{display:block;margin-top:2px;font-size:10px;color:var(--muted)}
+.settingsBack{width:40px;height:40px;border:0;border-radius:13px;background:transparent;font-size:31px;line-height:1;color:var(--ink);display:grid;place-items:center;justify-self:start}.settingsBack:not(.hidden){display:grid}.settingsBack:hover{background:var(--soft)}
+.settingsPages{overflow:auto;max-height:calc(88vh - 124px);padding:18px 17px 22px}.settingsPage{animation:settingsIn .18s ease}.settingsPage.hidden{display:none}@keyframes settingsIn{from{opacity:.5;transform:translateX(8px)}to{opacity:1;transform:none}}
+.settingsProfileCard{display:flex;align-items:center;gap:12px;padding:14px 15px;border:1px solid color-mix(in srgb,var(--line) 65%,transparent);border-radius:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--soft) 66%,transparent),color-mix(in srgb,var(--card) 92%,transparent));box-shadow:0 10px 28px color-mix(in srgb,var(--ink) 5%,transparent);margin-bottom:23px}
+.settingsProfileAvatar{width:54px;height:54px;border-radius:17px;overflow:hidden;display:grid;place-items:center;background:var(--soft);font-size:20px;font-weight:700;flex:none}.settingsProfileAvatar img{width:100%;height:100%;object-fit:cover}.settingsProfileInfo{min-width:0;flex:1}.settingsProfileInfo b{display:block;font-size:16px}.settingsProfileInfo small{display:block;margin-top:3px;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settingsOnline{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px}.settingsOnline i{width:7px;height:7px;border-radius:50%;background:#79ad82;box-shadow:0 0 0 4px color-mix(in srgb,#79ad82 13%,transparent)}
+.settingsSectionTitle{font-size:13px;font-weight:750;color:var(--muted);margin:18px 0 8px 7px;letter-spacing:.2px}.settingsSectionTitle:first-child{margin-top:0}
+.settingsGroup{overflow:hidden;border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:17px;background:color-mix(in srgb,var(--soft) 43%,var(--card));box-shadow:0 5px 18px color-mix(in srgb,var(--ink) 3%,transparent)}
+.settingsRow{width:100%;min-height:67px;padding:10px 13px;display:grid;grid-template-columns:34px 1fr auto 18px;gap:9px;align-items:center;text-align:left;background:transparent;border:0;color:var(--ink);position:relative}.settingsRow+.settingsRow{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}.settingsRow:active,.settingsAction:active{background:color-mix(in srgb,var(--soft) 65%,transparent)}
+.settingsRow .rowIcon{width:31px;height:31px;border-radius:10px;background:var(--card);display:grid;place-items:center;font-size:14px;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--line) 55%,transparent);color:var(--accent)}.settingsRow span:nth-child(2){min-width:0}.settingsRow b{display:block;font-size:14px}.settingsRow small{display:block;margin-top:3px;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settingsRow em{font-style:normal;color:var(--muted);font-size:25px;font-weight:300}.settingsRow strong{font-size:11px;font-weight:600;color:var(--muted);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settingsAbout{text-align:center;padding:28px 0 8px;color:var(--muted)}.settingsAbout b{display:block;color:var(--ink);font-size:12px}.settingsAbout small{font-size:9px;display:block;margin-top:4px}
+.subIntro{padding:2px 5px 12px}.subIntro b{font-size:20px;display:block}.subIntro small{display:block;margin-top:5px;font-size:11px;line-height:1.5;color:var(--muted)}
+.settingsFormGroup{padding:0}.settingsField{display:block;padding:13px 14px}.settingsField+.settingsField{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}.settingsField>span{display:block;font-size:11px;color:var(--muted);margin-bottom:7px;font-weight:650}.settingsField input,.settingsField textarea,.settingsField select{box-sizing:border-box;width:100%;border:0;border-radius:11px;background:var(--card);padding:10px 11px;color:var(--ink);font-size:13px;outline:0}.settingsField textarea{resize:vertical;line-height:1.55;min-height:100px}.settingsField input:focus,.settingsField textarea:focus,.settingsField select:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 9%,transparent)}
+.passwordField{display:flex;align-items:center;gap:7px}.passwordField input{flex:1}.passwordField button{border:0;background:var(--soft);color:var(--muted);border-radius:9px;padding:7px 9px;font-size:10px}
+.inlineActions{display:flex;gap:8px;padding:0 14px 13px}.smallAction{border:0;background:var(--accent);color:var(--accent2);padding:10px 13px;border-radius:11px;font-size:11px;font-weight:650}.smallAction.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}.smallAction.full{width:100%}.dangerAction{background:color-mix(in srgb,#a95b52 10%,var(--card));color:#a95b52}
+.visualGroup{padding:12px}.visualGroup .themeGrid,.visualGroup .bgGrid{padding:0}.visualGroup .rangeLabel{margin-top:12px}.visualGroup>.bubbleGrid{padding:0}.visualGroup>.smallAction{margin-top:10px}.themeGrid{grid-template-columns:repeat(2,1fr);gap:9px}.themeChoice{height:72px;border-radius:15px}.themeChoice span{font-size:10px}.bgGrid{grid-template-columns:repeat(3,1fr);gap:8px}.bgChoice{height:58px;border-radius:13px}
+.avatarGroup{padding:14px;display:flex;align-items:center;gap:14px}.largePreview{width:72px;height:72px;border-radius:21px;display:grid;place-items:center;overflow:hidden;background:var(--soft);font-weight:700;font-size:22px;flex:none}.largePreview img{width:100%;height:100%;object-fit:cover}.avatarButtons{display:flex;flex-wrap:wrap;gap:7px}.switchRow{display:flex;align-items:center;justify-content:space-between;padding:13px 2px 2px;font-size:11px;color:var(--ink)}.switchRow input{display:none}.switchRow i{width:42px;height:25px;border-radius:99px;background:var(--line);position:relative;transition:.2s}.switchRow i:after{content:"";position:absolute;width:21px;height:21px;left:2px;top:2px;border-radius:50%;background:white;box-shadow:0 1px 4px rgba(0,0,0,.18);transition:.2s}.switchRow input:checked+i{background:var(--accent)}.switchRow input:checked+i:after{transform:translateX(17px)}
+.settingsActionGroup{padding:0}.settingsAction{width:100%;display:flex;align-items:center;justify-content:space-between;border:0;background:transparent;color:var(--ink);padding:15px 15px;text-align:left;font-size:12px}.settingsAction+.settingsAction{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}.settingsAction em{font-style:normal;color:var(--muted);font-size:23px}.settingsAction.danger{color:#a95b52}.settingsNote{font-size:10px;color:var(--muted);line-height:1.5;margin:12px 5px 0}
+.settingsFooter{padding:10px 17px max(13px,env(safe-area-inset-bottom));background:color-mix(in srgb,var(--card) 88%,transparent);border-top:1px solid color-mix(in srgb,var(--line) 65%,transparent);backdrop-filter:blur(18px)}.settingsFooter .save{box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 15%,transparent)}
+@media(max-width:799px){dialog#settings{width:calc(100vw - 0px);max-width:none;height:min(92vh,760px);max-height:none;margin:auto;border-radius:26px 26px 0 0}.settingsShell{max-height:92vh}.settingsPages{max-height:calc(92vh - 124px);padding:16px 14px 22px}.settingsTopbar{min-height:62px}.settingsProfileCard{border-radius:19px}.settingsRow{min-height:64px}.settingsSectionTitle{margin-top:20px}}
