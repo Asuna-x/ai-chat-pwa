@@ -34,41 +34,52 @@ function renderBubbleStyles(){$("#animations").onchange=()=>{state.settings.anim
 function renderTopAvatar(){const mode=state.settings.topAvatar||"user";document.querySelectorAll("#topAvatarGrid [data-top-avatar]").forEach(b=>b.classList.toggle("active",b.dataset.topAvatar===mode))}
 function renderAvatarPreviews(){$("#userAvatarPreview").innerHTML=avatarHTML("user");$("#aiAvatarPreview").innerHTML=avatarHTML("ai")}
 function showErr(t){const e=$("#error");e.textContent=t;e.classList.remove("hidden");clearTimeout(showErr.t);showErr.t=setTimeout(()=>e.classList.add("hidden"),7000)}
-function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}function base(u){return u.trim().replace(/\/+$/,"",).replace(/\/chat\/completions$/i,"")}
+function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}
+function base(u){return String(u||"").trim().replace(/\/+$/,"" ).replace(/\/chat\/completions$/i,"")}
+function finishBusy(){state.busy=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading")}updateTyping();save()}
+function apiHint(){const api=String(state.settings.apiBase||"").trim();if(!api)return"未设置 Base URL";try{const u=new URL(api);return u.origin+u.pathname.replace(/\/+$/,"" )+"/chat/completions"}catch{return"Base URL 格式不正确"}}
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
  if(!text)return;
  const api=String(state.settings.apiBase||"").trim(),key=String(state.settings.apiKey||"").trim(),model=String(state.settings.model||"").trim();
- if(!api||!key||!model){showErr("还没有完成 API 设置：请打开右上角设置，检查 Base URL、API Key 和模型。");settings();return}
+ if(!api||!key||!model){showErr("还没有完成 API 设置：请打开设置，检查 Base URL、API Key 和模型。");settings();return}
  let url;
- try{url=base(api)+"/chat/completions";new URL(url)}catch{showErr("API Base URL 格式不正确，请检查地址。" );settings();return}
+ try{url=base(api)+"/chat/completions";new URL(url)}catch{showErr("API Base URL 格式不正确，请检查地址。");settings();return}
  ensure();const c=chat();
  c.messages.push({role:"user",content:text,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
  i.value="";resize();save();
- state.busy=true;$("#send").disabled=true;$("#send").classList.add("loading");
+ state.busy=true;const sendBtn=$("#send");sendBtn.disabled=true;sendBtn.classList.add("loading");updateTyping();
  try{render()}catch(err){console.error("render before request failed",err)}
  const controller=new AbortController();state._abort=controller;
- const timeout=setTimeout(()=>controller.abort(),45000);
+ const timeout=setTimeout(()=>controller.abort(),20000);
  try{
-  const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);
-  const body={model, messages:ms, temperature:Number(state.settings.temperature??.7), stream:false};
-  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body),signal:controller.signal,cache:"no-store"});
+  const ms=[];
+  if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});
+  ms.push(...c.messages);
+  const temp=Number(state.settings.temperature??.7);
+  const body={model,messages:ms,stream:false};
+  if(Number.isFinite(temp))body.temperature=temp;
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body),signal:controller.signal,cache:"no-store",credentials:"omit"});
   const raw=await r.text();
-  if(!r.ok){let detail=raw;try{const er=JSON.parse(raw);detail=er?.error?.message||er?.message||raw}catch{};throw new Error(`HTTP ${r.status}${detail?": "+String(detail).slice(0,500):""}`)}
+  if(!r.ok){let detail=raw;try{const er=JSON.parse(raw);detail=er?.error?.message||er?.message||raw}catch{};throw new Error(`HTTP ${r.status}${detail?": "+String(detail).slice(0,600):""}`)}
   let o;try{o=JSON.parse(raw)}catch{throw new Error("API 返回的不是 JSON。请检查 Base URL 是否为兼容 OpenAI Chat Completions 的接口。")}
-  let ans=o.choices?.[0]?.message?.content??o.choices?.[0]?.text;
+  let ans=o?.choices?.[0]?.message?.content??o?.choices?.[0]?.text;
   if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||x?.content||"")).join("");
-  if(typeof ans!=="string"||!ans.trim())throw new Error("API 已连接，但没有返回文字内容。请检查模型名称和接口兼容性。");
+  if(ans&&typeof ans!=="string")ans=String(ans);
+  if(typeof ans!=="string"||!ans.trim())throw new Error("API 已连接，但没有返回文字内容。请检查模型名称和接口兼容性。\n返回："+JSON.stringify(o).slice(0,300));
   c.messages.push({role:"assistant",content:ans,timestamp:Date.now()});save();
  }catch(e){
-  if(e?.name==="AbortError")showErr("请求超过 45 秒仍没有返回。请检查网络、API Base URL、模型和余额。" );
-  else if(e instanceof TypeError)showErr("无法连接 API。常见原因是 Base URL 错误、网络问题或接口不允许浏览器跨域请求（CORS）。" );
-  else showErr(e.message||String(e));
+  let msg;
+  if(e?.name==="AbortError")msg="请求超过 20 秒仍没有返回。\n请检查 Base URL、API Key、模型、余额，以及中转站是否支持浏览器跨域请求。";
+  else if(e instanceof TypeError)msg="无法连接 API。\n常见原因：Base URL 错误、网络问题，或接口禁止 GitHub Pages 浏览器跨域（CORS）。";
+  else msg=e.message||String(e);
+  showErr(msg+"\n请求地址："+apiHint());
  }finally{
   clearTimeout(timeout);if(state._abort===controller)state._abort=null;
-  state.busy=false;$("#send").disabled=false;$("#send").classList.remove("loading");save();try{render()}catch(err){console.error("final render failed",err)}
+  finishBusy();
+  try{render()}catch(err){console.error("final render failed",err);updateTyping()}
  }
 }
 
