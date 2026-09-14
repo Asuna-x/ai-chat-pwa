@@ -53,7 +53,7 @@ async function send(){
  state.busy=true;const sendBtn=$("#send");sendBtn.disabled=true;sendBtn.classList.add("loading");updateTyping();
  try{render()}catch(err){console.error("render before request failed",err)}
  const controller=new AbortController();state._abort=controller;
- const timeout=setTimeout(()=>controller.abort(),20000);
+ const timeout=setTimeout(()=>controller.abort(),60000);
  try{
   const ms=[];
   if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});
@@ -61,7 +61,7 @@ async function send(){
   const temp=Number(state.settings.temperature??.7);
   const body={model,messages:ms,stream:false};
   if(Number.isFinite(temp))body.temperature=temp;
-  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body),signal:controller.signal,cache:"no-store",credentials:"omit"});
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body),signal:controller.signal,cache:"no-store"});
   const raw=await r.text();
   if(!r.ok){let detail=raw;try{const er=JSON.parse(raw);detail=er?.error?.message||er?.message||raw}catch{};throw new Error(`HTTP ${r.status}${detail?": "+String(detail).slice(0,600):""}`)}
   let o;try{o=JSON.parse(raw)}catch{throw new Error("API 返回的不是 JSON。请检查 Base URL 是否为兼容 OpenAI Chat Completions 的接口。")}
@@ -72,7 +72,7 @@ async function send(){
   c.messages.push({role:"assistant",content:ans,timestamp:Date.now()});save();
  }catch(e){
   let msg;
-  if(e?.name==="AbortError")msg="请求超过 20 秒仍没有返回。\n请检查 Base URL、API Key、模型、余额，以及中转站是否支持浏览器跨域请求。";
+  if(e?.name==="AbortError")msg="请求超过 60 秒仍没有返回。\n请检查 Base URL、API Key、模型、余额，以及中转站是否支持浏览器跨域请求。";
   else if(e instanceof TypeError)msg="无法连接 API。\n常见原因：Base URL 错误、网络问题，或接口禁止 GitHub Pages 浏览器跨域（CORS）。";
   else msg=e.message||String(e);
   showErr(msg+"\n请求地址："+apiHint());
