@@ -42,47 +42,33 @@ async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
  if(!text)return;
- const api=String(state.settings.apiBase||"").trim(),key=String(state.settings.apiKey||"").trim(),model=String(state.settings.model||"").trim();
- if(!api||!key||!model){showErr("还没有完成 API 设置：请打开设置，检查 Base URL、API Key 和模型。");settings();return}
- let url;
- try{url=base(api)+"/chat/completions";new URL(url)}catch{showErr("API Base URL 格式不正确，请检查地址。");settings();return}
+ if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
  ensure();const c=chat();
  c.messages.push({role:"user",content:text,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
- i.value="";resize();save();
+ i.value="";resize();save();render();
  state.busy=true;const sendBtn=$("#send");sendBtn.disabled=true;sendBtn.classList.add("loading");updateTyping();
- try{render()}catch(err){console.error("render before request failed",err)}
  const controller=new AbortController();state._abort=controller;
- const timeout=setTimeout(()=>controller.abort(),60000);
+ const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  try{
-  const ms=[];
-  if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});
-  ms.push(...c.messages);
-  const temp=Number(state.settings.temperature??.7);
-  const body={model,messages:ms,stream:false};
-  if(Number.isFinite(temp))body.temperature=temp;
-  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body),signal:controller.signal,cache:"no-store"});
-  const raw=await r.text();
-  if(!r.ok){let detail=raw;try{const er=JSON.parse(raw);detail=er?.error?.message||er?.message||raw}catch{};throw new Error(`HTTP ${r.status}${detail?": "+String(detail).slice(0,600):""}`)}
-  let o;try{o=JSON.parse(raw)}catch{throw new Error("API 返回的不是 JSON。请检查 Base URL 是否为兼容 OpenAI Chat Completions 的接口。")}
-  let ans=o?.choices?.[0]?.message?.content??o?.choices?.[0]?.text;
-  if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||x?.content||"")).join("");
-  if(ans&&typeof ans!=="string")ans=String(ans);
-  if(typeof ans!=="string"||!ans.trim())throw new Error("API 已连接，但没有返回文字内容。请检查模型名称和接口兼容性。\n返回："+JSON.stringify(o).slice(0,300));
+  const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);
+  const url=base(state.settings.apiBase)+"/chat/completions";
+  const body={model:state.settings.model,messages:ms,temperature:Number(state.settings.temperature??.7),stream:false};
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+state.settings.apiKey},body:JSON.stringify(body),signal:controller.signal});
+  if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
+  const o=await r.json();
+  let ans=o.choices?.[0]?.message?.content;
+  if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
+  if(typeof ans!=="string"||!ans.trim())throw new Error("API 没有返回文字内容，请检查模型、API Key 和 Base URL。");
   c.messages.push({role:"assistant",content:ans,timestamp:Date.now()});save();
  }catch(e){
-  let msg;
-  if(e?.name==="AbortError")msg="请求超过 60 秒仍没有返回。\n请检查 Base URL、API Key、模型、余额，以及中转站是否支持浏览器跨域请求。";
-  else if(e instanceof TypeError)msg="无法连接 API。\n常见原因：Base URL 错误、网络问题，或接口禁止 GitHub Pages 浏览器跨域（CORS）。";
-  else msg=e.message||String(e);
-  showErr(msg+"\n请求地址："+apiHint());
+  if(e?.name==="AbortError")showErr("请求等待超过 60 秒。请检查 API Base URL、模型和网络连接。\n请求地址："+base(state.settings.apiBase)+"/chat/completions");
+  else showErr(e.message||String(e));
  }finally{
   clearTimeout(timeout);if(state._abort===controller)state._abort=null;
-  finishBusy();
-  try{render()}catch(err){console.error("final render failed",err);updateTyping()}
+  state.busy=false;sendBtn.disabled=false;sendBtn.classList.remove("loading");updateTyping();save();render();
  }
 }
-
 function chatMenu(id){const c=state.chats.find(x=>x.id===id);if(!c)return;const action=prompt("输入操作：1 重命名  2 删除","");if(action==="1"){const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}else if(action==="2"&&confirm("确定删除这个对话吗？")){state.chats=state.chats.filter(x=>x.id!==id);if(state.current===id)state.current=state.chats[0]?.id||null;ensure();save();render()}}
 function renameCurrent(){const c=chat();if(!c)return;const n=prompt("新的对话名称",c.title||"新对话");if(n?.trim()){c.title=n.trim().slice(0,40);save();render()}}
 function exportChat(){const c=chat();if(!c)return;const text=[`# ${c.title||"新对话"}`,"",...c.messages.map(m=>`${m.role==="user"?"你":"G"}：\n${m.content}\n`)].join("\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(c.title||"chat")+".txt";a.click();URL.revokeObjectURL(url)}
