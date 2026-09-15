@@ -1,4 +1,4 @@
-/* Iris v4.41 */
+/* Iris v4.42 — nest bottom navigation stays visible; anniversary background upload fixed; moods split into user/G. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
 const $=s=>document.querySelector(s);const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const themes={cream:{name:"奶油米",bg:"#f6f2ec",card:"#fffdf9",ink:"#282522",muted:"#9a948c",line:"#e8e0d6",soft:"#eee8df",user:"#ded5c8",accent:"#2d2925",accent2:"#fff"},blue:{name:"雾蓝",bg:"#eef3f6",card:"#fbfdff",ink:"#263039",muted:"#8c98a1",line:"#dce5ea",soft:"#e5edf1",user:"#d8e5eb",accent:"#355565",accent2:"#fff"},lavender:{name:"雾紫",bg:"#f2eff6",card:"#fcfaff",ink:"#302b36",muted:"#9b93a5",line:"#e3ddea",soft:"#ebe5f0",user:"#e3d9e9",accent:"#554563",accent2:"#fff"},pink:{name:"柔粉",bg:"#f8eff1",card:"#fffafb",ink:"#35292c",muted:"#a18f94",line:"#eadcdf",soft:"#f0e4e7",user:"#ecd8dd",accent:"#65434d",accent2:"#fff"},green:{name:"鼠尾草",bg:"#eff3ee",card:"#fbfdfb",ink:"#29302b",muted:"#909b92",line:"#dce4dd",soft:"#e4ebe5",user:"#d9e4db",accent:"#3e5645",accent2:"#fff"},night:{name:"深夜",bg:"#17191b",card:"#222528",ink:"#f0efeb",muted:"#9ca2a6",line:"#34393d",soft:"#2d3337",user:"#344049",accent:"#f0efeb",accent2:"#17191b"}};
@@ -17,12 +17,12 @@ function nestDays(){const p=nestDateParts();if(!p)return null;const now=new Date
 function nestDaysText(){const d=nestDays();if(d===null)return"还没有设置纪念日";return d===0?"就是今天":`还有 ${d} 天`}
 function nestTodayText(){const d=new Date();return d.toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"long"})}
 function updateNestClock(){const n=$("#nestNow"),big=$("#nestClockBig");const d=new Date();if(n)n.textContent=nestTodayText();if(big)big.textContent=d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false});const c=$("#nestCountdown"),cb=$("#nestCountdownBig");if(c)c.textContent=nestDaysText();if(cb){const days=nestDays();cb.textContent=days===null?"—":String(days)}const lab=$("#nestAnniversaryLabel");if(lab)lab.textContent=nestData.anniversaryName||nestData.anniversary||"还没有设置纪念日";const bigLab=$("#nestAnniversaryBigLabel");if(bigLab)bigLab.textContent=nestData.anniversaryName||"我们的纪念日"}
-function applyNestBackground(){const app=$("#nestApp");const preview=$("#nestBackgroundPreview");if(!app)return;app.style.setProperty("--nest-bg-image",nestData.background?`url(${nestData.background})`:"none");if(preview)preview.style.backgroundImage=nestData.background?`url(${nestData.background})`:"linear-gradient(135deg,#f5e9dc,#fffaf3)";const page=$("#nestAnniversaryPage");if(page)page.style.setProperty("--anniversary-bg-image",nestData.anniversaryBackground?`url(${nestData.anniversaryBackground})`:"none");const ap=$("#nestAnniversaryPreview");if(ap)ap.style.backgroundImage=nestData.anniversaryBackground?`url(${nestData.anniversaryBackground})`:"linear-gradient(135deg,#f5e9dc,#fffaf3)"}
-function renderNestHome(){const mood=$("#nestMoodShow"),toG=$("#nestToGShow"),note=$("#nestNoteShow");if(mood)mood.textContent=nestData.mood||"今天感觉怎么样？";if(toG)toG.textContent=nestData.toG||"写点什么留在这里。";if(note)note.textContent=nestData.note||"今天有什么想留下来？";updateNestClock();applyNestBackground()}
-function showNestView(view="home"){document.querySelectorAll("#nest .nestPage").forEach(x=>x.classList.add("hidden"));const id=view==="home"?"nestHome":view==="note"?"nestNotePage":view==="anniversary"?"nestAnniversaryPage":"nestSettingsPage";$("#"+id)?.classList.remove("hidden");document.querySelectorAll("#nest .nestBottomNav button").forEach(b=>b.classList.toggle("active",b.dataset.nestView===view));if(view==="note"){$("#nestNote").value=nestData.note||"";$("#nestNoteDate").textContent=nestTodayText()}if(view==="anniversary"){ensureNestControls();$("#nestAnniversary").value=nestData.anniversary||"";$("#nestAnniversaryName").value=nestData.anniversaryName||"";applyNestBackground();updateNestClock()}if(view==="settings"){ensureNestControls();$("#nestMood").value=nestData.mood||"";$("#nestToG").value=nestData.toG||"";applyNestBackground()}}
+function applyNestBackground(){const app=$("#nestApp");const preview=$("#nestBackgroundPreview");if(!app)return;app.style.setProperty("--nest-bg-image",nestData.background?`url(${nestData.background})`:"none");if(preview)preview.style.backgroundImage=nestData.background?`url(${nestData.background})`:"linear-gradient(135deg,#f5e9dc,#fffaf3)";const page=$("#nestAnniversaryPage");if(page){const bg=nestData.anniversaryBackground?`url(${nestData.anniversaryBackground})`:"none";page.style.setProperty("--anniversary-bg-image",bg);page.style.backgroundImage=bg;}const ap=$("#nestAnniversaryPreview");if(ap)ap.style.backgroundImage=nestData.anniversaryBackground?`url(${nestData.anniversaryBackground})`:"linear-gradient(135deg,#f5e9dc,#fffaf3)"}
+function renderNestHome(){const mood=$("#nestMoodShow"),aiMood=$("#nestAiMoodShow"),toG=$("#nestToGShow"),note=$("#nestNoteShow");if(mood)mood.textContent=nestData.mood||"今天感觉怎么样？";if(aiMood)aiMood.textContent=nestData.aiMood||"今天的我想留下一句话。";if(toG)toG.textContent=nestData.toG||"写点什么留在这里。";if(note)note.textContent=nestData.note||"今天有什么想留下来？";updateNestClock();applyNestBackground()}
+function showNestView(view="home"){document.querySelectorAll("#nest .nestPage").forEach(x=>x.classList.add("hidden"));const id=view==="home"?"nestHome":view==="note"?"nestNotePage":view==="anniversary"?"nestAnniversaryPage":"nestSettingsPage";$("#"+id)?.classList.remove("hidden");document.querySelectorAll("#nest .nestBottomNav button").forEach(b=>b.classList.toggle("active",b.dataset.nestView===view));if(view==="note"){$("#nestNote").value=nestData.note||"";$("#nestNoteDate").textContent=nestTodayText()}if(view==="anniversary"){ensureNestControls();$("#nestAnniversary").value=nestData.anniversary||"";$("#nestAnniversaryName").value=nestData.anniversaryName||"";applyNestBackground();updateNestClock()}if(view==="settings"){ensureNestControls();$("#nestMood").value=nestData.mood||"";$("#nestAiMood").value=nestData.aiMood||"";$("#nestToG").value=nestData.toG||"";applyNestBackground()}}
 function openNest(){nestData=loadNest();ensureNestControls();renderNestHome();showNestView("home");clearInterval(nestClockTimer);nestClockTimer=setInterval(updateNestClock,30000);$("#nest").showModal()}
 function closeNest(){clearInterval(nestClockTimer);nestClockTimer=null;const d=$("#nest");if(d?.open)d.close()}
-function saveNest(){ensureNestControls();nestData.mood=$("#nestMood").value.trim();nestData.toG=$("#nestToG").value.trim();nestData.note=$("#nestNote").value.trim();nestData.anniversary=$("#nestAnniversary").value||"";nestData.anniversaryName=$("#nestAnniversaryName")?.value.trim()||"";nestData.updatedAt=Date.now();saveNestData();renderNestHome()}
+function saveNest(){ensureNestControls();nestData.mood=$("#nestMood").value.trim();nestData.aiMood=$("#nestAiMood").value.trim();nestData.toG=$("#nestToG").value.trim();nestData.note=$("#nestNote").value.trim();nestData.anniversary=$("#nestAnniversary").value||"";nestData.anniversaryName=$("#nestAnniversaryName")?.value.trim()||"";nestData.updatedAt=Date.now();saveNestData();renderNestHome()}
 
 function ensureNestControls(){
  const annPage=$("#nestAnniversaryPage"),annInput=$("#nestAnniversary");
@@ -36,16 +36,11 @@ function ensureNestControls(){
   const box=document.createElement("div");box.className="nestAnniversaryBgBox";box.innerHTML='<div class="nestSettingTitle">纪念日背景</div><div class="nestBackgroundRow"><div id="nestAnniversaryPreview" class="nestBackgroundPreview"></div><div><b>专属背景</b><small>只用于纪念日页面，不影响小窝主背景。</small></div><button id="nestAnniversaryBgPick" type="button">选择</button></div><input id="nestAnniversaryBgFile" type="file" accept="image/*" hidden><button id="nestAnniversaryBgClear" class="nestClearBg" type="button">恢复默认背景</button>';
   annPage.querySelector(".nestSubBody")?.appendChild(box);
   $("#nestAnniversaryBgPick").onclick=()=>$("#nestAnniversaryBgFile").click();
-  $("#nestAnniversaryBgFile").onchange=async()=>{const f=$("#nestAnniversaryBgFile").files?.[0];if(!f)return;try{nestData.anniversaryBackground=await imageToData(f,1400,.78);saveNestData();applyNestBackground()}catch{showErr("纪念日背景图片处理失败。")}};
+  $("#nestAnniversaryBgFile").onchange=async()=>{const f=$("#nestAnniversaryBgFile").files?.[0];if(!f)return;try{nestData.anniversaryBackground=await imageToData(f,900,.72);saveNestData();applyNestBackground();$("#nestAnniversaryBgFile").value=""}catch{showErr("纪念日背景图片处理失败。")}};
   $("#nestAnniversaryBgClear").onclick=()=>{nestData.anniversaryBackground="";saveNestData();applyNestBackground()};
  }
- const settingsPage=$("#nestSettingsPage"),mood=$("#nestMood");
- if(settingsPage&&mood&&!$("#nestAiMoodWrite")){
-  const field=mood.closest(".nestField")||mood.parentElement;
-  if(field){
-   const b=document.createElement("button");b.id="nestAiMoodWrite";b.type="button";b.className="nestAiMoodBtn";b.textContent="让 G 写今天的心情";b.onclick=writeNestMoodWithAI;field.appendChild(b);
-  }
- }
+ const settingsPage=$("#nestSettingsPage"),mood=$("#nestMood"),aiMood=$("#nestAiMood");
+ if(settingsPage&&mood&&aiMood){aiMood.value=nestData.aiMood||""}
  applyNestBackground();
 }
 async function writeNestMoodWithAI(){
@@ -54,13 +49,12 @@ async function writeNestMoodWithAI(){
  const recent=compactMessagesForModel(c?.messages||[]).slice(-16).map(m=>(m.role==="user"?"用户":"G")+"："+m.content).join("\n");
  const ui=chatInterfaceContext(c);
  const prompt=`请替用户写一条“今日心情”，放进他的小窝里。它不是总结，而是一段自然、像本人随手写下来的小短句。可以带 1-3 个 emoji，让情绪有一点温度，但不要堆 emoji。结合最近聊天的真实内容和当前界面状态，只使用能确定的信息，不要编造。控制在 30-90 个中文字符。只输出正文。\n\n${ui}\n\n最近聊天：\n${recent}`;
- const btn=$("#nestAiMoodWrite");if(btn){btn.disabled=true;btn.textContent="G 正在写…"}
  try{
   const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:"你是一个熟悉用户长期聊天背景的私人 AI。写作自然、简洁、有一点生活气息。"},{role:"user",content:prompt}],temperature:.75});
   const mood=String(result.answer||"").trim().replace(/^```[\s\S]*?```$/g,"").trim();
-  if(mood){nestData.mood=mood;saveNestData();$("#nestMood").value=mood;renderNestHome();}
+  if(mood){nestData.aiMood=mood;saveNestData();$("#nestAiMood").value=mood;renderNestHome();}
  }catch(e){showErr(e.message||"今日心情生成失败")}
- finally{if(btn){btn.disabled=false;btn.textContent="让 G 写今天的心情"}}
+ finally{}
 }
 function chatInterfaceContext(c){
  const t=themes[state.settings.theme]||themes.cream;
@@ -228,7 +222,8 @@ function nestContext(){
  const parts=[];
  parts.push("用户的‘小窝’是一个与聊天相连的私人空间。你可以理解其中的内容，并在聊天时自然参考，但不要擅自编造或修改里面的信息。");
  parts.push("小窝目前提供这些功能：查看今天日期与当前时间、纪念日倒计时、记录今天的心情、留给 G 的话、每日笔记，以及用户自定义的小窝背景。");
- if(n.mood)parts.push("今天的心情："+n.mood);
+ if(n.mood)parts.push("用户今天的心情："+n.mood);
+ if(n.aiMood)parts.push("G 今天留在小窝的心情："+n.aiMood);
  if(n.toG)parts.push("用户留在小窝给 G 的话："+n.toG);
  if(n.note)parts.push("小窝笔记："+n.note);
  if(n.anniversary)parts.push("纪念日："+n.anniversary+"（倒计时信息以小窝当前显示为准）");
@@ -309,13 +304,13 @@ async function maybeWriteNestFromChat(userText,c,fullAnswer){
  else if(/心情/.test(text))target='mood';
  const n=loadNest();
  const recent=compactMessagesForModel(c.messages||[]).slice(-20).map(m=>(m.role==='user'?'用户':'G')+'：'+String(m.content||'')).join('\n');
- const targetGuide=target==='mood'?'写入“小窝 → 今日心情”，这是 G 此刻想留下的一小段心情；用第一人称。':target==='note'?'写入“小窝 → 今日笔记”，像共同生活空间里留下的一条自然记录。':'写入“小窝 → 留给 G 的话”，但内容应当是 G 想对用户留下的话，用第一人称写。';
+ const targetGuide=target==='mood'?'写入“小窝 → G 的今日心情”，这是 G 此刻想留下的一小段心情；用第一人称。':target==='note'?'写入“小窝 → 今日笔记”，像共同生活空间里留下的一条自然记录。':'写入“小窝 → 留给 G 的话”，但内容应当是 G 想对用户留下的话，用第一人称写。';
  const prompt=`用户在正常聊天中要求你进入你们共同的“小窝”留下内容。你现在可以直接写进去，不需要用户打开小窝，也不要把内部操作过程说出来。\n\n${targetGuide}\n要求：自然、像真实相处中的随手留下；结合最近聊天；只使用确定的信息；不要总结成报告；不要提及“AI”“系统”“API”等内部词。可以有 1-3 个合适的 emoji，但不要堆。控制在 30-100 个中文字符。只输出最终要写入小窝的正文。\n\n当前小窝已有内容：\n今日心情：${n.mood||'空'}\n留给 G 的话：${n.toG||'空'}\n今日笔记：${n.note||'空'}\n\n最近聊天：\n${recent}\n\n刚才用户说：${text}\n\n你刚才对用户的回复：\n${String(fullAnswer||'').slice(-1600)}`;
  try{
   const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:'system',content:'你是这间共同小窝的另一位主人。用户允许你在被要求时直接进入小窝写下内容。'},{role:'user',content:prompt}],temperature:.72});
   const value=String(result.answer||'').trim().replace(/^```[\s\S]*?```$/g,'').trim();
   if(!value)return;
-  if(target==='mood')nestData.mood=value;
+  if(target==='mood')nestData.aiMood=value;
   else if(target==='note')nestData.note=value;
   else nestData.toG=value;
   nestData.updatedAt=Date.now();
