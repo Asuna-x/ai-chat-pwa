@@ -4,7 +4,7 @@
 <link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>G Chat</title><link rel="stylesheet" href="./style.css"><script>/* v4.33: remove legacy service workers/caches so stale JS cannot survive updates. */
 (async()=>{try{if("serviceWorker"in navigator){const rs=await navigator.serviceWorker.getRegistrations();for(const r of rs)await r.unregister()}if(window.caches){const ks=await caches.keys();for(const k of ks)await caches.delete(k)}}catch(e){console.warn("SW cleanup",e)}})();</script><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script></head>
 <body><div class="app" id="app"><aside id="drawer" class="drawer"><div class="drawer-top"><div class="brand"><div class="brand-mark" id="brandAvatar">G</div><div><b>G Chat</b><small>私人 AI 對話</small></div></div><button class="round" id="closeDrawer">×</button></div>
-<button class="new" id="newChat">＋ 新對話</button><div id="chatSelectBar" class="chatSelectBar hidden"><div><b id="selectedChatCount">已选择 0 个</b></div><button id="cancelChatSelect">取消</button><button id="renameSelected">重命名</button><button id="deleteSelected" class="danger">删除</button></div><div class="section">對話 <span id="chatCount"></span></div><div id="chatList" class="list"></div><div class="bottom"><button id="openSettings">设置</button><small>聊天记录与个性化资料只保存在这台装置</small></div></aside>
+<button class="new" id="newChat">＋ 新對話</button><div class="section">對話 <span id="chatCount"></span></div><div id="chatList" class="list"></div><div class="bottom"><button id="openSettings">设置</button><small>聊天记录与个性化资料只保存在这台装置</small></div></aside>
 <main class="main"><header><button class="round" id="openDrawer">☰</button><button class="head profileHead" id="openProfile"><span class="headAvatar" id="headAvatar">G</span><span class="headText"><b id="title">新对话</b><small><i class="onlineDot" id="headerStatusDot"></i><span id="modelStatus"><span id="modelName">未設定模型</span><em id="headerTime"></em></span><span id="typingStatus" class="typingStatus hidden">正在输入中<span class="typingDots"><i></i><i></i><i></i></span></span></small></span></button><button class="round" id="headerSettings">⚙</button></header>
 <section id="messages" class="messages"></section><div id="error" class="error hidden"></div><footer><div class="composer"><button class="pageView" id="pageView" title="让 G 看当前页面">▣</button><button class="mic" id="mic" title="语音输入">◉</button><div class="composerInner"><textarea id="input" rows="1" placeholder="和 AI 说点什么…"></textarea><span class="composerGlow"></span></div><button class="send" id="send">↑</button></div><div class="hint">Enter 送出　·　Shift + Enter 换行</div></footer></main></div><div id="chatItemMenu" class="chatItemMenu hidden"><button type="button" id="chatMenuRename">重命名</button><button type="button" id="chatMenuDelete" class="danger">删除</button></div><div id="shade" class="shade hidden"></div>
 <dialog id="settings">
@@ -43,7 +43,7 @@
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>G Chat</b><small>Version 4.38 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>G Chat</b><small>Version 4.39 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -129,7 +129,7 @@
       <div class="settingsSectionTitle">G 的头像</div>
       <div class="settingsGroup avatarGroup"><div class="largePreview aiPreview" id="aiAvatarPreview">G</div><div class="avatarButtons"><button class="smallAction" id="uploadAiAvatar">上传头像</button><button class="smallAction ghost" id="clearAiAvatar">恢复默认</button><input id="aiAvatarFile" type="file" accept="image/*" hidden></div></div>
       <div class="settingsSectionTitle">顶部显示</div>
-      <div class="settingsGroup visualGroup"><div class="bubbleGrid topAvatarGrid" id="topAvatarGrid"><button data-top-avatar="user">我的头像</button><button data-top-avatar="ai">G 头像</button><button data-top-avatar="none">不显示</button></div></div>
+      <div class="settingsGroup visualGroup"><div class="bubbleGrid topAvatarGrid" id="topAvatarGrid"><button data-top-avatar="user">显示我的头像</button><button data-top-avatar="ai">显示 G 头像</button><button data-top-avatar="none">隐藏头像</button></div></div>
       <div class="settingsSectionTitle">名字位置</div>
       <div class="settingsGroup settingsFormGroup namePositionGroup">
         <div class="subSettingHint">左右平移名字，正数向右，负数向左。头像位置不会跟着改变。</div>
@@ -141,6 +141,11 @@
 
     <section class="settingsPage subSettingsPage hidden" id="chatPage">
       <div class="subIntro"><b>聊天与数据</b><small>管理当前对话，以及你的本地备份。</small></div>
+      <div class="settingsSectionTitle">数据继承</div>
+      <div class="settingsGroup migrationGroup">
+        <div class="migrationIntro">如果 iPhone 主屏幕版和 Safari 的数据没有自动共用，可以在原来的网页生成一次迁移码，再在主屏幕版导入。聊天、设置、头像和长期记忆都会一起带过去。</div>
+        <div class="migrationActions"><button class="smallAction" id="exportMigration">生成迁移码</button><button class="smallAction ghost" id="importMigration">导入迁移码</button></div>
+      </div>
       <div class="settingsSectionTitle">Token 统计</div>
       <div class="settingsGroup tokenStatsGroup">
         <div class="tokenStat"><small>输入</small><b id="tokenPrompt">0</b><span>tokens</span></div>
@@ -172,4 +177,4 @@
 </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.38"></script><script src="./app.js?v=4.38"></script></body></html>
+<script src="./api.js?v=4.39"></script><script src="./app.js?v=4.39"></script></body></html>
