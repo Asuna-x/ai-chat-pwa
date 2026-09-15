@@ -428,3 +428,35 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .memoryMeta{font-size:9px;letter-spacing:.1px}
 .memoryDelete{font-size:11px;opacity:.72}
 .memoryDelete:active{opacity:.45}
+
+
+/* Iris v4.40 — shared nest polish */
+.nestApp,.nestPage,.nestSubBody,.nestSubFooter{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","PingFang SC","Hiragino Sans GB",sans-serif}
+.nestTop h1,.nestSubTop h2,.nestClockCard strong,.nestBigCountdown strong,.nestMoodValue{font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif}
+.nestTop h1{font-size:26px;letter-spacing:3px;font-weight:600}
+.nestSubTop h2{font-size:18px;letter-spacing:1.5px;font-weight:600}
+.nestClockCard{padding:17px 20px 19px}
+.nestClockCard strong{font-size:36px;letter-spacing:1.5px}
+.nestCard{padding:15px 16px;margin-bottom:9px}
+.nestCardHead{font-size:12px;letter-spacing:.2px}
+.nestMoodValue{margin-top:10px;font-size:19px;line-height:1.55;letter-spacing:.1px}
+.nestTextPreview{margin-top:7px;font-size:12px;line-height:1.7;color:#8b7668}
+.nestAnniversaryCard{padding:14px 15px}
+.nestAnniversaryCard strong{font-size:13px}
+.nestSubTop{padding-top:calc(7px + env(safe-area-inset-top));padding-bottom:7px}
+.nestSubBody{padding-top:19px}
+.nestField{gap:7px;margin-top:17px}
+.nestField span,.nestSettingTitle{font-size:11px;letter-spacing:.2px}
+.nestSubBody textarea,.nestField input,.nestField textarea{border-radius:16px;padding:13px 14px;font-size:14px;line-height:1.7}
+.nestField textarea{min-height:132px}
+.nestSaveBtn{border-radius:14px;padding:12px;font-size:12px}
+.nestSettingGroup{border-radius:19px;padding:14px;margin-bottom:10px}
+.nestBackgroundRow{grid-template-columns:52px 1fr auto;gap:10px}
+.nestBackgroundPreview{width:52px;height:52px;border-radius:15px}
+.nestBackgroundRow b{font-size:12px}.nestBackgroundRow small{font-size:9px;line-height:1.45}
+.nestAnniversaryBgBox{padding:14px;border-radius:18px}
+.nestAnniversaryPage{position:relative;isolation:isolate;background-color:#f7eee4;background-image:var(--anniversary-bg-image);background-size:cover;background-position:center;background-repeat:no-repeat}
+.nestAnniversaryPage:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,250,244,.52),rgba(255,250,244,.70));pointer-events:none;z-index:0}
+.nestAnniversaryPage>*{position:relative;z-index:1}
+.nestAnniversaryPage .nestSubBody,.nestAnniversaryPage .nestSubTop,.nestAnniversaryPage .nestSubFooter{position:relative;z-index:1}
+.nestBottomNav button{font-size:10px;padding:8px 3px}

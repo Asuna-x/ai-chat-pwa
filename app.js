@@ -1,4 +1,4 @@
-/* Iris v4.39 — AI mood writing, full chat UI context, anniversary name/background, layout polish. */
+/* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
 const $=s=>document.querySelector(s);const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const themes={cream:{name:"奶油米",bg:"#f6f2ec",card:"#fffdf9",ink:"#282522",muted:"#9a948c",line:"#e8e0d6",soft:"#eee8df",user:"#ded5c8",accent:"#2d2925",accent2:"#fff"},blue:{name:"雾蓝",bg:"#eef3f6",card:"#fbfdff",ink:"#263039",muted:"#8c98a1",line:"#dce5ea",soft:"#e5edf1",user:"#d8e5eb",accent:"#355565",accent2:"#fff"},lavender:{name:"雾紫",bg:"#f2eff6",card:"#fcfaff",ink:"#302b36",muted:"#9b93a5",line:"#e3ddea",soft:"#ebe5f0",user:"#e3d9e9",accent:"#554563",accent2:"#fff"},pink:{name:"柔粉",bg:"#f8eff1",card:"#fffafb",ink:"#35292c",muted:"#a18f94",line:"#eadcdf",soft:"#f0e4e7",user:"#ecd8dd",accent:"#65434d",accent2:"#fff"},green:{name:"鼠尾草",bg:"#eff3ee",card:"#fbfdfb",ink:"#29302b",muted:"#909b92",line:"#dce4dd",soft:"#e4ebe5",user:"#d9e4db",accent:"#3e5645",accent2:"#fff"},night:{name:"深夜",bg:"#17191b",card:"#222528",ink:"#f0efeb",muted:"#9ca2a6",line:"#34393d",soft:"#2d3337",user:"#344049",accent:"#f0efeb",accent2:"#17191b"}};
 themes.warm={name:"暖白",bg:"#f7f1e8",card:"#fffaf3",ink:"#332b25",muted:"#a09589",line:"#e8ddd0",soft:"#eee3d5",user:"#e6d6c2",accent:"#624c39",accent2:"#fffaf3"};
@@ -296,6 +296,34 @@ async function autoSummarizeChat(c){
  }finally{state.summarizing=false}
 }
 
+async function maybeWriteNestFromChat(userText,c,fullAnswer){
+ const text=String(userText||'').trim();
+ if(!text||!c||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
+ const nestIntent=/(小窝|窝里|窝中|我们的窝|共同小窝)/i.test(text)&&/(写|记|留|放|进去|进来|添加|更新|存|记录)/i.test(text);
+ const moodIntent=/(今日心情|今天的心情|今天心情|心情)/i.test(text)&&/(写|记|留|放|进去|进来|更新|帮我)/i.test(text);
+ if(!nestIntent&&!moodIntent)return;
+ let target='mood';
+ if(/笔记|备忘|记一下|记录一下/.test(text))target='note';
+ else if(/写给我|给我留|给你自己|给用户/.test(text))target='toG';
+ else if(/心情/.test(text))target='mood';
+ const n=loadNest();
+ const recent=compactMessagesForModel(c.messages||[]).slice(-20).map(m=>(m.role==='user'?'用户':'G')+'：'+String(m.content||'')).join('\n');
+ const targetGuide=target==='mood'?'写入“小窝 → 今日心情”，这是 G 此刻想留下的一小段心情；用第一人称。':target==='note'?'写入“小窝 → 今日笔记”，像共同生活空间里留下的一条自然记录。':'写入“小窝 → 留给 G 的话”，但内容应当是 G 想对用户留下的话，用第一人称写。';
+ const prompt=`用户在正常聊天中要求你进入你们共同的“小窝”留下内容。你现在可以直接写进去，不需要用户打开小窝，也不要把内部操作过程说出来。\n\n${targetGuide}\n要求：自然、像真实相处中的随手留下；结合最近聊天；只使用确定的信息；不要总结成报告；不要提及“AI”“系统”“API”等内部词。可以有 1-3 个合适的 emoji，但不要堆。控制在 30-100 个中文字符。只输出最终要写入小窝的正文。\n\n当前小窝已有内容：\n今日心情：${n.mood||'空'}\n留给 G 的话：${n.toG||'空'}\n今日笔记：${n.note||'空'}\n\n最近聊天：\n${recent}\n\n刚才用户说：${text}\n\n你刚才对用户的回复：\n${String(fullAnswer||'').slice(-1600)}`;
+ try{
+  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:'system',content:'你是这间共同小窝的另一位主人。用户允许你在被要求时直接进入小窝写下内容。'},{role:'user',content:prompt}],temperature:.72});
+  const value=String(result.answer||'').trim().replace(/^```[\s\S]*?```$/g,'').trim();
+  if(!value)return;
+  if(target==='mood')nestData.mood=value;
+  else if(target==='note')nestData.note=value;
+  else nestData.toG=value;
+  nestData.updatedAt=Date.now();
+  saveNestData();
+  renderNestHome();
+  if(result.usage){const usage=result.usage,ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;ts.prompt+=up;ts.completion+=uc;ts.total+=ut;ts.requests+=1;state.settings.tokenStats=ts;save();renderTokenStats()}
+ }catch(e){console.warn('nest write failed',e)}
+}
+
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
@@ -360,7 +388,10 @@ async function send(){
   // Do NOT call render() here: rebuilding #messages would recreate every bubble and
   // restart its entrance animation, causing the sentence bubbles to flash/disappear.
   finishBusy();
-  if(completed) autoUpdateLongTermMemory(c);
+  if(completed){
+   autoUpdateLongTermMemory(c);
+   maybeWriteNestFromChat(text,c,fullAnswer);
+  }
  }
 }
 
