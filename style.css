@@ -128,6 +128,7 @@ dialog{border:1px solid color-mix(in srgb,var(--line) 72%,transparent);backgroun
 
 /* v3.5 visual refinement */
 .headText{min-width:0}.headText small{display:flex;align-items:center;justify-content:center;gap:4px}.headText small em{font-style:normal;color:color-mix(in srgb,var(--muted) 72%,transparent);white-space:nowrap}.onlineDot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#72a87a;box-shadow:0 0 0 3px color-mix(in srgb,#72a87a 12%,transparent)}
+.onlineDot.status-busy{background:#d65d57!important;box-shadow:0 0 0 3px color-mix(in srgb,#d65d57 12%,transparent)}.onlineDot.status-away{background:#d3a33f!important;box-shadow:0 0 0 3px color-mix(in srgb,#d3a33f 12%,transparent)}.onlineDot.status-invisible{background:#9da0a5!important;box-shadow:0 0 0 3px color-mix(in srgb,#9da0a5 12%,transparent)}
 .profileHead{display:flex;align-items:center;justify-content:center;gap:9px}.profileHead .headText{max-width:62vw}.profileHead.avatar-hidden .headText{max-width:70vw}
 .msgTime{display:block;margin-top:5px;font-size:9px;line-height:1;color:var(--muted);opacity:.68;letter-spacing:.02em;white-space:nowrap}.user .msgTime{text-align:right}.assistant .msgTime{text-align:left}
 .empty .welcomeKicker{display:inline-block;margin-bottom:8px;padding:5px 9px;border-radius:999px;background:color-mix(in srgb,var(--soft) 72%,transparent);border:1px solid color-mix(in srgb,var(--line) 55%,transparent);color:var(--muted);font-size:10px}
@@ -254,11 +255,11 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .message.user{justify-content:flex-end}
 .message .bubble{flex:0 1 auto;min-width:0;max-width:min(74vw,680px)}
 
-.msgIdentity{width:42px;flex:0 0 42px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;align-self:flex-end;margin:0}
+.msgIdentity{width:42px;flex:0 0 42px;display:flex;flex-direction:column;align-items:center;gap:3px;align-self:flex-end;margin:0;overflow:visible}
 .msgIdentity .msgName{order:0;display:block;width:100%;max-width:76px;font-size:8px;line-height:1.1;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.82}
-.msgIdentity .msgavatar{order:1;width:32px;height:32px;align-self:flex-start;margin:0}
-.message.assistant .msgIdentity{order:0;align-items:flex-start}
-.message.assistant .msgName{text-align:left}
+.msgIdentity .msgavatar{order:1;width:32px;height:32px;align-self:center;margin:0}
+.message.assistant .msgIdentity{order:0;align-items:center}
+.message.assistant .msgName{text-align:center}
 .message.assistant .bubble{order:1}
 .message.assistant .readStatus{order:2}
 .message.assistant .msgTime{order:3}
@@ -266,9 +267,9 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .message.user .msgTime{order:0}
 .message.user .readStatus{order:1}
 .message.user .bubble{order:2}
-.message.user .msgIdentity{order:3;align-items:flex-end}
-.message.user .msgIdentity .msgavatar{align-self:flex-end}
-.message.user .msgName{text-align:right}
+.message.user .msgIdentity{order:3;align-items:center}
+.message.user .msgIdentity .msgavatar{align-self:center}
+.message.user .msgName{text-align:center}
 
 .readStatus{align-self:flex-end;margin:0 1px 5px;color:#68a875;font-size:7px;line-height:1;letter-spacing:.01em;opacity:.9;white-space:nowrap;flex:none}
 .message .msgTime{flex:none;align-self:flex-end;margin:0 1px 5px;color:var(--muted);font-size:9px;line-height:1;letter-spacing:.01em;opacity:.72;white-space:nowrap}
@@ -277,9 +278,9 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
   .message{gap:6px}
   .message.assistant .msgIdentity{margin-left:5px}
   .message.user .msgIdentity{margin-right:5px}
-  .msgIdentity{width:40px;flex-basis:40px}
+  .msgIdentity{width:42px;flex-basis:42px}
   .msgIdentity .msgName{font-size:8px;max-width:68px}
-  .msgIdentity .msgavatar{width:32px;height:32px}
+  .msgIdentity .msgavatar{width:32px;height:32px;align-self:center}
   .readStatus{font-size:7px;margin-bottom:4px}
   .message .msgTime{font-size:8px;margin-bottom:4px}
 }
@@ -303,11 +304,11 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 
 
 /* v4.23 — sentence-by-sentence AI bubbles and editable G status. */
-.msgStatus{display:flex;align-items:center;justify-content:flex-start;gap:3px;font-size:7px;line-height:1;color:var(--muted);white-space:nowrap;opacity:.9;padding-left:1px}
+.msgStatus{display:flex;align-items:center;justify-content:center;gap:3px;font-size:7px;line-height:1;color:var(--muted);white-space:nowrap;opacity:.9;padding-left:1px}
 .msgStatus i,.statusDot{width:5px;height:5px;border-radius:50%;display:inline-block;background:#72a87a;flex:none}
-.msgStatus.busy i,.statusDot.busy{background:#c99655}
-.msgStatus.away i,.statusDot.away{background:#9c958b}
-.msgStatus.invisible i,.statusDot.invisible{background:#aaa}
+.msgStatus.busy i,.statusDot.busy{background:#d65d57}
+.msgStatus.away i,.statusDot.away{background:#d3a33f}
+.msgStatus.invisible i,.statusDot.invisible{background:#9da0a5}
 .statusClickable{cursor:pointer}
 .statusClickable:active{transform:scale(.97)}
 .profileStatusButton{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:7px 11px;font-size:11px;cursor:pointer}
@@ -319,15 +320,3 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .statusOption:active{background:var(--soft)}
 
 /* v4.24 bugfix: restore drawer open/close handlers; no visual layout change. */
-
-
-/* v4.27 — status sits directly below each chat avatar. */
-.msgIdentity{width:40px!important;flex:0 0 40px!important;align-items:center!important;gap:3px!important;overflow:visible!important}
-.msgIdentity .msgName{width:32px!important;max-width:32px!important;text-align:center!important;overflow:hidden!important;text-overflow:ellipsis!important}
-.msgIdentity .msgavatar{width:32px!important;height:32px!important;align-self:center!important;flex:none!important}
-.msgStatus{width:32px!important;min-width:32px!important;justify-content:center!important;align-items:center!important;gap:3px!important;font-size:7px!important;line-height:1!important;white-space:nowrap!important;padding:0!important;margin:0!important}
-.msgStatus i{width:5px!important;height:5px!important;flex:none!important}
-.msgStatus.online i,.statusDot.online{background:#72a87a!important}.msgStatus.busy i,.statusDot.busy{background:#d65d57!important}.msgStatus.away i,.statusDot.away{background:#d3a33f!important}.msgStatus.invisible i,.statusDot.invisible{background:#9da0a5!important}
-.onlineDot.status-online{background:#72a87a!important}.onlineDot.status-busy{background:#d65d57!important}.onlineDot.status-away{background:#d3a33f!important}.onlineDot.status-invisible{background:#9da0a5!important}
-.profileStatusButton.online .statusDot{background:#72a87a!important}.profileStatusButton.busy .statusDot{background:#d65d57!important}.profileStatusButton.away .statusDot{background:#d3a33f!important}.profileStatusButton.invisible .statusDot{background:#9da0a5!important}
-@media(max-width:799px){.msgIdentity{width:40px!important;flex-basis:40px!important}.msgIdentity .msgName{max-width:32px!important}.message.assistant .msgIdentity{margin-left:5px}.message.user .msgIdentity{margin-right:5px}}
