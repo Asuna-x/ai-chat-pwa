@@ -396,3 +396,14 @@ body.bubble-glass .assistant .bubble{border-radius:15px 15px 15px 5px}
 body.bubble-glass .user .bubble{border-radius:15px 15px 5px 15px}
 body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding:7px 13px}
 @media(max-width:799px){.message{margin-bottom:12px}.bubble{font-size:15px;line-height:1.48}}
+
+/* v4.38 — compact SMS-like bubbles and reply speed control */
+.replySpeedField output{float:right;color:var(--muted);font-size:11px;font-weight:500}.replySpeedField input[type="range"]{width:100%;margin-top:10px;accent-color:var(--accent)}
+.message{margin-bottom:13px}
+.bubble{line-height:1.58}
+.assistant .bubble{padding:5px 3px}
+.user .bubble{padding:9px 13px;border-radius:16px 16px 5px 16px}
+body.bubble-soft .assistant .bubble,body.bubble-soft .user .bubble{padding-top:7px;padding-bottom:7px}
+body.bubble-glass .assistant .bubble,body.bubble-glass .user .bubble{padding-top:8px;padding-bottom:8px;min-height:0}
+body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8px;padding-bottom:8px}
+@media(max-width:799px){.message{margin-bottom:12px}.bubble{font-size:15px;line-height:1.58}.assistant .bubble{padding:4px 2px}.user .bubble{padding:8px 12px}}
