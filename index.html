@@ -25,13 +25,14 @@
       <div class="settingsSectionTitle">AI</div>
       <div class="settingsGroup">
         <button class="settingsRow" data-settings-page="aiPage"><span class="rowIcon">◉</span><span><b>AI 设置</b><small>API、模型与回复方式</small></span><em>›</em></button>
-        <button class="settingsRow" data-settings-page="aiModifyPage"><span class="rowIcon">✎</span><span><b>AI 修改网页</b><small>让 AI 直接帮你改界面与功能</small></span><em>›</em></button>
         <button class="settingsRow" data-settings-page="personaPage"><span class="rowIcon">✦</span><span><b>G 的设定</b><small>名字、简介与系统提示词</small></span><em>›</em></button>
       </div>
 
       <div class="settingsSectionTitle">外观</div>
       <div class="settingsGroup">
-        <button class="settingsRow" data-settings-page="appearancePage"><span class="rowIcon">◐</span><span><b>外观</b><small>主题、背景与气泡</small></span><strong id="settingsThemeSummary">奶油米</strong><em>›</em></button>
+        <button class="settingsRow" data-settings-page="themePage"><span class="rowIcon">◐</span><span><b>主题</b><small>整体配色与界面氛围</small></span><strong id="settingsThemeSummary">奶油米</strong><em>›</em></button>
+        <button class="settingsRow" data-settings-page="backgroundPage"><span class="rowIcon">▧</span><span><b>聊天背景</b><small>背景样式、图片与透明度</small></span><em>›</em></button>
+        <button class="settingsRow" data-settings-page="bubblePage"><span class="rowIcon">▢</span><span><b>气泡</b><small>样式、颜色与透明度</small></span><em>›</em></button>
         <button class="settingsRow" data-settings-page="avatarPage"><span class="rowIcon">◎</span><span><b>头像</b><small>我的头像、G头像与顶部头像</small></span><em>›</em></button>
       </div>
 
@@ -40,7 +41,7 @@
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>G Chat</b><small>Version 4.16 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>G Chat</b><small>Version 4.18 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -61,20 +62,40 @@
       </div>
     </section>
 
-    <section class="settingsPage subSettingsPage hidden" id="aiModifyPage">
-      <div class="subIntro"><b>AI 修改网页</b><small>用当前已连接的 AI 读取网页代码，生成修改并在本机预览、应用。</small></div>
-      <div class="settingsSectionTitle">修改范围</div>
-      <div class="settingsGroup settingsFormGroup">
-        <label class="settingsField"><span>模式</span><select id="aiModifyScope"><option value="visual">界面与外观</option><option value="function">功能与交互</option></select></label>
+    <section class="settingsPage subSettingsPage hidden" id="themePage">
+      <div class="subIntro"><b>主题</b><small>选择整个聊天空间的主色调。</small></div>
+      <div class="settingsSectionTitle">主题色</div>
+      <div class="settingsGroup visualGroup"><div class="themeGrid" id="themeGrid"></div></div>
+    </section>
+
+    <section class="settingsPage subSettingsPage hidden" id="backgroundPage">
+      <div class="subIntro"><b>聊天背景</b><small>调整聊天空间的背景样式和透明度。</small></div>
+      <div class="settingsSectionTitle">背景</div>
+      <div class="settingsGroup visualGroup">
+        <div class="bgGrid" id="bgGrid"></div>
+        <label class="rangeLabel"><span>背景透明度</span><output id="bgOpacityOut">18%</output><input id="bgOpacity" type="range" min="0" max="60" value="18"></label>
+        <button class="smallAction full" id="uploadBg">上传背景图片</button><input id="bgFile" type="file" accept="image/*" hidden>
+        <button class="smallAction ghost full" id="clearBg">清除自定义背景</button>
       </div>
-      <div class="settingsSectionTitle">告诉 AI 你想改什么</div>
-      <div class="settingsGroup settingsFormGroup">
-        <label class="settingsField"><span>修改要求</span><textarea id="aiModifyPrompt" rows="7" placeholder="例如：把设置页面的按钮做得更像 iOS，保留现在的布局和功能。"></textarea></label>
+    </section>
+
+    <section class="settingsPage subSettingsPage hidden" id="bubblePage">
+      <div class="subIntro"><b>气泡</b><small>分别调整 G 和你的消息气泡样式、颜色与透明度。</small></div>
+      <div class="settingsSectionTitle">气泡样式</div>
+      <div class="settingsGroup visualGroup">
+        <div class="bubbleGrid" id="bubbleGrid"><button data-bubble="soft">柔和</button><button data-bubble="glass">玻璃</button><button data-bubble="minimal">极简</button><button data-bubble="pill">胶囊</button></div>
       </div>
-      <div class="aiModifyActions"><button class="smallAction full" id="aiModifyRun">AI 分析并生成修改</button><button class="smallAction ghost full" id="aiModifyApply" disabled>应用这次修改</button><button class="smallAction ghost full" id="aiModifyUndo">撤销本机 AI 修改</button></div>
-      <div id="aiModifyStatus" class="aiModifyStatus">尚未生成修改。</div>
-      <pre id="aiModifyPreview" class="aiModifyPreview hidden"></pre>
-      <p class="settingsNote">AI 修改保存在这台装置，不会自动改 GitHub。API 请求代码 api.js 默认不会交给 AI 修改。</p>
+      <div class="settingsSectionTitle">G 的气泡</div>
+      <div class="settingsGroup settingsFormGroup bubbleColorGroup">
+        <label class="settingsField"><span>颜色</span><div class="colorField"><input id="aiBubbleColor" type="color" value="#fffdf9"><output id="aiBubbleColorOut">#FFFDF9</output></div></label>
+        <label class="settingsField"><span>透明度</span><output class="rangeValue" id="aiBubbleOpacityOut">94%</output><input id="aiBubbleOpacity" type="range" min="0" max="100" value="94"></label>
+      </div>
+      <div class="settingsSectionTitle">我的气泡</div>
+      <div class="settingsGroup settingsFormGroup bubbleColorGroup">
+        <label class="settingsField"><span>颜色</span><div class="colorField"><input id="userBubbleColor" type="color" value="#ded5c8"><output id="userBubbleColorOut">#DED5C8</output></div></label>
+        <label class="settingsField"><span>透明度</span><output class="rangeValue" id="userBubbleOpacityOut">90%</output><input id="userBubbleOpacity" type="range" min="0" max="100" value="90"></label>
+      </div>
+      <div class="settingsGroup visualGroup"><label class="switchRow"><span>轻微动画</span><input id="animations" type="checkbox" checked><i></i></label></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="personaPage">
@@ -89,21 +110,6 @@
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>System Prompt</span><textarea id="systemPrompt" rows="8" placeholder="你是一个有帮助的助手。"></textarea></label>
       </div>
-    </section>
-
-    <section class="settingsPage subSettingsPage hidden" id="appearancePage">
-      <div class="subIntro"><b>外观</b><small>调整聊天空间的颜色、背景和消息样式。</small></div>
-      <div class="settingsSectionTitle">主题色</div>
-      <div class="settingsGroup visualGroup"><div class="themeGrid" id="themeGrid"></div></div>
-      <div class="settingsSectionTitle">聊天背景</div>
-      <div class="settingsGroup visualGroup">
-        <div class="bgGrid" id="bgGrid"></div>
-        <label class="rangeLabel"><span>背景透明度</span><output id="bgOpacityOut">18%</output><input id="bgOpacity" type="range" min="0" max="60" value="18"></label>
-        <button class="smallAction full" id="uploadBg">上传背景图片</button><input id="bgFile" type="file" accept="image/*" hidden>
-        <button class="smallAction ghost full" id="clearBg">清除自定义背景</button>
-      </div>
-      <div class="settingsSectionTitle">气泡样式</div>
-      <div class="settingsGroup visualGroup"><div class="bubbleGrid" id="bubbleGrid"><button data-bubble="soft">柔和</button><button data-bubble="glass">玻璃</button><button data-bubble="minimal">极简</button><button data-bubble="pill">胶囊</button></div><label class="switchRow"><span>轻微动画</span><input id="animations" type="checkbox" checked><i></i></label></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="avatarPage">
@@ -142,4 +148,4 @@
 </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><span class="online">● 在线</span><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>主题</small><b id="profileTheme">奶油米</b></div></div><button class="save full" id="profileStart">开始聊天</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.16"></script><script src="./ai-loader.js?v=4.16"></script></body></html>
+<script src="./api.js?v=4.18"></script><script src="./app.js?v=4.18"></script></body></html>
