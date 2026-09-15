@@ -322,3 +322,8 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .statusOption .statusDot{width:7px;height:7px;border-radius:50%;display:block}
 .statusOption:active{background:var(--soft)}
 .statusClickable{cursor:pointer}
+
+/* v4.31 — force status to stay below the avatar in both identity columns. */
+.msgIdentity .msgName{order:0!important}
+.msgIdentity .msgavatar{order:1!important}
+.msgIdentity .msgStatus{order:2!important}
