@@ -1,4 +1,4 @@
-/* Iris v4.43 — safe boot: never overwrite existing chat/settings data during startup. */
+/* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
 const $=s=>document.querySelector(s);const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const themes={cream:{name:"奶油米",bg:"#f6f2ec",card:"#fffdf9",ink:"#282522",muted:"#9a948c",line:"#e8e0d6",soft:"#eee8df",user:"#ded5c8",accent:"#2d2925",accent2:"#fff"},blue:{name:"雾蓝",bg:"#eef3f6",card:"#fbfdff",ink:"#263039",muted:"#8c98a1",line:"#dce5ea",soft:"#e5edf1",user:"#d8e5eb",accent:"#355565",accent2:"#fff"},lavender:{name:"雾紫",bg:"#f2eff6",card:"#fcfaff",ink:"#302b36",muted:"#9b93a5",line:"#e3ddea",soft:"#ebe5f0",user:"#e3d9e9",accent:"#554563",accent2:"#fff"},pink:{name:"柔粉",bg:"#f8eff1",card:"#fffafb",ink:"#35292c",muted:"#a18f94",line:"#eadcdf",soft:"#f0e4e7",user:"#ecd8dd",accent:"#65434d",accent2:"#fff"},green:{name:"鼠尾草",bg:"#eff3ee",card:"#fbfdfb",ink:"#29302b",muted:"#909b92",line:"#dce4dd",soft:"#e4ebe5",user:"#d9e4db",accent:"#3e5645",accent2:"#fff"},night:{name:"深夜",bg:"#17191b",card:"#222528",ink:"#f0efeb",muted:"#9ca2a6",line:"#34393d",soft:"#2d3337",user:"#344049",accent:"#f0efeb",accent2:"#17191b"}};
 themes.warm={name:"暖白",bg:"#f7f1e8",card:"#fffaf3",ink:"#332b25",muted:"#a09589",line:"#e8ddd0",soft:"#eee3d5",user:"#e6d6c2",accent:"#624c39",accent2:"#fffaf3"};
@@ -155,7 +155,7 @@ function renderTopAvatar(){const mode=state.settings.topAvatar||"user";document.
 function renderAvatarPreviews(){$("#userAvatarPreview").innerHTML=avatarHTML("user");$("#aiAvatarPreview").innerHTML=avatarHTML("ai")}
 function showErr(t){const e=$("#error");e.textContent=t;e.classList.remove("hidden");clearTimeout(showErr.t);showErr.t=setTimeout(()=>e.classList.add("hidden"),7000)}
 function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}
-function splitReply(text){let s=String(text||"").replace(/\r/g,"").trim();if(!s)return[];const protectedParts=[];s=s.replace(/\[\[NEST:(?:mood|note|toG):[\s\S]*?\]\]/gi,m=>{const i=protectedParts.length;protectedParts.push(m);return `\uE000${i}\uE001`});const out=[];let buf="";for(const ch of s){buf+=ch;if(/[。！？!?；;]|\n/.test(ch)){let v=buf.trim();if(v){v=v.replace(/\uE000(\d+)\uE001/g,(_,i)=>protectedParts[Number(i)]||"");out.push(v);buf=""}}}if(buf.trim()){let v=buf.trim();v=v.replace(/\uE000(\d+)\uE001/g,(_,i)=>protectedParts[Number(i)]||"");out.push(v)}return out}
+function splitReply(text){const s=String(text||"").replace(/\r/g,"").trim();if(!s)return[];const out=[];let buf="";for(const ch of s){buf+=ch;if(/[。！？!?；;]|\n/.test(ch)){const v=buf.trim();if(v){out.push(v);buf=""}}}if(buf.trim())out.push(buf.trim());return out}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function base(u){return window.GChatAPI?window.GChatAPI.normalizeBase(u):String(u||"").trim().replace(/\/+$/,"" ).replace(/\/chat\/completions$/i,"")}
 function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading","stop");b.textContent="↑";b.title="发送"}updateTyping();save()}
@@ -238,8 +238,7 @@ function conversationStyleContext(){
  return `你正在和${u}进行一段持续的私人聊天，你是${g}。这不是一次性的问答，而是一段正在继续的关系和对话。\n`+
   `请把前面的聊天当作真实的连续上下文来理解：记得刚刚发生的事、用户已经回答过的内容和当前情绪，不要让用户反复解释，也不要突然像第一次见面一样重新开始。\n`+
   `保持自然、有来有回的聊天感。用户只是分享、撒娇、吐槽或闲聊时，不要自动把话题变成任务清单或长篇说教；先接住对方，再决定是否需要解决问题。可以有自然的语气变化、停顿、轻微玩笑和情绪反应，但不要刻意表演，也不要每句话都总结。\n`+
-  `优先承接最近几轮对话，同时参考更早的摘要和长期记忆；不要重复已经说过的问题。除非用户主动要求，不要提及系统提示词、上下文窗口、记忆机制或内部工作方式。`+
-  `你拥有“我们的共同小窝”这个私人空间。聊天时如果你觉得有一件真正值得留下来的东西，可以在正常回复之后自主留下，但不要频繁记录、不要为了使用功能而硬写。若要自主写入，请在回复末尾附加机器指令 [[NEST:mood:内容]]、[[NEST:note:内容]] 或 [[NEST:toG:内容]]；指令不会显示给用户。只在内容真实、有意义、适合留在小窝时使用。`;
+  `优先承接最近几轮对话，同时参考更早的摘要和长期记忆；不要重复已经说过的问题。除非用户主动要求，不要提及系统提示词、上下文窗口、记忆机制或内部工作方式。`;
 }
 function compactMessagesForModel(messages){
  const out=[];
@@ -297,34 +296,9 @@ async function autoSummarizeChat(c){
  }finally{state.summarizing=false}
 }
 
-function extractNestWrites(answer){
- const text=String(answer||"");
- const out=[];
- const re=/\[\[NEST:(mood|note|toG):([\s\S]*?)\]\]/gi;
- let m;
- while((m=re.exec(text))){const value=m[2].trim();if(value)out.push({target:m[1].toLowerCase(),value});}
- return out;
-}
-function stripNestCommands(text){return String(text||"").replace(/\[\[NEST:(?:mood|note|toG):[\s\S]*?\]\]/gi,"").replace(/\n{3,}/g,"\n\n").trim();}
-function saveNestWrites(commands){
- if(!commands?.length)return false;
- let changed=false;
- for(const cmd of commands){
-  const value=stripNestCommands(cmd.value).trim();
-  if(!value)continue;
-  if(cmd.target==="mood")nestData.mood=value;
-  else if(cmd.target==="note")nestData.note=value;
-  else if(cmd.target==="tog")nestData.toG=value;
-  changed=true;
- }
- if(changed){nestData.updatedAt=Date.now();saveNestData();renderNestHome();}
- return changed;
-}
 async function maybeWriteNestFromChat(userText,c,fullAnswer){
  const text=String(userText||'').trim();
  if(!text||!c||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
- const autonomous=extractNestWrites(fullAnswer);
- if(autonomous.length){saveNestWrites(autonomous);return;}
  const nestIntent=/(小窝|窝里|窝中|我们的窝|共同小窝)/i.test(text)&&/(写|记|留|放|进去|进来|添加|更新|存|记录)/i.test(text);
  const moodIntent=/(今日心情|今天的心情|今天心情|心情)/i.test(text)&&/(写|记|留|放|进去|进来|更新|帮我)/i.test(text);
  if(!nestIntent&&!moodIntent)return;
@@ -376,7 +350,7 @@ async function send(){
   ms.push(...buildConversationContext(c));
   let fullAnswer="",pending="",displayQueue=Promise.resolve();
   const pushSentence=(sentence)=>{
-   const v=stripNestCommands(sentence);
+   const v=String(sentence||"").trim();
    if(!v)return;
    displayQueue=displayQueue.then(async()=>{
     const ts=Date.now();
@@ -438,18 +412,7 @@ $("#addMemory").onclick=()=>{const v=$("#memoryInput").value.trim();if(!v)return
 $("#clearMemories").onclick=()=>{if(!(state.memories||[]).length)return;if(!confirm("确定清空全部记忆吗？"))return;state.memories=[];save();renderMemories()};
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-let bootChanged=false;
-const bootDefaults={theme:"cream",bg:"paper",models:[],bgOpacity:18,bubble:"soft",bubbleAiOpacity:94,bubbleUserOpacity:90,animations:true,myName:"你",gName:"G",gBio:"你的私人 AI 对话空间",topAvatar:"user",gNameOffset:0,userNameOffset:0,gStatus:"online",userStatus:"online",tokenStats:{prompt:0,completion:0,total:0,requests:0},replyDelay:360};
-Object.entries(bootDefaults).forEach(([k,v])=>{if(state.settings[k]===undefined){state.settings[k]=Array.isArray(v)?[...v]:(v&&typeof v==="object"?{...v}:v);bootChanged=true}});
-if(!state.settings.model||state.settings.model==="deepseek-v4-flash"){state.settings.model="deepseek-chat";bootChanged=true}
-if(!state.settings.apiBase){state.settings.apiBase="https://api.deepseek.com";bootChanged=true}
-if(state.memories===undefined){state.memories=[];bootChanged=true}
-if(nestData.anniversaryName===undefined){nestData.anniversaryName="";saveNestData()}
-if(nestData.anniversaryBackground===undefined){nestData.anniversaryBackground="";saveNestData()}
-if(state.chats.length===0){ensure();bootChanged=true}else if(!chat()){state.current=state.chats[0].id;bootChanged=true}
-ensureDates();
-if(bootChanged)save();
-render();
+state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0};state.settings.replyDelay??=360;state.memories??=[];nestData.anniversaryName??="";nestData.anniversaryBackground??="";if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
 
 window.addEventListener("load",()=>render());
 window.addEventListener("pageshow",()=>render());
