@@ -167,14 +167,16 @@ header:after{content:"";position:absolute;left:12%;right:12%;bottom:-1px;height:
 
 /* The old in-bubble cursor is intentionally gone; the status now lives in the header. */
 .bubble.streaming:after{display:none!important}
-.typingStatus{display:inline-flex;align-items:center;gap:2px;color:var(--accent);font-weight:650;letter-spacing:.01em;animation:typingFade 1.4s ease-in-out infinite}
-.typingDots{display:inline-flex;gap:2px;margin-left:1px;align-items:center}
-.typingDots i{width:3px;height:3px;border-radius:50%;background:currentColor;opacity:.35;animation:typingDot 1.15s ease-in-out infinite}
-.typingDots i:nth-child(2){animation-delay:.16s}
-.typingDots i:nth-child(3){animation-delay:.32s}
-@keyframes typingFade{0%,100%{opacity:.68}50%{opacity:1}}
-@keyframes typingDot{0%,70%,100%{transform:translateY(0);opacity:.28}35%{transform:translateY(-2px);opacity:1}}
-body.no-motion .typingStatus,body.no-motion .typingDots i{animation:none}
+.typingStatus{display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-weight:650;letter-spacing:.015em;white-space:nowrap;animation:typingFade 1.5s ease-in-out infinite}
+.typingStatus::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.8;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 10%,transparent);animation:typingPulse 1.5s ease-in-out infinite}
+.typingDots{display:inline-flex;gap:2.5px;margin-left:-1px;align-items:center;height:10px}
+.typingDots i{width:3px;height:3px;border-radius:50%;background:currentColor;opacity:.28;animation:typingDot 1.05s ease-in-out infinite}
+.typingDots i:nth-child(2){animation-delay:.14s}
+.typingDots i:nth-child(3){animation-delay:.28s}
+@keyframes typingFade{0%,100%{opacity:.62}50%{opacity:1}}
+@keyframes typingPulse{0%,100%{transform:scale(.82);opacity:.55}50%{transform:scale(1);opacity:1}}
+@keyframes typingDot{0%,70%,100%{transform:translateY(0);opacity:.25}35%{transform:translateY(-2px);opacity:1}}
+body.no-motion .typingStatus,body.no-motion .typingStatus::before,body.no-motion .typingDots i{animation:none}
 
 .head small{min-height:14px;display:flex;align-items:center;justify-content:center;gap:3px}
 #modelStatus{display:inline-flex;align-items:center;min-width:0}
@@ -212,3 +214,36 @@ body.no-motion .typingStatus,body.no-motion .typingDots i{animation:none}
 .send.stop{font-size:15px!important;opacity:1!important;transform:none!important;display:grid;place-items:center}
 .send.stop:before{display:none!important;content:none!important}
 .send.stop:active{transform:scale(.94)!important}
+
+
+/* v4.8 visual polish — no API/send logic changes. */
+header{background:color-mix(in srgb,var(--card) 78%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom-color:color-mix(in srgb,var(--line) 72%,transparent)}
+.headAvatar{box-shadow:0 4px 14px var(--shadow);border:1px solid color-mix(in srgb,var(--line) 75%,transparent)}
+.message .bubble{box-shadow:0 5px 18px color-mix(in srgb,var(--shadow) 65%,transparent)}
+.message.assistant .bubble{background:color-mix(in srgb,var(--card) 94%,transparent)}
+.message.user .bubble{background:color-mix(in srgb,var(--user) 90%,var(--card))}
+.composer{background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 9px 30px var(--shadow)}
+
+/* v4.9 — Settings opens as a true full-screen page. API/send logic untouched. */
+dialog#settings{
+  width:100vw;
+  max-width:none;
+  height:100dvh;
+  max-height:none;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  inset:0;
+}
+dialog#settings::backdrop{background:var(--bg)}
+dialog#settings .settingsShell{height:100dvh;max-height:none;border-radius:0}
+dialog#settings .settingsPages{max-height:none;flex:1;min-height:0;padding:18px max(17px,env(safe-area-inset-left)) 24px max(17px,env(safe-area-inset-right));}
+dialog#settings .settingsTopbar{padding-top:max(10px,env(safe-area-inset-top));min-height:66px}
+dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bottom))}
+@media(max-width:799px){
+  dialog#settings{width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border-radius:0}
+  dialog#settings .settingsShell{height:100dvh;max-height:none}
+  dialog#settings .settingsPages{max-height:none;flex:1;min-height:0;padding:16px 14px 22px}
+  dialog#settings .settingsTopbar{min-height:62px}
+}
