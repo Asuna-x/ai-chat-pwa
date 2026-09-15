@@ -1,4 +1,4 @@
-/* Iris v4.51 — nest layout polish and direct AI entry/mood writing */
+/* Iris v4.53 — nest hierarchy, glass anniversary layout, reliable chat-to-nest action */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -313,11 +313,14 @@ async function autoSummarizeChat(c){
 async function maybeWriteNestFromChat(userText,c,fullAnswer){
  const text=String(userText||'').trim();
  if(!text||!c||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
+ const lower=text.toLowerCase();
  const nestWords=/(小窝|窝里|窝中|我们的窝|共同小窝)/i.test(text);
- const enterWords=/(进小窝|进入小窝|去小窝|到小窝|进窝|去窝|进去|进来|进去看看|去看看)/i.test(text);
- const writeWords=/(写心情|写下心情|留点心情|留下心情|记下心情|记录心情|写一点|留一点|写下来|留下来|写点东西|写点)/i.test(text);
- const invitationWords=/(你可以|你能|你去|你也可以|试试|可以试试|要不要|去吧|进去吧|进来吧|帮你|你自己)/i.test(text);
- const nestIntent=nestWords&&((enterWords&&writeWords)||(invitationWords&&(enterWords||writeWords)));
+ const enterWords=/(进小窝|进入小窝|去小窝|到小窝|进窝|去窝|进去小窝|进去|进来|进去看看|去看看)/i.test(text);
+ const writeWords=/(写心情|写下心情|留点心情|留下心情|记下心情|记录心情|写一点|留一点|写下来|留下来|写点东西|写点|留句话|留下一句话)/i.test(text);
+ const invitationWords=/(你可以|你能|你去|你也可以|试试|可以试试|要不要|去吧|进去吧|进来吧|帮你|你自己|你可以试试)/i.test(text);
+ // Explicit invitations are intentionally broad enough to understand natural Chinese word order.
+ const explicitNestMood=/((你可以|你能|你去|你也可以|可以试试|试试|要不要|去吧|进去吧|进来吧|你自己)[^。！？!?\n]{0,32}(进小窝|进入小窝|去小窝|到小窝|进窝|去窝)[^。！？!?\n]{0,32}(写心情|写下心情|留点心情|留下心情|记录心情|写点|写下来|留下来))|((进小窝|进入小窝|去小窝|到小窝|进窝|去窝)[^。！？!?\n]{0,24}(写心情|写下心情|留点心情|留下心情|记录心情|写点|写下来|留下来)[^。！？!?\n]{0,24}(你可以|你能|你去|试试|要不要|去吧|进去吧|进来吧|你自己))/i.test(text);
+ const nestIntent=explicitNestMood || (nestWords && ((enterWords&&writeWords)||(invitationWords&&(enterWords||writeWords))));
  const moodIntent=/(今日心情|今天的心情|今天心情)/i.test(text)&&/(写|记|留|放|进去|进来|更新|帮我|你可以|试试)/i.test(text);
  if(!nestIntent&&!moodIntent)return;
  let target='mood';
@@ -325,23 +328,25 @@ async function maybeWriteNestFromChat(userText,c,fullAnswer){
  else if(/写给我|给我留|给你自己|给用户/.test(text))target='toG';
  else if(/心情/.test(text))target='mood';
  const n=loadNest();
- const recent=compactMessagesForModel(c.messages||[]).slice(-20).map(m=>(m.role==='user'?'用户':'他')+'：'+String(m.content||'')).join('\n');
- const targetGuide=target==='mood'?'写入“小窝 → 他的今日心情”，这是他此刻想留下的一小段心情；用第一人称。':target==='note'?'写入“小窝 → 今日笔记”，像共同生活空间里留下的一条自然记录。':'写入“小窝 → 留给他的话”，但内容应当是他想对用户留下的话，用第一人称写。';
- const prompt=`用户在正常聊天中要求你进入你们共同的“小窝”留下内容。你现在可以直接写进去，不需要用户打开小窝，也不要把内部操作过程说出来。\n\n${targetGuide}\n要求：自然、像真实相处中的随手留下；结合最近聊天；只使用确定的信息；不要总结成报告；不要提及“AI”“系统”“API”等内部词。可以有 1-3 个合适的 emoji，但不要堆。控制在 30-100 个中文字符。只输出最终要写入小窝的正文。\n\n当前小窝已有内容：\n我的今日心情：${n.moods?.user||'空'}\n留给他的话：${n.toG||'空'}\n今日笔记：${n.note||'空'}\n\n最近聊天：\n${recent}\n\n刚才用户说：${text}\n\n你刚才对用户的回复：\n${String(fullAnswer||'').slice(-1600)}`;
+ normalizeNestData();
+ const e=dailyEntry(nestDateKey());
+ const recent=compactMessagesForModel(c.messages||[]).slice(-40).map(m=>(m.role==='user'?'用户':'他')+'：'+String(m.content||'')).join('\n');
+ const targetGuide=target==='mood'?'写入“小窝 → 他的今日心情”，这是他此刻想留下的一小段心情；用第一人称。':target==='note'?'写入“小窝 → 今日小记”，像共同生活空间里留下的一条自然记录。':'写入“小窝 → 留给他的话”，内容是他想对用户留下的话，用第一人称写。';
+ const prompt=`用户在正常聊天中明确邀请你进入你们共同的“小窝”留下内容。现在请直接完成这件事，不需要用户打开小窝，也不要把内部操作过程说出来。\n\n${targetGuide}\n要求：自然、像真实相处中的随手留下；结合最近聊天；只使用确定的信息；不要总结成报告；不要提及“AI”“系统”“API”等内部词。可以有 1-3 个合适的 emoji，但不要堆。控制在 30-100 个中文字符。只输出最终要写入小窝的正文。\n\n今天小窝已有内容：\n我的今日心情：${e.userMood||'空'}\n我的今日心情文字：${e.userMoodNote||'空'}\n他的今日心情：${e.aiMood||'空'}\n他的今日心情文字：${e.aiMoodNote||'空'}\n我今天留给他的话：${e.toG||'空'}\n今日小记：${e.note||'空'}\n\n最近聊天：\n${recent}\n\n刚才用户说：${text}\n\n你刚才对用户的回复：\n${String(fullAnswer||'').slice(-1600)}`;
  try{
-  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:'system',content:'你是这间共同小窝的另一位主人。用户允许你在被要求时直接进入小窝写下内容。'},{role:'user',content:prompt}],temperature:.72});
+  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:'system',content:'你是这间共同小窝的另一位主人。用户明确允许你在被要求时直接进入小窝写下内容。'} ,{role:'user',content:prompt}],temperature:.72});
   const value=String(result.answer||'').trim().replace(/^```[\s\S]*?```$/g,'').trim();
   if(!value)return;
-  if(target==='mood'){nestData.moods=nestData.moods||{user:"",ai:""};saveDailyField(nestDateKey(),"aiMoodNote",value);}
-  else if(target==='note'){nestData.note=value;saveDailyField(nestDateKey(),"note",value);}
-  else {nestData.toG=value;saveDailyField(nestDateKey(),"toG",value);}
+  const key=nestDateKey();
+  if(target==='mood')saveDailyField(key,'aiMoodNote',value);
+  else if(target==='note')saveDailyField(key,'note',value);
+  else saveDailyField(key,'toG',value);
   nestData.updatedAt=Date.now();
   saveNestData();
   renderNestHome();
   if(result.usage){const usage=result.usage,ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;ts.prompt+=up;ts.completion+=uc;ts.total+=ut;ts.requests+=1;state.settings.tokenStats=ts;save();renderTokenStats()}
  }catch(e){console.warn('nest write failed',e)}
 }
-
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
