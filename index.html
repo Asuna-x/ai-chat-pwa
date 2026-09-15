@@ -25,6 +25,7 @@
       <div class="settingsSectionTitle">AI</div>
       <div class="settingsGroup">
         <button class="settingsRow" data-settings-page="aiPage"><span class="rowIcon">◉</span><span><b>AI 设置</b><small>API、模型与回复方式</small></span><em>›</em></button>
+        <button class="settingsRow" data-settings-page="aiModifyPage"><span class="rowIcon">✎</span><span><b>AI 修改网页</b><small>让 AI 直接帮你改界面与功能</small></span><em>›</em></button>
         <button class="settingsRow" data-settings-page="personaPage"><span class="rowIcon">✦</span><span><b>G 的设定</b><small>名字、简介与系统提示词</small></span><em>›</em></button>
       </div>
 
@@ -39,7 +40,7 @@
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>G Chat</b><small>Version 4.12 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>G Chat</b><small>Version 4.15 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -58,6 +59,22 @@
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>Temperature</span><input id="temperature" type="number" min="0" max="2" step=".1"></label>
       </div>
+    </section>
+
+    <section class="settingsPage subSettingsPage hidden" id="aiModifyPage">
+      <div class="subIntro"><b>AI 修改网页</b><small>用当前已连接的 AI 读取网页代码，生成修改并在本机预览、应用。</small></div>
+      <div class="settingsSectionTitle">修改范围</div>
+      <div class="settingsGroup settingsFormGroup">
+        <label class="settingsField"><span>模式</span><select id="aiModifyScope"><option value="visual">界面与外观</option><option value="function">功能与交互</option></select></label>
+      </div>
+      <div class="settingsSectionTitle">告诉 AI 你想改什么</div>
+      <div class="settingsGroup settingsFormGroup">
+        <label class="settingsField"><span>修改要求</span><textarea id="aiModifyPrompt" rows="7" placeholder="例如：把设置页面的按钮做得更像 iOS，保留现在的布局和功能。"></textarea></label>
+      </div>
+      <div class="aiModifyActions"><button class="smallAction full" id="aiModifyRun">AI 分析并生成修改</button><button class="smallAction ghost full" id="aiModifyApply" disabled>应用这次修改</button><button class="smallAction ghost full" id="aiModifyUndo">撤销本机 AI 修改</button></div>
+      <div id="aiModifyStatus" class="aiModifyStatus">尚未生成修改。</div>
+      <pre id="aiModifyPreview" class="aiModifyPreview hidden"></pre>
+      <p class="settingsNote">AI 修改保存在这台装置，不会自动改 GitHub。API 请求代码 api.js 默认不会交给 AI 修改。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="personaPage">
@@ -125,4 +142,4 @@
 </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><span class="online">● 在线</span><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>主题</small><b id="profileTheme">奶油米</b></div></div><button class="save full" id="profileStart">开始聊天</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.11"></script><script src="./app.js?v=4.11"></script></body></html>
+<script src="./api.js?v=4.15"></script><script src="./ai-loader.js?v=4.15"></script></body></html>

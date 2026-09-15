@@ -248,31 +248,42 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
   dialog#settings .settingsTopbar{min-height:62px}
 }
 
-/* v4.10: show the speaker name beneath each avatar. */
-.msgIdentity{width:32px;flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;align-self:flex-end;margin-bottom:0}
-.msgIdentity .msgavatar{width:32px;height:32px}
-.msgName{max-width:72px;font-size:8px;line-height:1.1;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;opacity:.82}
-.message.assistant .msgIdentity{order:0}
-.message.user .msgIdentity{order:2}
-@media(max-width:799px){.msgName{font-size:8px;max-width:64px}.message{align-items:flex-end}}
+/* v4.14 — exact message layout: identities at outer edges, names above avatars, read receipts beside bubbles. */
+.message{width:100%;max-width:none;display:flex;align-items:flex-end;gap:7px;margin-bottom:20px}
+.message.assistant{justify-content:flex-start}
+.message.user{justify-content:flex-end}
+.message .bubble{flex:0 1 auto;min-width:0;max-width:min(74vw,680px)}
 
+.msgIdentity{width:42px;flex:0 0 42px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;align-self:flex-end;margin:0}
+.msgIdentity .msgName{order:0;display:block;width:100%;max-width:76px;font-size:8px;line-height:1.1;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.82}
+.msgIdentity .msgavatar{order:1;width:32px;height:32px;align-self:flex-start;margin:0}
+.message.assistant .msgIdentity{order:0;align-items:flex-start}
+.message.assistant .msgName{text-align:left}
+.message.assistant .bubble{order:1}
+.message.assistant .readStatus{order:2}
+.message.assistant .msgTime{order:3}
 
-/* v4.11: subtle read receipt for the user's messages. */
-.message.user{position:relative}
-.message.user .readStatus{order:3;align-self:flex-end;margin:0 2px 5px 1px;color:var(--muted);font-size:8px;line-height:1;letter-spacing:.01em;opacity:.72;white-space:nowrap}
-@media(max-width:799px){.message.user .readStatus{font-size:8px;margin-bottom:5px}}
+.message.user .msgTime{order:0}
+.message.user .readStatus{order:1}
+.message.user .bubble{order:2}
+.message.user .msgIdentity{order:3;align-items:flex-end}
+.message.user .msgIdentity .msgavatar{align-self:flex-end}
+.message.user .msgName{text-align:right}
 
-/* v4.12 — cleaner identity layout: names above avatars, inward aligned. */
-.msgIdentity{width:38px;flex:none;display:flex;flex-direction:column;align-items:stretch;gap:3px;align-self:flex-end;margin-bottom:0}
-.msgIdentity .msgavatar{width:32px;height:32px;align-self:center}
-.msgName{display:block;width:100%;max-width:72px;font-size:8px;line-height:1.1;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.82}
-.message.assistant .msgIdentity{order:0}
-.message.assistant .msgName{text-align:right}
-.message.user .msgIdentity{order:2}
-.message.user .msgName{text-align:left}
-.message.user .readStatus{order:1;align-self:flex-end;margin:0 1px 4px 0;color:#68a875;font-size:7px;line-height:1;letter-spacing:.01em;opacity:.9;white-space:nowrap}
+.readStatus{align-self:flex-end;margin:0 1px 5px;color:#68a875;font-size:7px;line-height:1;letter-spacing:.01em;opacity:.9;white-space:nowrap;flex:none}
+.message .msgTime{flex:none;align-self:flex-end;margin:0 1px 5px;color:var(--muted);font-size:9px;line-height:1;letter-spacing:.01em;opacity:.72;white-space:nowrap}
+
 @media(max-width:799px){
-  .msgIdentity{width:36px}
-  .msgName{font-size:8px;max-width:64px}
-  .message.user .readStatus{font-size:7px;margin-bottom:4px}
+  .message{gap:6px}
+  .message.assistant .msgIdentity{margin-left:-5px}
+  .message.user .msgIdentity{margin-right:-5px}
+  .msgIdentity{width:40px;flex-basis:40px}
+  .msgIdentity .msgName{font-size:8px;max-width:68px}
+  .msgIdentity .msgavatar{width:32px;height:32px}
+  .readStatus{font-size:7px;margin-bottom:4px}
+  .message .msgTime{font-size:8px;margin-bottom:4px}
 }
+
+
+/* v4.15 — AI modifier page */
+.aiModifyActions{display:flex;flex-direction:column;gap:8px;padding:12px 14px 4px}.aiModifyStatus{margin:10px 5px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);font-size:10px;line-height:1.5;color:var(--muted)}.aiModifyStatus.errorText{color:#a95b52}.aiModifyPreview{margin:10px 5px 0;padding:12px;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--card) 92%,var(--soft));font:9px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);white-space:pre-wrap;word-break:break-word}.settingsFormGroup select{width:100%;box-sizing:border-box}
