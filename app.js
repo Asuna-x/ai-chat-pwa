@@ -158,12 +158,27 @@ function exportAll(){const data={version:1,exportedAt:new Date().toISOString(),c
 function encodeMigrationData(){
  const data={version:2,type:"gchat-migration",createdAt:new Date().toISOString(),chats:state.chats,current:state.current,settings:state.settings};
  const json=JSON.stringify(data);
- return btoa(unescape(encodeURIComponent(json)));
+ const bytes=new TextEncoder().encode(json);
+ let binary="";for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
+ return btoa(binary);
 }
 function decodeMigrationData(code){
- const raw=decodeURIComponent(escape(atob(String(code||"").trim())));
- const data=JSON.parse(raw);
- if(!data||data.type!=="gchat-migration"||!Array.isArray(data.chats)||typeof data.settings!=="object")throw new Error("迁移码无效或已损坏。请重新生成。");
+ let s=String(code||"").trim();
+ s=s.replace(/^GCHAT-MIGRATION:\s*/i,"").replace(/\s+/g,"");
+ let data=null;
+ try{
+   // First allow a plain JSON migration payload for easier recovery.
+   if(s.startsWith("{"))data=JSON.parse(s);
+   else{
+     // Accept normal Base64 and URL-safe Base64.
+     s=s.replace(/-/g,"+").replace(/_/g,"/");
+     while(s.length%4)s+="=";
+     const binary=atob(s);
+     const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+     data=JSON.parse(new TextDecoder("utf-8").decode(bytes));
+   }
+ }catch(e){throw new Error("迁移码无效或已损坏，请重新生成并完整复制。")}
+ if(!data||data.type!=="gchat-migration"||!Array.isArray(data.chats)||!data.settings||typeof data.settings!=="object")throw new Error("迁移码无效或已损坏，请重新生成并完整复制。");
  return data;
 }
 function ensureMigrationUI(){
