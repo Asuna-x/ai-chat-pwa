@@ -46,6 +46,8 @@ function renderTopAvatar(){const mode=state.settings.topAvatar||"user";document.
 function renderAvatarPreviews(){$("#userAvatarPreview").innerHTML=avatarHTML("user");$("#aiAvatarPreview").innerHTML=avatarHTML("ai")}
 function showErr(t){const e=$("#error");e.textContent=t;e.classList.remove("hidden");clearTimeout(showErr.t);showErr.t=setTimeout(()=>e.classList.add("hidden"),7000)}
 function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}
+function splitReply(text){const s=String(text||"").replace(/\r/g,"").trim();if(!s)return[];const out=[];let buf="";for(const ch of s){buf+=ch;if(/[。！？!?；;]|\n/.test(ch)){const v=buf.trim();if(v){out.push(v);buf=""}}}if(buf.trim())out.push(buf.trim());return out}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function base(u){return window.GChatAPI?window.GChatAPI.normalizeBase(u):String(u||"").trim().replace(/\/+$/,"" ).replace(/\/chat\/completions$/i,"")}
 function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading","stop");b.textContent="↑";b.title="发送"}updateTyping();save()}
 function apiHint(){return window.GChatAPI?window.GChatAPI.requestUrl(state.settings.apiBase):base(state.settings.apiBase)+"/chat/completions"}
@@ -65,6 +67,14 @@ async function send(){
  try{
   const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);
   const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal});
+  const replyParts=splitReply(result.answer);
+  const replyBubble=bubble("assistant","",false,Date.now(),true);
+  for(let n=0;n<replyParts.length;n++){
+   replyBubble.textContent+=(n?"\n":"")+replyParts[n];
+   replyBubble.dataset.text=replyBubble.textContent;
+   scroll();
+   if(n<replyParts.length-1)await sleep(420);
+  }
   c.messages.push({role:"assistant",content:result.answer,timestamp:Date.now()});save();
  }catch(e){
   if(e?.name==="AbortError") { showErr("请求等待超过 60 秒。\n请求地址："+apiHint()); }
