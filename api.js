@@ -1,4 +1,4 @@
-/* G Chat API — same request style as the last known working v3.4 build. */
+/* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
     return String(value||"").trim().replace(/\/+$/,"").replace(/\/chat\/completions$/i,"");

@@ -40,7 +40,7 @@ function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#sen
 function apiHint(){return window.GChatAPI?window.GChatAPI.requestUrl(state.settings.apiBase):base(state.settings.apiBase)+"/chat/completions"}
 function stopThinking(){if(!state.busy||!state._abort)return;state.stopRequested=true;try{state._abort.abort()}catch{};showErr("已停止这次回复。你的消息已经保留在聊天记录里。")}
 async function send(){
- if(state.busy){stopThinking();return;}
+ if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
  if(!text)return;
  if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
@@ -48,15 +48,15 @@ async function send(){
  c.messages.push({role:"user",content:text,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
  i.value="";resize();save();render();
- state.busy=true;state.stopRequested=false;const sendBtn=$("#send");sendBtn.disabled=false;sendBtn.classList.add("stop");sendBtn.classList.remove("loading");sendBtn.textContent="■";sendBtn.title="停止回复";updateTyping();
+ state.busy=true;const sendBtn=$("#send");sendBtn.disabled=true;sendBtn.classList.add("loading");sendBtn.classList.remove("stop");sendBtn.textContent="…";sendBtn.title="发送中";updateTyping();
  const controller=new AbortController();state._abort=controller;
- const timeout=setTimeout(()=>{try{controller.abort()}catch{}},45000);
+ const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  try{
   const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);
   const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal});
   c.messages.push({role:"assistant",content:result.answer,timestamp:Date.now()});save();
  }catch(e){
-  if(e?.name==="AbortError") { if(!state.stopRequested) showErr("请求等待超过 45 秒。请检查 API Base URL、模型和网络连接。\n请求地址："+apiHint()); }
+  if(e?.name==="AbortError") { showErr("请求等待超过 60 秒。\n请求地址："+apiHint()); }
   else showErr(e.message||String(e));
  }finally{
   clearTimeout(timeout);if(state._abort===controller)state._abort=null;
@@ -77,4 +77,4 @@ $("#exportAll").onclick=exportAll;$("#importAll").onclick=()=>$("#importFile").c
 document.querySelectorAll("[data-settings-page]").forEach(b=>b.onclick=()=>settingsOpenPage(b.dataset.settingsPage));
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js?v=4.4",{updateViaCache:"none"}).then(r=>r.update()).catch(console.error);state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";ensure();ensureDates();save();render();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js?v=4.7",{updateViaCache:"none"}).then(r=>r.update()).catch(console.error);state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
