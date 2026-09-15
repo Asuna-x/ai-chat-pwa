@@ -319,3 +319,11 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .statusOption:active{background:var(--soft)}
 
 /* v4.24 bugfix: restore drawer open/close handlers; no visual layout change. */
+
+/* v4.26 — independent status for both people; header status follows G. */
+.headAvatar.status-online:after,.onlineDot.status-online{background:#72a87a}
+.headAvatar.status-busy:after,.onlineDot.status-busy{background:#c65f5f}
+.headAvatar.status-away:after,.onlineDot.status-away{background:#c99655}
+.headAvatar.status-invisible:after,.onlineDot.status-invisible{background:#aaa}
+.headAvatar.status-busy:after,.headAvatar.status-away:after,.headAvatar.status-invisible:after{box-shadow:0 0 0 2px color-mix(in srgb,currentColor 8%,transparent)}
+.msgStatus.online i{background:#72a87a}.msgStatus.busy i{background:#c65f5f}.msgStatus.away i{background:#c99655}.msgStatus.invisible i{background:#aaa}
