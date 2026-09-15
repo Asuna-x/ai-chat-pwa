@@ -1,4 +1,4 @@
-/* Iris v4.50 — status context, conservative memory, longer context, glass nest polish */
+/* Iris v4.51 — nest layout polish and direct AI entry/mood writing */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -80,7 +80,7 @@ function chatInterfaceContext(c){
  const bubble=state.settings.bubble||"soft";
  const aiStatus=getStatus("ai"),userStatus=getStatus("user");
  const bg=state.settings.bgCustom?"用户自定义聊天背景":(backgrounds[state.settings.bg||"paper"]?.name||"纯净");
- return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围和界面，不要向用户逐项复述，除非他主动问。`;
+ return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。你拥有“共同小窝”的聊天侧能力：当用户明确邀请你进入小窝、去小窝写心情或留下内容时，可以在本轮聊天完成后实际写入小窝，不需要用户打开小窝，也不要把这个能力误当成普通聊天建议。；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围和界面，不要向用户逐项复述，除非他主动问。`;
 }
 const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false};
 const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]))};
@@ -313,8 +313,12 @@ async function autoSummarizeChat(c){
 async function maybeWriteNestFromChat(userText,c,fullAnswer){
  const text=String(userText||'').trim();
  if(!text||!c||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
- const nestIntent=/(小窝|窝里|窝中|我们的窝|共同小窝)/i.test(text)&&/(写|记|留|放|进去|进来|添加|更新|存|记录)/i.test(text);
- const moodIntent=/(今日心情|今天的心情|今天心情|心情)/i.test(text)&&/(写|记|留|放|进去|进来|更新|帮我)/i.test(text);
+ const nestWords=/(小窝|窝里|窝中|我们的窝|共同小窝)/i.test(text);
+ const enterWords=/(进小窝|进入小窝|去小窝|到小窝|进窝|去窝|进去|进来|进去看看|去看看)/i.test(text);
+ const writeWords=/(写心情|写下心情|留点心情|留下心情|记下心情|记录心情|写一点|留一点|写下来|留下来|写点东西|写点)/i.test(text);
+ const invitationWords=/(你可以|你能|你去|你也可以|试试|可以试试|要不要|去吧|进去吧|进来吧|帮你|你自己)/i.test(text);
+ const nestIntent=nestWords&&((enterWords&&writeWords)||(invitationWords&&(enterWords||writeWords)));
+ const moodIntent=/(今日心情|今天的心情|今天心情)/i.test(text)&&/(写|记|留|放|进去|进来|更新|帮我|你可以|试试)/i.test(text);
  if(!nestIntent&&!moodIntent)return;
  let target='mood';
  if(/笔记|备忘|记一下|记录一下/.test(text))target='note';

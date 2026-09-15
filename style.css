@@ -368,7 +368,6 @@ dialog#nest.nestDialog::backdrop{background:#f7eee4}
 .nestApp{--nest-bg-image:none;position:relative;width:100%;height:100%;overflow:hidden;background:#f7eee4;background-image:var(--nest-bg-image);background-size:cover;background-position:center}
 .nestApp:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,250,244,.80),rgba(255,250,244,.88));pointer-events:none}
 .nestPage{position:relative;width:100%;height:100%;display:flex;flex-direction:column;z-index:1}
-.nestHomeBg{position:absolute;inset:0;background:radial-gradient(circle at 82% 16%,rgba(255,232,207,.8),transparent 30%),radial-gradient(circle at 15% 80%,rgba(238,216,197,.55),transparent 35%);pointer-events:none}
 .nestHomeInner{position:relative;flex:1;overflow:auto;padding:calc(10px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 90px max(18px,env(safe-area-inset-left));scrollbar-width:none}
 .nestHomeInner::-webkit-scrollbar{display:none}
 .nestTop,.nestSubTop{height:54px;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;flex:none}
@@ -376,7 +375,6 @@ dialog#nest.nestDialog::backdrop{background:#f7eee4}
 .nestTop h1{font-size:28px}.nestSubTop h2{font-size:19px}
 .nestIconBtn{width:40px;height:40px;border:0;background:rgba(255,255,255,.58);border-radius:14px;color:#77665a;font-size:25px;display:grid;place-items:center;box-shadow:0 5px 18px rgba(94,65,42,.07)}
 .nestTop .nestIconBtn:last-child{font-size:18px}
-.nestHeroSpace{height:clamp(35px,10vh,92px)}
 .nestClockCard,.nestCard,.nestAnniversaryCard{background:rgba(255,250,244,.82);border:1px solid rgba(180,151,123,.18);box-shadow:0 12px 35px rgba(94,65,42,.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .nestClockCard{border-radius:25px;padding:18px 20px;margin-bottom:12px;text-align:center}.nestClockCard div{font-size:11px;color:#9a8777}.nestClockCard strong{display:block;margin-top:3px;font-family:ui-serif,Georgia,serif;font-size:38px;line-height:1;color:#6f5140;font-weight:500;letter-spacing:1px}
 .nestCard{border-radius:22px;padding:16px 17px;margin-bottom:10px}.nestCardHead{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#68574b;font-weight:700}.nestCardHead button{border:0;background:transparent;color:#a77d67;font-size:11px;padding:3px 0}.nestMoodValue{margin-top:12px;font-family:ui-serif,Georgia,serif;font-size:20px;color:#6d5748}.nestTextPreview{margin-top:9px;color:#8c7768;font-size:13px;line-height:1.65;min-height:22px;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.nestToGCard{background:linear-gradient(135deg,rgba(255,247,240,.94),rgba(251,239,229,.82))}.nestAnniversaryCard{border-radius:21px;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:2px}.nestAnniversaryCard span,.nestAnniversaryCard strong{display:block}.nestAnniversaryCard span{font-size:10px;color:#a08b7a}.nestAnniversaryCard strong{margin-top:3px;font-size:14px;color:#6d5648;font-weight:600}.nestAnniversaryCard button{border:0;background:transparent;font-size:25px;color:#b18a72}
@@ -493,9 +491,8 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 
 
 /* Iris v4.46 — soft pink editorial nest layout and clearer single-person mood views. */
-.nestHomeInner{padding-top:calc(16px + env(safe-area-inset-top));background:radial-gradient(circle at 85% 10%,rgba(255,226,238,.72),transparent 31%),radial-gradient(circle at 12% 72%,rgba(244,220,232,.52),transparent 34%)}
+.nestHomeInner{padding-top:calc(16px + env(safe-area-inset-top));background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.04))}
 .nestTop{height:58px}.nestTop h1{font-size:25px;letter-spacing:4px}.nestIconBtn{background:rgba(255,255,255,.72);border:1px solid rgba(190,146,164,.10);box-shadow:0 8px 24px rgba(128,87,105,.08)}
-.nestHeroSpace{height:10px}
 .nestClockCard{border-radius:26px;background:rgba(255,248,251,.82);border:1px solid rgba(190,146,164,.14);box-shadow:0 14px 34px rgba(128,87,105,.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);text-align:center}
 .nestClockCard div{font-size:10px;letter-spacing:.5px;color:#aa8f9b}.nestClockCard strong{display:block;margin-top:8px;color:#765366;font-size:37px}
 .nestQuickMoodLabel{margin:17px 4px 8px;font-size:9px;letter-spacing:2.2px;color:#b08d9b;text-transform:uppercase}.nestQuickMoodRow{gap:10px;margin-bottom:12px}
@@ -527,17 +524,17 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestTop h1{font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif;font-weight:500;letter-spacing:3px}
 .nestClockCard{position:relative;padding:24px 18px 20px;overflow:hidden}
 .nestClockCard::before{content:"TODAY  ·  OUR LITTLE PLACE";display:block;margin-bottom:10px;font-size:8px;letter-spacing:2px;color:#b79aa6}
-.nestClockCard::after{content:"";position:absolute;width:110px;height:110px;right:-36px;top:-46px;border-radius:50%;background:rgba(255,221,235,.45);pointer-events:none}
+
 .nestQuickMoodLabel{margin-top:20px}
 .nestQuickMoodRow{grid-template-columns:1fr 1fr}
 .nestQuickMood{min-height:82px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
-.nestQuickMood::after{content:"";position:absolute;right:-18px;bottom:-24px;width:72px;height:72px;border-radius:50%;background:rgba(244,216,228,.35);pointer-events:none}
+
 .nestQuickMood strong{position:relative;z-index:1}
 .nestCard{position:relative;overflow:hidden}
 .nestToGCard::before,.nestNoteCard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#e5c3d1;border-radius:4px}
 .nestToGCard .nestCardHead,.nestNoteCard .nestCardHead,.nestToGCard .nestTextPreview,.nestNoteCard .nestTextPreview{padding-left:4px}
 .nestAnniversaryCard{margin-top:2px;padding:17px 16px}
-.nestAnniversaryCard::before{content:"";position:absolute;right:56px;top:50%;width:5px;height:5px;border-radius:50%;background:#d7b2c1;box-shadow:12px -8px 0 #ead2dc,22px 4px 0 #e1c1ce;opacity:.65}
+
 .nestSubBody{max-width:760px;width:100%;box-sizing:border-box;margin:0 auto}
 .nestSubTop{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
 .nestMoodSection{box-shadow:0 14px 34px rgba(128,87,105,.055)}
@@ -566,8 +563,8 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 @media(max-width:380px){.nestMoodWritingLabel{display:block}.nestMoodWritingLabel small{display:block;margin-top:3px}}
 
 
-/* Iris v4.50 — softer glass nest */
-.nestApp:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.28),transparent 38%),linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,241,248,.10));z-index:0}
+/* Iris v4.51 — softer glass nest, no decorative pink circles */
+.nestApp:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04));z-index:0}
 .nestPage{isolation:isolate}.nestHomeInner,.nestSubBody,.nestSubFooter,.nestSubTop{z-index:1}
 .nestClockCard,.nestCard,.nestQuickMood,.nestAnniversaryCard,.nestMoodSection,.nestMoodSliderCard,.nestDailyPager,.nestSettingGroup,.nestAnniversaryBgBox{background:linear-gradient(145deg,rgba(255,255,255,.58),rgba(255,248,252,.38));border:1px solid rgba(255,255,255,.62);box-shadow:0 16px 38px rgba(105,73,91,.08),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(24px) saturate(125%);-webkit-backdrop-filter:blur(24px) saturate(125%)}
 .nestQuickMood,.nestCard{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}.nestQuickMood:active,.nestCard:active{transform:translateY(1px);box-shadow:0 10px 25px rgba(105,73,91,.07)}
@@ -576,3 +573,8 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestBottomNav button.active{background:rgba(239,219,228,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
 .nestSubBody textarea,.nestField input,.nestField textarea,.nestAnniversaryPickerGroup select{background:rgba(255,255,255,.52);border-color:rgba(255,255,255,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.65)}
 .nestBigCountdown{background:linear-gradient(145deg,rgba(255,255,255,.62),rgba(250,230,240,.44));border:1px solid rgba(255,255,255,.68);box-shadow:0 18px 42px rgba(105,73,91,.09),inset 0 1px 0 rgba(255,255,255,.78);backdrop-filter:blur(24px) saturate(125%);-webkit-backdrop-filter:blur(24px) saturate(125%)}
+
+
+/* Iris v4.52 — clean nest top; entering the nest is a chat-side AI action */
+.nestHomeInner{padding-top:calc(10px + env(safe-area-inset-top))}
+.nestClockCard{margin-top:4px}
