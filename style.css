@@ -521,7 +521,7 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestDailyPager>button:disabled{opacity:.35}.nestSubBody textarea.nestMoodCustom{min-height:78px}
 
 
-/* Iris v4.48 — shared-nest editorial refinement, inspired by the user's reference layout. */
+/* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 .nestHomeInner{max-width:760px;margin:0 auto;width:100%;box-sizing:border-box}
 .nestTop{margin-bottom:2px}
 .nestTop h1{font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif;font-weight:500;letter-spacing:3px}
@@ -548,3 +548,19 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   .nestHomeInner{padding-left:28px;padding-right:28px}
   .nestHomeInner>.nestCard,.nestHomeInner>.nestAnniversaryCard,.nestHomeInner>.nestClockCard,.nestHomeInner>.nestQuickMoodLabel,.nestHomeInner>.nestQuickMoodRow{max-width:680px;margin-left:auto;margin-right:auto}
 }
+
+
+/* Iris v4.49 — direct daily cards and separated quick mood / free writing UI. */
+.nestCard[role="button"]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nestCard[role="button"]:focus-visible{outline:2px solid rgba(184,132,155,.45);outline-offset:2px}
+.nestCardArrow{font-size:21px;line-height:1;color:#b38b9a;font-weight:300;transition:transform .18s ease}
+.nestCard[role="button"]:active .nestCardArrow{transform:translateX(2px)}
+.nestToGCard,.nestNoteCard{min-height:96px;display:flex;flex-direction:column;justify-content:center}
+.nestToGCard .nestTextPreview,.nestNoteCard .nestTextPreview{margin-right:26px}
+.nestMoodWriting{margin-top:12px;padding:12px;border:1px solid rgba(190,146,164,.11);border-radius:18px;background:rgba(255,252,253,.55)}
+.nestMoodWritingLabel{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 8px;color:#765565}
+.nestMoodWritingLabel span{font-size:11px;font-weight:650}
+.nestMoodWritingLabel small{font-size:8px;color:#b39aa4}
+.nestMoodWriting .nestMoodCustom{margin:0!important;min-height:82px!important;background:rgba(255,255,255,.62)!important}
+.nestQuickMood strong{max-width:calc(100% - 8px)}
+@media(max-width:380px){.nestMoodWritingLabel{display:block}.nestMoodWritingLabel small{display:block;margin-top:3px}}
