@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#f6f2ec"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="G Chat">
+<meta name="theme-color" content="#f6f2ec"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Iris">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>Iris</title><link rel="stylesheet" href="./style.css"><script>/* v4.33: remove legacy service workers/caches so stale JS cannot survive updates. */
 (async()=>{try{if("serviceWorker"in navigator){const rs=await navigator.serviceWorker.getRegistrations();for(const r of rs)await r.unregister()}if(window.caches){const ks=await caches.keys();for(const k of ks)await caches.delete(k)}}catch(e){console.warn("SW cleanup",e)}})();</script></head>
 <body><div class="app" id="app"><aside id="drawer" class="drawer"><div class="drawer-top"><div class="brand"><div class="brand-mark" id="brandAvatar">G</div><div><b>G Chat</b><small>私人 AI 對話</small></div></div><button class="round" id="closeDrawer">×</button></div>
@@ -69,7 +69,7 @@
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="memoryPage">
-      <div class="subIntro"><b>记忆</b><small>这里保存长期记忆。聊天时会自动带入这些记忆；对话变长后，Iris 会自动整理旧记录，减少每次发送的上下文。</small></div>
+      <div class="subIntro"><b>记忆</b><small>这里保存 G 可以长期参考的信息。聊天时会自动带入这些记忆。</small></div>
       <div class="settingsSectionTitle">添加记忆</div>
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>记住一件事</span><textarea id="memoryInput" rows="3" placeholder="例如：我喜欢晚上安静地聊天。"></textarea></label>
@@ -78,7 +78,7 @@
       <div class="settingsSectionTitle">已保存</div>
       <div class="settingsGroup settingsFormGroup" id="memoryList"></div>
       <div class="settingsGroup settingsActionGroup"><button class="settingsAction danger" id="clearMemories"><span>清空全部记忆</span><em>›</em></button></div>
-      <p class="settingsNote">你也可以在聊天中直接说“记住：……”；Iris 会把这句话保存为记忆。对话达到一定长度后，Iris 会自动总结旧记录，只保留最近消息和摘要用于后续聊天，以减少 Token 消耗。摘要和记忆都会包含在数据导出文件中。</p>
+      <p class="settingsNote">你也可以在聊天中直接说“记住：……”；G Chat 会把这句话保存为记忆。记忆只保存在当前装置，并会包含在数据导出文件中。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="themePage">
