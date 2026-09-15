@@ -579,7 +579,7 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestHomeInner{padding-top:calc(10px + env(safe-area-inset-top))}
 .nestClockCard{margin-top:4px}
 
-/* Iris v4.53 — nest visual hierarchy and glass anniversary layout */
+/* Iris v4.54 — visible glass nest hierarchy */
 .nestClockCard::before{display:none!important;content:none!important}
 .nestClockCard{padding:28px 22px 25px!important;border-radius:30px!important;text-align:center!important}
 .nestTimeKicker{display:block;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#aa8f9b;margin-bottom:10px}
@@ -611,3 +611,13 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
  .nestBigCountdown strong{font-size:70px!important}
  .nestAnniversaryActions{grid-template-columns:1fr!important}
 }
+
+/* v4.54: stronger, cleaner glass hierarchy for the nest. */
+.nestApp:before{background:linear-gradient(180deg,rgba(255,250,244,.60),rgba(255,250,244,.78))!important}
+.nestClockCard,.nestCard,.nestQuickMood,.nestAnniversaryCard,.nestBigCountdown,.nestSettingGroup,.nestAnniversaryBgBox{background:linear-gradient(145deg,rgba(255,255,255,.70),rgba(255,247,250,.46))!important;border-color:rgba(255,255,255,.78)!important;box-shadow:0 18px 45px rgba(105,73,91,.10),inset 0 1px 0 rgba(255,255,255,.85)!important;backdrop-filter:blur(28px) saturate(135%)!important;-webkit-backdrop-filter:blur(28px) saturate(135%)!important}
+.nestClockCard{min-height:150px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+.nestClockCard strong{font-size:68px!important}
+.nestBigCountdown{min-height:190px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;text-align:center!important}
+.nestBigCountdown strong{font-size:88px!important}
+.nestQuickMoodRow{margin-top:2px!important}
+@media(max-width:380px){.nestClockCard strong{font-size:58px!important}.nestBigCountdown strong{font-size:72px!important}}
