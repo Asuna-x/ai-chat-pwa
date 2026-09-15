@@ -490,3 +490,22 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 
 /* v4.45 — quick mood choices in the shared nest. */
 .nestMoodQuickGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 10px}.nestMoodQuickOption{border:1px solid #eadbd0;background:rgba(255,252,248,.82);color:#806d5e;border-radius:14px;padding:10px 4px;font:inherit;font-size:11px;transition:.16s}.nestMoodQuickOption.active{background:#ead8c9;border-color:#d6bca8;color:#634b3b;font-weight:700;box-shadow:0 4px 12px rgba(116,80,58,.08)}.nestMoodCustom{min-height:62px!important}.nestMoodCustomLabel{grid-column:1/-1;padding:9px 11px;border-radius:12px;background:rgba(255,250,244,.72);color:#8a7667;font-size:10px;line-height:1.45}.nestMoodSection+.nestMoodSection{margin-top:22px}
+
+
+/* Iris v4.46 — soft pink editorial nest layout and clearer single-person mood views. */
+.nestHomeInner{padding-top:calc(16px + env(safe-area-inset-top));background:radial-gradient(circle at 85% 10%,rgba(255,226,238,.72),transparent 31%),radial-gradient(circle at 12% 72%,rgba(244,220,232,.52),transparent 34%)}
+.nestTop{height:58px}.nestTop h1{font-size:25px;letter-spacing:4px}.nestIconBtn{background:rgba(255,255,255,.72);border:1px solid rgba(190,146,164,.10);box-shadow:0 8px 24px rgba(128,87,105,.08)}
+.nestHeroSpace{height:10px}
+.nestClockCard{border-radius:26px;background:rgba(255,248,251,.82);border:1px solid rgba(190,146,164,.14);box-shadow:0 14px 34px rgba(128,87,105,.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);text-align:center}
+.nestClockCard div{font-size:10px;letter-spacing:.5px;color:#aa8f9b}.nestClockCard strong{display:block;margin-top:8px;color:#765366;font-size:37px}
+.nestQuickMoodLabel{margin:17px 4px 8px;font-size:9px;letter-spacing:2.2px;color:#b08d9b;text-transform:uppercase}.nestQuickMoodRow{gap:10px;margin-bottom:12px}
+.nestQuickMood{border-radius:22px;padding:15px 16px;background:rgba(255,249,252,.82);border-color:rgba(190,146,164,.14);box-shadow:0 12px 30px rgba(128,87,105,.07)}
+.nestQuickMood span{font-size:10px;color:#a88d98;letter-spacing:.4px}.nestQuickMood strong{margin-top:2px;font-size:15px;color:#6e5060}
+.nestCard,.nestAnniversaryCard{border-radius:22px;background:rgba(255,249,252,.76);border-color:rgba(190,146,164,.13);box-shadow:0 12px 30px rgba(128,87,105,.06)}
+.nestCardHead{color:#785b69}.nestTextPreview{color:#997f8a}.nestAnniversaryCard strong{color:#78576a}
+.nestSubTop{border-bottom:1px solid rgba(190,146,164,.13);background:rgba(255,249,252,.40)}
+.nestSubBody{background:linear-gradient(180deg,rgba(255,249,252,.32),rgba(255,248,251,.12))}
+.nestMoodSection{background:rgba(255,249,252,.76);border:1px solid rgba(190,146,164,.13);border-radius:24px;padding:17px;box-shadow:0 12px 30px rgba(128,87,105,.06)}
+.nestMoodIntro{font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif;font-size:18px;color:#6e5060;margin-bottom:14px}.nestMoodSection .nestMoodQuickGrid{margin-bottom:12px}.nestMoodQuickOption{border-color:#ead7df;background:rgba(255,252,253,.9);color:#8b6f7b;border-radius:15px;padding:11px 4px;font-size:11px}.nestMoodQuickOption.active{background:#efdbe4;border-color:#dfc1ce;color:#6c4b5d;box-shadow:0 5px 14px rgba(128,87,105,.10)}
+.nestMoodCustom{min-height:78px!important;background:rgba(255,252,253,.92)!important;border-color:#ead7df!important}.nestSubFooter{background:rgba(255,249,252,.86)}.nestSaveBtn{background:#8b6174;box-shadow:0 10px 22px rgba(111,72,92,.16)}
+.nestMoodPage .hidden{display:none!important}
