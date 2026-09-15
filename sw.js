@@ -1,5 +1,33 @@
-const C="g-chat-v4-33";
-const A=["./","./index.html","./style.css","./app.js","./api.js","./manifest.webmanifest","./icon-192.png","./icon-512.png","./apple-touch-icon.png"];
-self.addEventListener("install",e=>e.waitUntil(self.skipWaiting()));
-self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;if(/\/(?:index\.html|app\.js|api\.js|style\.css|sw\.js)(?:$|\?)/.test(new URL(e.request.url).pathname))return;e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});
+const CACHE_NAME = "iris-shell-v20260915-1";
+
+self.addEventListener("install", event => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener("fetch", event => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith((async () => {
+    try {
+      const fresh = await fetch(req, { cache: "no-store" });
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(req, fresh.clone()).catch(() => {});
+      return fresh;
+    } catch (err) {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      throw err;
+    }
+  })());
+});
