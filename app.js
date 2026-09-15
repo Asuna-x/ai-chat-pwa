@@ -65,19 +65,25 @@ async function send(){
 }
 
 
-/* v4.15 — AI web modifier. Uses the existing AI connection and keeps api.js out of AI edits. */
+/* v4.16 — AI web modifier. Plan-first, tolerant parsing, and CSS patching instead of asking AI to rewrite huge files. */
 function aiModifySetStatus(text,error=false){const el=$("#aiModifyStatus");if(!el)return;el.textContent=text;el.classList.toggle("errorText",!!error)}
 async function aiModifyReadSource(file){
-  const r=await fetch("./"+file+"?ai_source=4.15",{cache:"no-store"});
+  const r=await fetch("./"+file+"?ai_source=4.16",{cache:"no-store"});
   if(!r.ok)throw new Error("读取 "+file+" 失败（HTTP "+r.status+"）");
   return await r.text();
 }
-function aiModifyExtractJSON(text){
-  let t=String(text||"").trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"");
-  try{return JSON.parse(t)}catch{}
+function aiModifyExtractPlan(text){
+  const t=String(text||"").trim();
+  if(!t)throw new Error("AI 没有返回内容。请检查模型是否可用。");
+  return t.replace(/^```(?:text|markdown)?\s*/i,"").replace(/\s*```$/i,"").trim();
+}
+function aiModifyExtractCss(text){
+  const t=String(text||"").trim();
+  const m=t.match(/```(?:css)?\s*([\s\S]*?)```/i);
+  if(m&&m[1].trim())return m[1].trim();
   const a=t.indexOf("{");const b=t.lastIndexOf("}");
-  if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));
-  throw new Error("AI 返回的修改结果不是有效 JSON。");
+  if(a>=0&&b>a)return t.slice(Math.max(0,t.lastIndexOf("\n",a)+1),b+1).trim();
+  throw new Error("AI 没有返回可应用的 CSS 修改。请重新生成。");
 }
 async function aiModifyRun(){
   const prompt=$("#aiModifyPrompt")?.value.trim();
@@ -85,29 +91,36 @@ async function aiModifyRun(){
   if(!prompt){aiModifySetStatus("请先写下你想修改的内容。",true);return}
   if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){aiModifySetStatus("请先在 AI 设置里完成 API Base、API Key 和模型。",true);return}
   const btn=$("#aiModifyRun"),apply=$("#aiModifyApply"),preview=$("#aiModifyPreview");
-  btn.disabled=true;apply.disabled=true;preview.classList.add("hidden");aiModifySetStatus("正在读取当前网页并让 AI 生成修改……");
+  btn.disabled=true;apply.disabled=true;preview.classList.add("hidden");window._aiModifyPending=null;
+  aiModifySetStatus("正在让 AI 分析当前网页……");
   try{
     const file=scope==="function"?"app.js":"style.css";
     const source=await aiModifyReadSource(file);
-    const locked=scope==="function"?"绝对不要修改、删除或重写 send() 的 API 请求流程；绝对不要修改 GChatAPI、API Key、Base URL、模型请求逻辑。必须保留现有设置、聊天记录、头像、语音、已读、输入状态、AI 修改页面等全部已有功能。":"不要删除现有任何视觉规则或功能；只在现有 CSS 基础上实现要求。";
-    const system=`你是 G Chat 的网页代码修改器。用户会给你当前文件和修改要求。你必须只修改指定文件：${file}。${locked}\n只返回严格 JSON，不要 Markdown，不要代码围栏，格式：{"file":"${file}","summary":"用一句中文说明改了什么","content":"完整的修改后文件内容"}。content 必须是完整文件，不是片段。不要输出其他文字。`;
-    const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:system},{role:"user",content:"修改要求：\\n"+prompt+"\\n\\n当前 "+file+"：\\n"+source}],temperature:.2});
-    const obj=aiModifyExtractJSON(result.answer);
-    if(obj.file!==file||typeof obj.content!=="string"||!obj.content.trim())throw new Error("AI 返回的文件格式不正确。");
-    window._aiModifyPending={file,content:obj.content,summary:String(obj.summary||"已生成修改")};
-    preview.textContent=obj.content;preview.classList.remove("hidden");
-    apply.disabled=false;aiModifySetStatus((obj.summary||"修改已生成")+"。请先看预览，确认后再应用。",false);
+    if(scope==="visual"){
+      const system=`你是 G Chat 的网页设计助手。根据用户要求分析当前 style.css，但不要重写整个文件。\n先用简短中文说明：1.你理解用户想改什么；2.准备改哪些区域；3.不会影响哪些现有功能。\n然后给出一个“可直接追加”的 CSS 补丁，只写新增/覆盖规则，不要删除原 CSS，不要修改 JavaScript，不要修改 API。\n格式可以是普通中文说明 + 一个 CSS 代码块。不要返回 JSON。`;
+      const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:system},{role:"user",content:"用户修改要求：\n"+prompt+"\n\n当前 style.css（用于理解现有结构）：\n"+source}],temperature:.2});
+      const plan=aiModifyExtractPlan(result.answer);
+      let css="";try{css=aiModifyExtractCss(result.answer)}catch{}
+      preview.textContent=plan+(css?"\n\n—— 可应用的 CSS 补丁 ——\n\n"+css:"");preview.classList.remove("hidden");
+      if(css){window._aiModifyPending={file:"style.css",content:css,summary:plan};apply.disabled=false;aiModifySetStatus("修改方案已生成。下面的 CSS 补丁可以直接应用到本机。",false)}
+      else aiModifySetStatus("修改方案已生成，但 AI 没有返回可应用的 CSS。请重新生成。",true);
+    }else{
+      const system=`你是 G Chat 的网页功能设计助手。分析当前 app.js 和用户要求，只生成“修改方案”，不要返回完整代码。\n必须明确：修改哪些函数/区域、实现步骤、风险点，以及如何保证 send()、GChatAPI、API Key、Base URL、模型请求流程完全不变。\n不要 JSON，不要代码块，不要尝试执行修改。`;
+      const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:system},{role:"user",content:"用户修改要求：\n"+prompt+"\n\n当前 app.js：\n"+source}],temperature:.2});
+      const plan=aiModifyExtractPlan(result.answer);
+      preview.textContent=plan;preview.classList.remove("hidden");
+      aiModifySetStatus("功能修改方案已生成。功能代码暂时不会自动覆盖，以免影响现有发送/API 逻辑。",false);
+    }
   }catch(e){aiModifySetStatus("生成失败："+(e.message||String(e)),true)}finally{btn.disabled=false}
 }
 function aiModifyApply(){
   const p=window._aiModifyPending;if(!p){aiModifySetStatus("还没有可应用的修改。",true);return}
-  const old=localStorage.getItem("gchat_ai_overrides");
-  let o={};try{o=old?JSON.parse(old)||{}:{}}catch{o={}}
-  if(p.file==="style.css")o.style=p.content;else o.app=p.content;
+  let o={};try{o=JSON.parse(localStorage.getItem("gchat_ai_overrides")||"{}")}catch{o={}}
+  const old=JSON.stringify(o);
+  o.style=(o.style?o.style+"\n\n":"")+p.content;
   localStorage.setItem("gchat_ai_overrides",JSON.stringify(o));
-  localStorage.setItem("gchat_ai_overrides_backup",old||"{}");
-  aiModifySetStatus("已应用到本机。正在重新载入……");
-  setTimeout(()=>location.reload(),180);
+  localStorage.setItem("gchat_ai_overrides_backup",old);
+  aiModifySetStatus("已应用到本机。正在重新载入……");setTimeout(()=>location.reload(),180);
 }
 function aiModifyUndo(){
   if(!confirm("撤销本机 AI 修改？这只会清除 AI 对网页代码的本地覆盖，不会删除聊天记录或 API 设置。"))return;
@@ -131,4 +144,4 @@ document.querySelectorAll("[data-settings-page]").forEach(b=>b.onclick=()=>setti
 $("#aiModifyRun").onclick=aiModifyRun;$("#aiModifyApply").onclick=aiModifyApply;$("#aiModifyUndo").onclick=aiModifyUndo;
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js?v=4.15",{updateViaCache:"none"}).then(r=>r.update()).catch(console.error);state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js?v=4.16",{updateViaCache:"none"}).then(r=>r.update()).catch(console.error);state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
