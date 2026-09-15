@@ -261,3 +261,18 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .message.user{position:relative}
 .message.user .readStatus{order:3;align-self:flex-end;margin:0 2px 5px 1px;color:var(--muted);font-size:8px;line-height:1;letter-spacing:.01em;opacity:.72;white-space:nowrap}
 @media(max-width:799px){.message.user .readStatus{font-size:8px;margin-bottom:5px}}
+
+/* v4.12 — cleaner identity layout: names above avatars, inward aligned. */
+.msgIdentity{width:38px;flex:none;display:flex;flex-direction:column;align-items:stretch;gap:3px;align-self:flex-end;margin-bottom:0}
+.msgIdentity .msgavatar{width:32px;height:32px;align-self:center}
+.msgName{display:block;width:100%;max-width:72px;font-size:8px;line-height:1.1;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.82}
+.message.assistant .msgIdentity{order:0}
+.message.assistant .msgName{text-align:right}
+.message.user .msgIdentity{order:2}
+.message.user .msgName{text-align:left}
+.message.user .readStatus{order:1;align-self:flex-end;margin:0 1px 4px 0;color:#68a875;font-size:7px;line-height:1;letter-spacing:.01em;opacity:.9;white-space:nowrap}
+@media(max-width:799px){
+  .msgIdentity{width:36px}
+  .msgName{font-size:8px;max-width:64px}
+  .message.user .readStatus{font-size:7px;margin-bottom:4px}
+}
