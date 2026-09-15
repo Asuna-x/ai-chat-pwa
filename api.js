@@ -1,3 +1,4 @@
+/* G Chat API v4.29: unchanged from v4.25 */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
