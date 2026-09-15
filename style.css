@@ -471,3 +471,10 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestAiMoodCard{background:rgba(255,248,242,.76)}
 #nestAiMood{min-height:105px}
 .nestAnniversaryPage{background-color:#f7eee4}
+/* Iris v4.43 — unified mood page and multi-anniversary UI */
+.nestBottomNav{grid-template-columns:repeat(5,1fr)}
+.nestMoodSection{margin-bottom:16px}.nestMoodSection .nestSettingTitle{margin-bottom:9px}.nestMoodSection textarea{min-height:150px}
+.nestMoodOpenBtn{width:100%;border:1px solid #eadbd0;background:rgba(255,252,248,.88);border-radius:16px;padding:13px 14px;text-align:left;color:#604e42;font-size:13px;display:flex;align-items:center;justify-content:space-between}.nestMoodOpenBtn span{margin-left:auto;margin-right:8px;color:#a08d7c;font-size:10px}.nestMoodOpenBtn::after{content:"";font-size:18px;color:#a08d7c}
+.nestAnniversaryPickerGroup select{box-sizing:border-box;width:100%;border:1px solid #eadbd0;background:rgba(255,252,248,.88);border-radius:14px;padding:12px 13px;color:#5e4b3f;font:inherit;outline:none}
+.nestAnniversaryList{display:grid;gap:7px;margin-top:10px}.nestAnniversaryListItem{width:100%;border:1px solid #eadbd0;background:rgba(255,252,248,.72);border-radius:14px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;text-align:left;color:#604e42}.nestAnniversaryListItem.active{background:#f1e1d5;border-color:#dec9b8}.nestAnniversaryListItem span,.nestAnniversaryListItem b,.nestAnniversaryListItem small{display:block}.nestAnniversaryListItem b{font-size:12px}.nestAnniversaryListItem small{margin-top:3px;color:#a08d7c;font-size:9px}.nestAnniversaryListItem em{font-style:normal;font-size:18px;color:#a58b79}.nestAnniversaryActions{display:grid;gap:8px;margin-top:14px}.nestAnniversaryActions .nestClearBg{margin-top:0}.dangerNestBtn{color:#a36f67!important;border-color:#ead1cd!important;background:rgba(255,247,245,.8)!important}
+@media(max-width:380px){.nestBottomNav button{font-size:9px;padding-left:1px;padding-right:1px}}
