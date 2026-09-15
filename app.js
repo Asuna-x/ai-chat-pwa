@@ -1,3 +1,4 @@
+/* Iris v4.50 — status context, conservative memory, longer context, glass nest polish */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -79,7 +80,7 @@ function chatInterfaceContext(c){
  const bubble=state.settings.bubble||"soft";
  const aiStatus=getStatus("ai"),userStatus=getStatus("user");
  const bg=state.settings.bgCustom?"用户自定义聊天背景":(backgrounds[state.settings.bg||"paper"]?.name||"纯净");
- return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：用户头像下方在聊天页面显示的当前状态就是「${userStatus.label}」，这是用户主动设置的实时聊天状态，请把它作为理解用户当下状态的背景，而不是把它当成今日心情。；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围和界面，不要向用户逐项复述，除非他主动问。`;
+ return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围和界面，不要向用户逐项复述，除非他主动问。`;
 }
 const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false};
 const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]))};
@@ -192,9 +193,19 @@ function renderMemories(){
   wrap.append(text,meta);row.append(icon,wrap,del);box.appendChild(row);
  });
 }
+function isStableMemoryCandidate(text,type="fact"){
+ const v=String(text||"").trim();
+ if(!v||v.length<4||v.length>180)return false;
+ if(/^(今天|现在|刚刚|这会儿|此刻|最近好累|我好累|好开心|好难过|有点烦|睡不着|困了|饿了|无聊)$/i.test(v))return false;
+ if(/(天气|气温|新闻|股票|汇率|今天吃|刚吃|正在吃|刚刚吃|现在在|等会儿|一会儿|明天再|今晚要|刚才发生|这次问答|这个问题)/.test(v)&&type!="plan")return false;
+ const stable=/偏好|喜欢|不喜欢|讨厌|习惯|通常|总是|从不|希望以后|以后都|长期|记得|称呼|关系|在一起|纪念日|项目|长期计划|正在做|持续|相处|聊天方式|不要用|希望你|我会|我不会|用户希望|用户喜欢/;
+ if(type!=="plan"&&!stable.test(v)&&v.length<18)return false;
+ return true;
+}
 function addMemory(text,meta={}){
+ const type=meta.type||"fact";
  const v=String(text||"").trim().replace(/^(记住|记得|请记住)[:：]?\s*/i,"").trim();
- if(!v)return false;
+ if(!isStableMemoryCandidate(v,type))return false;
  const existing=(state.memories||[]).find(m=>(m.text||"").trim()===v);
  if(existing){existing.updatedAt=Date.now();if(meta.source)existing.source=meta.source;save();renderMemories();return true}
  state.memories=state.memories||[];state.memories.unshift({id:crypto.randomUUID(),text:v,type:meta.type||"fact",source:meta.source||"manual",createdAt:Date.now(),updatedAt:Date.now()});
@@ -209,13 +220,13 @@ async function autoUpdateLongTermMemory(c){
  if(!c||state.memoryUpdating||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
  const userCount=(c.messages||[]).filter(m=>m.role==="user").length;
  if(userCount<6||userCount%6!==0)return;
- const grouped=compactMessagesForModel(c.messages||[]).slice(-30);
+ const grouped=compactMessagesForModel(c.messages||[]).slice(-60);
  if(grouped.length<8)return;
  state.memoryUpdating=true;
  try{
   const existing=(state.memories||[]).slice(0,60).map(m=>({id:m.id,text:m.text,type:m.type||"fact"}));
   const transcript=grouped.map(m=>(m.role==="user"?"用户":"AI")+"："+String(m.content||"")).join("\n");
-  const prompt=`请从这段持续私人聊天中维护“长期记忆”。长期记忆只保存未来聊天仍然有用的稳定信息：用户明确表达的长期偏好、习惯、重要关系信息、长期计划/项目、反复出现的相处方式。一次性的情绪、当天琐事、普通问答不要记。不要猜测。\n\n现有记忆：\n${JSON.stringify(existing, null, 2)}\n\n最近聊天：\n${transcript}\n\n请只输出 JSON，不要 Markdown：\n{"memories":[{"action":"add","text":"...","type":"fact|preference|relationship|plan"},{"action":"update","id":"现有记忆ID","text":"更新后的完整记忆","type":"fact|preference|relationship|plan"},{"action":"delete","id":"现有记忆ID"}]}\n规则：只输出确实需要改变的记忆；相同意思合并；新信息与旧信息冲突时更新旧记忆；过时或明确被否定的记忆删除；最多新增或更新 5 条。`;
+  const prompt=`请从这段持续私人聊天中维护“长期记忆”。长期记忆只保存未来聊天仍然有用的稳定信息：用户明确表达的长期偏好、习惯、重要关系信息、长期计划/项目、反复出现的相处方式。一次性的情绪、当天琐事、普通问答不要记。不要猜测。\n\n现有记忆：\n${JSON.stringify(existing, null, 2)}\n\n最近聊天：\n${transcript}\n\n请只输出 JSON，不要 Markdown：\n{"memories":[{"action":"add","text":"...","type":"fact|preference|relationship|plan"},{"action":"update","id":"现有记忆ID","text":"更新后的完整记忆","type":"fact|preference|relationship|plan"},{"action":"delete","id":"现有记忆ID"}]}\n规则：只输出确实需要改变的记忆；相同意思合并；新信息与旧信息冲突时更新旧记忆；过时或明确被否定的记忆删除；一次性情绪、当天安排、临时状态、普通问答、具体时间点和无关细节一律不要记录；除非是明确的长期计划，否则不要把“明天/今晚/这周”之类临时安排记入长期记忆；最多新增或更新 5 条。宁可少记，也不要误记。`;
   const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:"你是长期记忆维护器。你的工作是谨慎维护记忆，而不是记录所有聊天内容。"},{role:"user",content:prompt}],temperature:.1});
   const data=parseMemoryUpdate(result.answer);
   if(!data||!Array.isArray(data.memories))return;
@@ -231,7 +242,7 @@ async function autoUpdateLongTermMemory(c){
  }catch(e){console.warn("auto memory update failed",e)}finally{state.memoryUpdating=false}
 }
 function memoryContext(){
- const list=(state.memories||[]).map(m=>String(m.text||"").trim()).filter(Boolean).slice(0,60);
+ const list=(state.memories||[]).map(m=>String(m.text||"").trim()).filter(Boolean).slice(0,80);
  if(!list.length)return "";
  return "以下是用户保存的长期记忆。它们用于帮助你记住这个人和你们长期相处中的重要信息；如果与用户当前明确说的话冲突，以当前对话为准。不要把这些记忆逐条复述给用户，而是自然地体现在回应里：\n"+list.map((x,i)=>`${i+1}. ${x}`).join("\n");
 }
@@ -273,21 +284,21 @@ function shouldAutoSummarize(c){
 async function autoSummarizeChat(c){
  if(!c||state.summarizing||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
  const summaryCount=Math.max(0,Math.min(Number(c.summaryMessageCount)||0,c.messages.length));
- const source=(c.messages||[]).slice(summaryCount,-30);
+ const source=(c.messages||[]).slice(summaryCount,-60);
  if(source.length<6)return;
  state.summarizing=true;
  const snapshotId=c.id, snapshotLen=c.messages.length;
  try{
   const prior=c.summary?"已有摘要：\n"+c.summary.trim()+"\n\n":"";
   const transcript=source.map(m=>(m.role==="user"?"用户":"AI")+"："+String(m.content||"")).join("\n");
-  const prompt=`请把下面这段私人聊天整理成一份简洁、可长期使用的对话摘要。\n\n要求：\n1. 保留重要事实、用户偏好、正在进行的计划、已经做出的决定、未完成的事情、持续的话题，以及对后续聊天有帮助的情绪和互动背景。\n2. 如果聊天中形成了稳定的相处方式或用户明确表达过的长期偏好，也要保留。不要把一次性的情绪误判成长期事实。\n4. 不要记录一次性闲聊、重复内容或无关细节。\n5. 不要猜测，不要编造。\n6. 用自然的中文，第三人称描述用户，用“AI”描述助手。\n7. 控制在 600 字以内。\n8. 只输出摘要正文，不要标题、序号或解释。\n\n${prior}这次新增的聊天记录：\n${transcript}`;
+  const prompt=`请把下面这段私人聊天整理成一份简洁、可长期使用的对话摘要。\n\n要求：\n1. 保留重要事实、用户偏好、正在进行的计划、已经做出的决定、未完成的事情、持续的话题，以及对后续聊天有帮助的情绪和互动背景。\n2. 如果聊天中形成了稳定的相处方式或用户明确表达过的长期偏好，也要保留。不要把一次性的情绪误判成长期事实。\n4. 不要记录一次性闲聊、重复内容或无关细节。\n5. 不要猜测，不要编造。\n6. 用自然的中文，第三人称描述用户，用“AI”描述助手。\n7. 控制在 900 字以内。\n8. 只输出摘要正文，不要标题、序号或解释。\n\n${prior}这次新增的聊天记录：\n${transcript}`;
   const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:"你负责整理对话摘要。只保留对未来聊天真正有价值的信息。"},{role:"user",content:prompt}],temperature:.2});
   const summary=String(result.answer||"").trim();
   if(!summary)return;
   if(state.chats.find(x=>x.id===snapshotId)===c && c.messages.length>=snapshotLen){
    c.summary=summary;
    c.summaryUpdatedAt=Date.now();
-   c.summaryMessageCount=Math.max(0,snapshotLen-30);
+   c.summaryMessageCount=Math.max(0,snapshotLen-60);
    const usage=result.usage||{};
    const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};
    const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;
