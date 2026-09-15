@@ -135,7 +135,7 @@ function parseMemoryUpdate(raw){
  try{return JSON.parse(t)}catch{const a=t.indexOf("{");const b=t.lastIndexOf("}");if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch{}}return null}
 }
 async function autoUpdateLongTermMemory(c){
- if(!c||state.memoryUpdating||state.busy||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
+ if(!c||state.memoryUpdating||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
  const userCount=(c.messages||[]).filter(m=>m.role==="user").length;
  if(userCount<6||userCount%6!==0)return;
  const grouped=compactMessagesForModel(c.messages||[]).slice(-30);
@@ -240,6 +240,7 @@ async function send(){
  state.busy=true;const sendBtn=$("#send");sendBtn.disabled=true;sendBtn.classList.add("loading");sendBtn.classList.remove("stop");sendBtn.textContent="…";sendBtn.title="发送中";updateTyping();
  const controller=new AbortController();state._abort=controller;
  const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
+ let completed=false;
  try{
   const ms=[];
   const systemParts=[];
@@ -275,8 +276,8 @@ async function send(){
   // Each displayed sentence is already persisted as its own assistant message.
   // Do not append the full reply again, otherwise separate bubbles would collapse/duplicate.
   save();
+  completed=true;
   if(shouldAutoSummarize(c)) autoSummarizeChat(c);
-  autoUpdateLongTermMemory(c);
  }catch(e){
   if(e?.name==="AbortError") { showErr(state.stopRequested?"已停止这次回复。\n你的消息已经保留在聊天记录里。":"请求等待超过 60 秒。\n请求地址："+apiHint()); }
   else showErr(e.message||String(e));
@@ -286,6 +287,7 @@ async function send(){
   // Do NOT call render() here: rebuilding #messages would recreate every bubble and
   // restart its entrance animation, causing the sentence bubbles to flash/disappear.
   finishBusy();
+  if(completed) autoUpdateLongTermMemory(c);
  }
 }
 
