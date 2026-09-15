@@ -302,20 +302,23 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .namePositionGroup .settingsField{gap:0}
 
 
-/* v4.23 — sentence-by-sentence AI bubbles and editable G status. */
-.msgStatus{display:flex;align-items:center;justify-content:flex-start;gap:3px;font-size:7px;line-height:1;color:var(--muted);white-space:nowrap;opacity:.9;padding-left:1px}
-.msgStatus i,.statusDot{width:5px;height:5px;border-radius:50%;display:inline-block;background:#72a87a;flex:none}
-.msgStatus.busy i,.statusDot.busy{background:#c99655}
-.msgStatus.away i,.statusDot.away{background:#9c958b}
-.msgStatus.invisible i,.statusDot.invisible{background:#aaa}
-.statusClickable{cursor:pointer}
-.statusClickable:active{transform:scale(.97)}
+/* v4.30 — independent G/user statuses, always below the chat avatar. */
+.onlineDot.online,.msgStatus.online i,.statusDot.online{background:#72a87a!important}
+.onlineDot.busy,.msgStatus.busy i,.statusDot.busy{background:#d96b5f!important}
+.onlineDot.away,.msgStatus.away i,.statusDot.away{background:#d3a34a!important}
+.onlineDot.invisible,.msgStatus.invisible i,.statusDot.invisible{background:#9da0a5!important}
+.msgIdentity{overflow:visible!important;align-items:center!important}
+.message.user .msgIdentity{align-items:center!important}
+.msgIdentity .msgName{align-self:stretch;text-align:center!important}
+.msgIdentity .msgavatar{align-self:center!important;cursor:pointer}
+.msgStatus{display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;width:100%!important;padding:0!important;margin-top:1px!important;font-size:7px!important;line-height:1.1!important;white-space:nowrap!important;color:var(--muted)!important}
+.msgStatus i{width:5px;height:5px;border-radius:50%;display:inline-block;flex:none}
 .profileStatusButton{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:7px 11px;font-size:11px;cursor:pointer}
-.profileStatusButton .statusDot{width:7px;height:7px}
+.profileStatusButton .statusDot{width:7px;height:7px;border-radius:50%;display:inline-block}
 .profileStatusButton .statusChevron{font-size:13px;color:var(--muted);margin-left:1px}
 .statusPicker{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:9px 0 2px;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
 .statusOption{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 3px;border-radius:10px;background:transparent;color:var(--muted);font-size:9px}
 .statusOption.active{background:var(--soft);color:var(--ink);font-weight:650}
+.statusOption .statusDot{width:7px;height:7px;border-radius:50%;display:block}
 .statusOption:active{background:var(--soft)}
-
-/* v4.24 bugfix: restore drawer open/close handlers; no visual layout change. */
+.statusClickable{cursor:pointer}
