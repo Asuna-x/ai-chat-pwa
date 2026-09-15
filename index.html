@@ -41,7 +41,7 @@
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>G Chat</b><small>Version 4.22 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>G Chat</b><small>Version 4.23 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -60,6 +60,7 @@
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>Temperature</span><input id="temperature" type="number" min="0" max="2" step=".1"></label>
       </div>
+      <div class="settingsGroup visualGroup"><label class="switchRow"><span>AI 一句一句发送</span><input id="oneSentence" type="checkbox" checked><i></i></label><div class="subSettingHint">AI 回复会按句子拆成多个气泡，并逐句显示。</div></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="themePage">
@@ -154,5 +155,5 @@
   <div class="settingsFooter"><button class="save" id="saveSettings">保存设置</button></div>
 </div>
 </dialog>
-<dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><span class="online">● 在线</span><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>主题</small><b id="profileTheme">奶油米</b></div></div><button class="save full" id="profileStart">开始聊天</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.21"></script><script src="./app.js?v=4.21"></script></body></html>
+<dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton"><span class="statusDot"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker hidden" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>主题</small><b id="profileTheme">奶油米</b></div></div><button class="save full" id="profileStart">开始聊天</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
+<script src="./api.js?v=4.23"></script><script src="./app.js?v=4.23"></script></body></html>
