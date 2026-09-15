@@ -99,8 +99,19 @@ async function send(){
    return m;
   });
   ms.push(...requestMessages);
-  let fullAnswer="",pending="",shown=0,displayQueue=Promise.resolve();
-  const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;shown++;displayQueue=displayQueue.then(()=>{bubble("assistant",v,false,Date.now(),true);scroll();return shown>1?sleep(180):undefined})};
+  let fullAnswer="",pending="",displayQueue=Promise.resolve();
+  const pushSentence=(sentence)=>{
+   const v=String(sentence||"").trim();
+   if(!v)return;
+   displayQueue=displayQueue.then(async()=>{
+    const ts=Date.now();
+    bubble("assistant",v,false,ts,true);
+    c.messages.push({role:"assistant",content:v,timestamp:ts});
+    save();
+    scroll();
+    await sleep(260);
+   });
+  };
   const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal},(part,all)=>{
    fullAnswer=all;pending+=part;
    const parts=splitReply(pending),ready=/[。！？!?；;\n]\s*$/.test(pending);
@@ -111,7 +122,9 @@ async function send(){
   if(pending.trim())pushSentence(pending);
   await displayQueue;
   fullAnswer=result.answer||fullAnswer;
-  c.messages.push({role:"assistant",content:fullAnswer,timestamp:Date.now()});save();
+  // Each displayed sentence is already persisted as its own assistant message.
+  // Do not append the full reply again, otherwise separate bubbles would collapse/duplicate.
+  save();
  }catch(e){
   if(e?.name==="AbortError") { showErr(state.stopRequested?"已停止这次回复。\n你的消息已经保留在聊天记录里。":"请求等待超过 60 秒。\n请求地址："+apiHint()); }
   else showErr(e.message||String(e));
