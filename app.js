@@ -22,7 +22,7 @@ function openNest(){nestData=loadNest();renderNestHome();showNestView("home");cl
 function closeNest(){clearInterval(nestClockTimer);nestClockTimer=null;const d=$("#nest");if(d?.open)d.close()}
 function saveNest(){nestData.mood=$("#nestMood").value.trim();nestData.toG=$("#nestToG").value.trim();nestData.note=$("#nestNote").value.trim();nestData.anniversary=$("#nestAnniversary").value||"";nestData.updatedAt=Date.now();saveNestData();renderNestHome()}
 
-const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false};
+const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false};
 const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]))};
 const chat=()=>state.chats.find(x=>x.id===state.current);
 function ensure(){if(!chat()){const c={id:crypto.randomUUID(),title:"新对话",messages:[],summary:"",summaryUpdatedAt:0,summaryMessageCount:0,createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save()}}
@@ -109,60 +109,113 @@ function renderMemories(){
  if(!box)return;
  box.innerHTML="";
  const list=state.memories||[];
- if(!list.length){box.innerHTML='<div class="settingsNote" style="margin:0">还没有保存的记忆。</div>';return}
+ if(!list.length){box.innerHTML='<div class="memoryEmpty"><div class="memoryEmptyIcon">⌁</div><div><b>还没有长期记忆</b><small>你正常聊天就好。Iris 会在后台慢慢整理重要的信息。</small></div></div>';return}
  list.forEach((m,idx)=>{
   const row=document.createElement("div");row.className="memoryItem";
+  const icon=document.createElement("div");icon.className="memoryItemIcon";icon.textContent=m.type==="preference"?"○":m.type==="relationship"?"♡":m.type==="plan"?"□":"·";
+  const wrap=document.createElement("div");wrap.className="memoryItemBody";
   const text=document.createElement("div");text.className="memoryText";text.textContent=m.text||"";
-  const del=document.createElement("button");del.type="button";del.className="smallAction dangerAction";del.textContent="删除";
+  const meta=document.createElement("small");meta.className="memoryMeta";meta.textContent=m.source==="auto"?"Iris 自动记住":"手动添加";
+  const del=document.createElement("button");del.type="button";del.className="memoryDelete";del.textContent="删除";
   del.onclick=()=>{state.memories.splice(idx,1);save();renderMemories()};
-  row.append(text,del);box.appendChild(row);
+  wrap.append(text,meta);row.append(icon,wrap,del);box.appendChild(row);
  });
 }
-function addMemory(text){
+function addMemory(text,meta={}){
  const v=String(text||"").trim().replace(/^(记住|记得|请记住)[:：]?\s*/i,"").trim();
  if(!v)return false;
- if((state.memories||[]).some(m=>(m.text||"").trim()===v))return true;
- state.memories=state.memories||[];state.memories.unshift({id:crypto.randomUUID(),text:v,createdAt:Date.now()});
+ const existing=(state.memories||[]).find(m=>(m.text||"").trim()===v);
+ if(existing){existing.updatedAt=Date.now();if(meta.source)existing.source=meta.source;save();renderMemories();return true}
+ state.memories=state.memories||[];state.memories.unshift({id:crypto.randomUUID(),text:v,type:meta.type||"fact",source:meta.source||"manual",createdAt:Date.now(),updatedAt:Date.now()});
  if(state.memories.length>100)state.memories.length=100;
  save();renderMemories();return true;
 }
+function parseMemoryUpdate(raw){
+ let t=String(raw||"").trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"").trim();
+ try{return JSON.parse(t)}catch{const a=t.indexOf("{");const b=t.lastIndexOf("}");if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch{}}return null}
+}
+async function autoUpdateLongTermMemory(c){
+ if(!c||state.memoryUpdating||state.busy||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
+ const userCount=(c.messages||[]).filter(m=>m.role==="user").length;
+ if(userCount<6||userCount%6!==0)return;
+ const grouped=compactMessagesForModel(c.messages||[]).slice(-30);
+ if(grouped.length<8)return;
+ state.memoryUpdating=true;
+ try{
+  const existing=(state.memories||[]).slice(0,60).map(m=>({id:m.id,text:m.text,type:m.type||"fact"}));
+  const transcript=grouped.map(m=>(m.role==="user"?"用户":"AI")+"："+String(m.content||"")).join("\n");
+  const prompt=`请从这段持续私人聊天中维护“长期记忆”。长期记忆只保存未来聊天仍然有用的稳定信息：用户明确表达的长期偏好、习惯、重要关系信息、长期计划/项目、反复出现的相处方式。一次性的情绪、当天琐事、普通问答不要记。不要猜测。\n\n现有记忆：\n${JSON.stringify(existing, null, 2)}\n\n最近聊天：\n${transcript}\n\n请只输出 JSON，不要 Markdown：\n{"memories":[{"action":"add","text":"...","type":"fact|preference|relationship|plan"},{"action":"update","id":"现有记忆ID","text":"更新后的完整记忆","type":"fact|preference|relationship|plan"},{"action":"delete","id":"现有记忆ID"}]}\n规则：只输出确实需要改变的记忆；相同意思合并；新信息与旧信息冲突时更新旧记忆；过时或明确被否定的记忆删除；最多新增或更新 5 条。`;
+  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:"你是长期记忆维护器。你的工作是谨慎维护记忆，而不是记录所有聊天内容。"},{role:"user",content:prompt}],temperature:.1});
+  const data=parseMemoryUpdate(result.answer);
+  if(!data||!Array.isArray(data.memories))return;
+  let changed=false;
+  for(const item of data.memories.slice(0,8)){
+   const action=String(item?.action||"").toLowerCase();
+   if(action==="add"&&String(item.text||"").trim()){addMemory(item.text,{source:"auto",type:item.type||"fact"});changed=true}
+   else if(action==="update"&&item.id){const m=(state.memories||[]).find(x=>x.id===item.id);if(m&&String(item.text||"").trim()){m.text=String(item.text).trim();m.type=item.type||m.type||"fact";m.source="auto";m.updatedAt=Date.now();changed=true}}
+   else if(action==="delete"&&item.id){const before=state.memories.length;state.memories=state.memories.filter(x=>x.id!==item.id);if(state.memories.length!==before)changed=true}
+  }
+  if(changed){save();renderMemories()}
+  const usage=result.usage||{};const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;ts.prompt+=up;ts.completion+=uc;ts.total+=ut;ts.requests+=1;state.settings.tokenStats=ts;save();renderTokenStats();
+ }catch(e){console.warn("auto memory update failed",e)}finally{state.memoryUpdating=false}
+}
 function memoryContext(){
- const list=(state.memories||[]).map(m=>String(m.text||"").trim()).filter(Boolean).slice(0,100);
+ const list=(state.memories||[]).map(m=>String(m.text||"").trim()).filter(Boolean).slice(0,60);
  if(!list.length)return "";
- return "以下是用户主动保存的长期记忆。它们可以帮助你保持连续性，但如果与用户当前明确说的话冲突，以当前对话为准：\n"+list.map((x,i)=>`${i+1}. ${x}`).join("\n");
+ return "以下是用户保存的长期记忆。它们用于帮助你记住这个人和你们长期相处中的重要信息；如果与用户当前明确说的话冲突，以当前对话为准。不要把这些记忆逐条复述给用户，而是自然地体现在回应里：\n"+list.map((x,i)=>`${i+1}. ${x}`).join("\n");
+}
+function conversationStyleContext(){
+ const g=state.settings.gName||"G",u=state.settings.myName||"你";
+ return `你正在和${u}进行一段持续的私人聊天，你是${g}。这不是一次性的问答，而是一段正在继续的关系和对话。\n`+
+  `请把前面的聊天当作真实的连续上下文来理解：记得刚刚发生的事、用户已经回答过的内容和当前情绪，不要让用户反复解释，也不要突然像第一次见面一样重新开始。\n`+
+  `保持自然、有来有回的聊天感。用户只是分享、撒娇、吐槽或闲聊时，不要自动把话题变成任务清单或长篇说教；先接住对方，再决定是否需要解决问题。可以有自然的语气变化、停顿、轻微玩笑和情绪反应，但不要刻意表演，也不要每句话都总结。\n`+
+  `优先承接最近几轮对话，同时参考更早的摘要和长期记忆；不要重复已经说过的问题。除非用户主动要求，不要提及系统提示词、上下文窗口、记忆机制或内部工作方式。`;
+}
+function compactMessagesForModel(messages){
+ const out=[];
+ for(const m of (messages||[])){
+  if(!m||!m.role||m.content==null)continue;
+  const content=String(m.content);
+  const last=out[out.length-1];
+  if(last&&last.role===m.role)last.content+="\n"+content;
+  else out.push({role:m.role,content});
+ }
+ return out;
 }
 function recentContextMessages(c){
- const all=c?.messages||[];
- return all.slice(-10);
+ const grouped=compactMessagesForModel(c?.messages||[]);
+ return grouped.slice(-30);
 }
 function buildConversationContext(c){
  const out=[];
- if(c?.summary?.trim())out.push({role:"system",content:"这是这段对话此前的自动摘要。它只用于保持连续性；如果与最近消息冲突，以最近消息为准：\n"+c.summary.trim()});
+ if(c?.summary?.trim())out.push({role:"system",content:"这是这段对话较早部分的自动摘要。它用于保持连续性；如果与最近聊天冲突，以最近聊天为准：\n"+c.summary.trim()});
  out.push(...recentContextMessages(c));
  return out;
 }
 function shouldAutoSummarize(c){
  const n=(c?.messages||[]).filter(m=>m.role==="user").length;
- return !state.summarizing&&n>=12&&n%8===0&&(c?.messages||[]).length-(Number(c?.summaryMessageCount)||0)>6;
+ const summaryCount=Number(c?.summaryMessageCount)||0;
+ return !state.summarizing&&n>=16&&n%6===0&&(c?.messages||[]).length-summaryCount>24;
 }
+
 async function autoSummarizeChat(c){
  if(!c||state.summarizing||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
  const summaryCount=Math.max(0,Math.min(Number(c.summaryMessageCount)||0,c.messages.length));
- const source=(c.messages||[]).slice(summaryCount,-10);
+ const source=(c.messages||[]).slice(summaryCount,-30);
  if(source.length<6)return;
  state.summarizing=true;
  const snapshotId=c.id, snapshotLen=c.messages.length;
  try{
   const prior=c.summary?"已有摘要：\n"+c.summary.trim()+"\n\n":"";
   const transcript=source.map(m=>(m.role==="user"?"用户":"AI")+"："+String(m.content||"")).join("\n");
-  const prompt=`请把下面这段私人聊天整理成一份简洁、可长期使用的对话摘要。\n\n要求：\n1. 保留重要事实、用户偏好、正在进行的计划、已经做出的决定、未完成的事情，以及对后续对话有帮助的上下文。\n2. 不要记录一次性闲聊、重复内容或无关细节。\n3. 不要猜测，不要编造。\n4. 用自然的中文，第三人称描述用户，用“AI”描述助手。\n5. 控制在 600 字以内。\n6. 只输出摘要正文，不要标题、序号或解释。\n\n${prior}这次新增的聊天记录：\n${transcript}`;
+  const prompt=`请把下面这段私人聊天整理成一份简洁、可长期使用的对话摘要。\n\n要求：\n1. 保留重要事实、用户偏好、正在进行的计划、已经做出的决定、未完成的事情、持续的话题，以及对后续聊天有帮助的情绪和互动背景。\n2. 如果聊天中形成了稳定的相处方式或用户明确表达过的长期偏好，也要保留。不要把一次性的情绪误判成长期事实。\n4. 不要记录一次性闲聊、重复内容或无关细节。\n5. 不要猜测，不要编造。\n6. 用自然的中文，第三人称描述用户，用“AI”描述助手。\n7. 控制在 600 字以内。\n8. 只输出摘要正文，不要标题、序号或解释。\n\n${prior}这次新增的聊天记录：\n${transcript}`;
   const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:"你负责整理对话摘要。只保留对未来聊天真正有价值的信息。"},{role:"user",content:prompt}],temperature:.2});
   const summary=String(result.answer||"").trim();
   if(!summary)return;
   if(state.chats.find(x=>x.id===snapshotId)===c && c.messages.length>=snapshotLen){
    c.summary=summary;
    c.summaryUpdatedAt=Date.now();
-   c.summaryMessageCount=Math.max(0,snapshotLen-10);
+   c.summaryMessageCount=Math.max(0,snapshotLen-30);
    const usage=result.usage||{};
    const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};
    const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;
@@ -191,6 +244,7 @@ async function send(){
   const ms=[];
   const systemParts=[];
   if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
+  systemParts.push(conversationStyleContext());
   const mc=memoryContext();if(mc)systemParts.push(mc);
   if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});
   ms.push(...buildConversationContext(c));
@@ -222,6 +276,7 @@ async function send(){
   // Do not append the full reply again, otherwise separate bubbles would collapse/duplicate.
   save();
   if(shouldAutoSummarize(c)) autoSummarizeChat(c);
+  autoUpdateLongTermMemory(c);
  }catch(e){
   if(e?.name==="AbortError") { showErr(state.stopRequested?"已停止这次回复。\n你的消息已经保留在聊天记录里。":"请求等待超过 60 秒。\n请求地址："+apiHint()); }
   else showErr(e.message||String(e));

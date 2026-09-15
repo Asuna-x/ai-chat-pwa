@@ -345,9 +345,19 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .tokenStat small{grid-column:1/-1;color:var(--muted);font-size:10px}
 .tokenStat b{font-size:17px;font-variant-numeric:tabular-nums}
 .tokenStat span{font-size:9px;color:var(--muted)}
-.memoryItem{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.memoryItem{display:flex;align-items:flex-start;gap:11px;padding:14px 2px;border-bottom:1px solid var(--line)}
 .memoryItem:last-child{border-bottom:0}
-.memoryText{flex:1;min-width:0;line-height:1.55;word-break:break-word;color:var(--ink)}
+.memoryItemIcon{width:28px;height:28px;flex:none;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:14px}
+.memoryItemBody{flex:1;min-width:0;padding-top:1px}
+.memoryText{min-width:0;line-height:1.55;word-break:break-word;color:var(--ink);font-size:14px}
+.memoryMeta{display:block;margin-top:5px;color:var(--muted);font-size:10px}
+.memoryDelete{border:0;background:transparent;color:var(--muted);font-size:12px;padding:7px 4px;flex:none}
+.memoryDelete:active{opacity:.6}
+.memoryEmpty{display:flex;align-items:center;gap:12px;padding:16px 2px;color:var(--ink)}
+.memoryEmptyIcon{width:34px;height:34px;border-radius:12px;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:19px}
+.memoryEmpty b{display:block;font-size:13px;font-weight:650}
+.memoryEmpty small{display:block;margin-top:3px;color:var(--muted);line-height:1.45;font-size:11px}
+.sectionAutoLabel{font-size:10px;color:var(--muted);font-weight:500;margin-left:5px}
 
 /* Iris 小窝：独立于聊天主题色，固定为温暖的奶油生活感。 */
 dialog#nest.nestDialog{width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#f7eee4;color:#463a31;overflow:hidden}

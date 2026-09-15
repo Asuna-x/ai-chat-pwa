@@ -81,16 +81,16 @@ if("serviceWorker"in navigator){
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="memoryPage">
-      <div class="subIntro"><b>记忆</b><small>这里保存长期记忆。聊天时会自动带入这些记忆；对话变长后，Iris 会自动整理旧记录，减少每次发送的上下文。</small></div>
-      <div class="settingsSectionTitle">添加记忆</div>
+      <div class="subIntro"><b>记忆</b><small>Iris 会在你正常聊天时，自动整理值得长期记住的信息，并在新信息出现时更新或合并旧记忆。</small></div>
+      <div class="settingsSectionTitle">你不用特意说“记住”</div>
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>记住一件事</span><textarea id="memoryInput" rows="3" placeholder="例如：我喜欢晚上安静地聊天。"></textarea></label>
-        <button class="smallAction full" id="addMemory">添加到记忆</button>
+        <button class="smallAction full" id="addMemory">手动添加一条记忆</button>
       </div>
-      <div class="settingsSectionTitle">已保存</div>
+      <div class="settingsSectionTitle">长期记忆 <small class="sectionAutoLabel">自动更新</small></div>
       <div class="settingsGroup settingsFormGroup" id="memoryList"></div>
       <div class="settingsGroup settingsActionGroup"><button class="settingsAction danger" id="clearMemories"><span>清空全部记忆</span><em>›</em></button></div>
-      <p class="settingsNote">你也可以在聊天中直接说“记住：……”；Iris 会把这句话保存为记忆。对话达到一定长度后，Iris 会自动总结旧记录，只保留最近消息和摘要用于后续聊天，以减少 Token 消耗。摘要和记忆都会包含在数据导出文件中。</p>
+      <p class="settingsNote">长期记忆由聊天内容自动维护：新增、合并、修改和删除过时信息。手动输入“记住：……”仍然可以立即保存。聊天摘要和长期记忆都会包含在数据导出文件中。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="themePage">
