@@ -5,7 +5,7 @@ themes.rain={name:"雨夜",bg:"#1b2025",card:"#242b31",ink:"#edf1f2",muted:"#9ba
 themes.cafe={name:"咖啡馆",bg:"#eee7dd",card:"#fbf7f0",ink:"#3b3028",muted:"#9d8e80",line:"#ddd0c0",soft:"#e7dccd",user:"#dcc7ad",accent:"#684a35",accent2:"#fffaf3"};
 themes.mono={name:"黑白",bg:"#f2f2f0",card:"#ffffff",ink:"#202020",muted:"#929292",line:"#dededb",soft:"#e8e8e5",user:"#d9d9d6",accent:"#202020",accent2:"#ffffff"};
 const backgrounds={plain:{name:"纯净",value:"none"},paper:{name:"纸张",value:"radial-gradient(circle at 50% -10%,#fffdf9 0,#f6f2ec 45%)"},mist:{name:"柔雾",value:"radial-gradient(circle at 20% 15%,rgba(255,255,255,.85),transparent 35%),radial-gradient(circle at 85% 75%,rgba(220,230,235,.55),transparent 38%)"},lav:{name:"淡紫",value:"radial-gradient(circle at 15% 20%,rgba(225,214,236,.65),transparent 40%),radial-gradient(circle at 80% 75%,rgba(242,231,239,.8),transparent 40%)"},sage:{name:"浅绿",value:"radial-gradient(circle at 20% 20%,rgba(215,230,218,.7),transparent 40%),radial-gradient(circle at 80% 70%,rgba(235,240,226,.8),transparent 42%)"},sun:{name:"晨光",value:"radial-gradient(circle at 70% 15%,rgba(255,231,187,.6),transparent 38%),radial-gradient(circle at 20% 75%,rgba(248,222,210,.55),transparent 40%)"}};
-const state={chats:JSON.parse(localStorage.getItem("gchat_chats")||"[]"),current:localStorage.getItem("gchat_current")||null,settings:JSON.parse(localStorage.getItem("gchat_settings")||"{}"),busy:false,selectedBubble:null,recognition:null,statusTarget:"ai"};
+const state={chats:JSON.parse(localStorage.getItem("gchat_chats")||"[]"),current:localStorage.getItem("gchat_current")||null,settings:JSON.parse(localStorage.getItem("gchat_settings")||"{}"),busy:false,selectedBubble:null,recognition:null,statusTarget:"ai",pageVision:false};
 const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings))};
 const chat=()=>state.chats.find(x=>x.id===state.current);
 function ensure(){if(!chat()){const c={id:crypto.randomUUID(),title:"新对话",messages:[],createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save()}}
@@ -48,6 +48,25 @@ function showErr(t){const e=$("#error");e.textContent=t;e.classList.remove("hidd
 function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}
 function splitReply(text){const s=String(text||"").replace(/\r/g,"").trim();if(!s)return[];const out=[];let buf="";for(const ch of s){buf+=ch;if(/[。！？!?；;]|\n/.test(ch)){const v=buf.trim();if(v){out.push(v);buf=""}}}if(buf.trim())out.push(buf.trim());return out}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function pageStateContext(){
+ const c=chat(),g=getStatus("ai"),u=getStatus("user");
+ return `当前 G Chat 页面状态（由网页直接读取，不依赖截图）：
+- G 状态：${g.label}
+- 用户状态：${u.label}
+- G 名称：${state.settings.gName||"G"}
+- 用户名称：${state.settings.myName||"你"}
+- 当前模型：${state.settings.model||"未设置"}
+- 当前对话：${c?.title||"新对话"}
+- 当前页面：G Chat 聊天页
+如果同时收到页面截图，请把截图和这些状态一起理解；不要把截图中的状态猜测覆盖网页直接提供的状态。`;
+}
+async function captureCurrentPage(){
+ if(typeof window.html2canvas!=="function")throw new Error("页面截图组件还没有加载完成，请稍后再试。");
+ const target=document.querySelector(".main");
+ if(!target)throw new Error("找不到当前聊天页面。");
+ const canvas=await window.html2canvas(target,{useCORS:true,allowTaint:false,backgroundColor:null,scale:Math.min(window.devicePixelRatio||1,2),logging:false});
+ return canvas.toDataURL("image/jpeg",.72);
+}
 function base(u){return window.GChatAPI?window.GChatAPI.normalizeBase(u):String(u||"").trim().replace(/\/+$/,"" ).replace(/\/chat\/completions$/i,"")}
 function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading","stop");b.textContent="↑";b.title="发送"}updateTyping();save()}
 function apiHint(){return window.GChatAPI?window.GChatAPI.requestUrl(state.settings.apiBase):base(state.settings.apiBase)+"/chat/completions"}
@@ -65,22 +84,40 @@ async function send(){
  const controller=new AbortController();state._abort=controller;
  const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  try{
-  const ms=[];if(state.settings.systemPrompt)ms.push({role:"system",content:state.settings.systemPrompt});ms.push(...c.messages);
-  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal});
-  const replyParts=splitReply(result.answer);
-  const replyBubble=bubble("assistant","",false,Date.now(),true);
-  for(let n=0;n<replyParts.length;n++){
-   replyBubble.textContent+=(n?"\n":"")+replyParts[n];
-   replyBubble.dataset.text=replyBubble.textContent;
-   scroll();
-   if(n<replyParts.length-1)await sleep(420);
+  let pageImage=null;
+  if(state.pageVision){
+   const pv=$("#pageView");
+   try{pageImage=await captureCurrentPage();}catch(e){state.pageVision=false;if(pv)pv.classList.remove("active","loading");throw e}
   }
-  c.messages.push({role:"assistant",content:result.answer,timestamp:Date.now()});save();
+  const ms=[];
+  const systemParts=[];
+  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
+  systemParts.push(pageStateContext());
+  if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});
+  const requestMessages=c.messages.map((m,idx)=>{
+   if(pageImage&&idx===c.messages.length-1&&m.role==="user")return {...m,content:[{type:"text",text:String(m.content||"")},{type:"image_url",image_url:{url:pageImage}}]};
+   return m;
+  });
+  ms.push(...requestMessages);
+  let fullAnswer="",pending="",shown=0,displayQueue=Promise.resolve();
+  const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;shown++;displayQueue=displayQueue.then(()=>{bubble("assistant",v,false,Date.now(),true);scroll();return shown>1?sleep(180):undefined})};
+  const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal},(part,all)=>{
+   fullAnswer=all;pending+=part;
+   const parts=splitReply(pending),ready=/[。！？!?；;\n]\s*$/.test(pending);
+   const count=ready?parts.length:Math.max(0,parts.length-1);
+   for(let j=0;j<count;j++)pushSentence(parts[j]);
+   pending=count?parts.slice(count).join(""):pending;
+  });
+  if(pending.trim())pushSentence(pending);
+  await displayQueue;
+  fullAnswer=result.answer||fullAnswer;
+  c.messages.push({role:"assistant",content:fullAnswer,timestamp:Date.now()});save();
  }catch(e){
-  if(e?.name==="AbortError") { showErr("请求等待超过 60 秒。\n请求地址："+apiHint()); }
+  if(e?.name==="AbortError") { showErr(state.stopRequested?"已停止这次回复。\n你的消息已经保留在聊天记录里。":"请求等待超过 60 秒。\n请求地址："+apiHint()); }
   else showErr(e.message||String(e));
  }finally{
   clearTimeout(timeout);if(state._abort===controller)state._abort=null;
+  state.pageVision=false;const pv=$("#pageView");if(pv)pv.classList.remove("active","loading");
   finishBusy();render();
  }
 }
@@ -99,6 +136,7 @@ $("#openDrawer").onclick=openDrawer;$("#closeDrawer").onclick=closeDrawer;$("#sh
 $("#uploadUserAvatar").onclick=()=>$("#userAvatarFile").click();$("#userAvatarFile").onchange=()=>uploadImage($("#userAvatarFile"),"userAvatar",320,.8);$("#clearUserAvatar").onclick=()=>{state.settings.userAvatar="";save();renderAvatarPreviews();render()};$("#uploadAiAvatar").onclick=()=>$("#aiAvatarFile").click();$("#aiAvatarFile").onchange=()=>uploadImage($("#aiAvatarFile"),"aiAvatar",320,.8);$("#clearAiAvatar").onclick=()=>{state.settings.aiAvatar="";save();renderAvatarPreviews();render()};$("#uploadBg").onclick=()=>$("#bgFile").click();$("#bgFile").onchange=async()=>{const f=$("#bgFile").files?.[0];if(!f)return;try{state.settings.bgCustom=await imageToData(f,1200,.7);save();applyLook();renderBackgrounds();render()}catch{showErr("背景图片处理失败。")}};$("#clearBg").onclick=()=>{state.settings.bgCustom="";save();applyLook();renderBackgrounds();render()};$("#bgOpacity").oninput=e=>{state.settings.bgOpacity=Number(e.target.value);$("#bgOpacityOut").value=e.target.value+"%";save();applyLook()};$("#aiBubbleColor").oninput=e=>{state.settings.bubbleAiColor=e.target.value;$("#aiBubbleColorOut").value=e.target.value.toUpperCase();save();applyLook()};$("#userBubbleColor").oninput=e=>{state.settings.bubbleUserColor=e.target.value;$("#userBubbleColorOut").value=e.target.value.toUpperCase();save();applyLook()};$("#aiBubbleOpacity").oninput=e=>{state.settings.bubbleAiOpacity=Number(e.target.value);$("#aiBubbleOpacityOut").value=e.target.value+"%";save();applyLook()};$("#userBubbleOpacity").oninput=e=>{state.settings.bubbleUserOpacity=Number(e.target.value);$("#userBubbleOpacityOut").value=e.target.value+"%";save();applyLook()};$("#animations").onchange=()=>{state.settings.animations=$("#animations").checked;save();applyLook()};$("#gNameOffset").oninput=e=>{state.settings.gNameOffset=Number(e.target.value);$("#gNameOffsetOut").value=e.target.value+" px";save();applyLook()};$("#userNameOffset").oninput=e=>{state.settings.userNameOffset=Number(e.target.value);$("#userNameOffsetOut").value=e.target.value+" px";save();applyLook()};$("#resetNameOffsets").onclick=()=>{state.settings.gNameOffset=0;state.settings.userNameOffset=0;$("#gNameOffset").value=0;$("#gNameOffsetOut").value="0 px";$("#userNameOffset").value=0;$("#userNameOffsetOut").value="0 px";save();applyLook()};document.querySelectorAll("#bubbleGrid [data-bubble]").forEach(b=>b.onclick=()=>{state.settings.bubble=b.dataset.bubble;save();renderBubbleStyles();applyLook()});document.querySelectorAll("#topAvatarGrid [data-top-avatar]").forEach(b=>b.onclick=()=>{state.settings.topAvatar=b.dataset.topAvatar;save();renderTopAvatar();render()});$("#openProfile").onclick=()=>openStatusPicker((state.settings.topAvatar||"user")==="user"?"user":"ai");$("#closeProfile").onclick=()=>$("#profile").close();$("#profileStart").onclick=()=>$("#profile").close();
 $("#exportAll").onclick=exportAll;$("#importAll").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{const f=e.target.files?.[0];if(f)importAll(f);e.target.value=""};$("#mic").onclick=setupVoice;$("#send").onclick=send;$("#input").oninput=resize;$("#input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("#copyBubble").onclick=async()=>{if(!state.selectedBubble)return;try{await navigator.clipboard.writeText(state.selectedBubble.dataset.text||state.selectedBubble.textContent);$("#bubbleAction").classList.add("hidden")}catch{showErr("复制失败，请长按文字手动复制。")}};document.addEventListener("pointerdown",e=>{if(!e.target.closest(".bubbleAction")&&!e.target.closest(".bubble"))$("#bubbleAction").classList.add("hidden")});document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tabbody").forEach(x=>x.classList.add("hidden"));b.classList.add("active");$("#"+b.dataset.tab).classList.remove("hidden")});
 document.querySelectorAll("[data-settings-page]").forEach(b=>b.onclick=()=>settingsOpenPage(b.dataset.settingsPage));
+$("#pageView").onclick=()=>{if(state.busy)return;state.pageVision=!state.pageVision;$("#pageView").classList.toggle("active",state.pageVision);if(state.pageVision)showErr("已开启“看当前页面”，发送下一条消息时会把当前页面截图一起给 G。")};
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
 if("serviceWorker"in navigator){navigator.serviceWorker.register("./sw.js?v=4.31",{updateViaCache:"none"}).then(r=>{if(navigator.serviceWorker.controller&&r.waiting){r.waiting.postMessage({type:"SKIP_WAITING"})}}).catch(console.error)}state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();

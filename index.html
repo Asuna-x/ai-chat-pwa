@@ -1,11 +1,11 @@
 <!doctype html><html lang="zh-Hant"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f6f2ec"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="G Chat">
-<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>G Chat</title><link rel="stylesheet" href="./style.css"></head>
+<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>G Chat</title><link rel="stylesheet" href="./style.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script></head>
 <body><div class="app" id="app"><aside id="drawer" class="drawer"><div class="drawer-top"><div class="brand"><div class="brand-mark" id="brandAvatar">G</div><div><b>G Chat</b><small>私人 AI 對話</small></div></div><button class="round" id="closeDrawer">×</button></div>
 <button class="new" id="newChat">＋ 新對話</button><div class="section">對話 <span id="chatCount"></span></div><div id="chatList" class="list"></div><div class="bottom"><button id="openSettings">设置</button><small>聊天记录与个性化资料只保存在这台装置</small></div></aside>
 <main class="main"><header><button class="round" id="openDrawer">☰</button><button class="head profileHead" id="openProfile"><span class="headAvatar" id="headAvatar">G</span><span class="headText"><b id="title">新对话</b><small><i class="onlineDot" id="headerStatusDot"></i><span id="modelStatus"><span id="modelName">未設定模型</span><em id="headerTime"></em></span><span id="typingStatus" class="typingStatus hidden">正在输入中<span class="typingDots"><i></i><i></i><i></i></span></span></small></span></button><button class="round" id="headerSettings">⚙</button></header>
-<section id="messages" class="messages"></section><div id="error" class="error hidden"></div><footer><div class="composer"><button class="mic" id="mic" title="语音输入">◉</button><div class="composerInner"><textarea id="input" rows="1" placeholder="和 AI 说点什么…"></textarea><span class="composerGlow"></span></div><button class="send" id="send">↑</button></div><div class="hint">Enter 送出　·　Shift + Enter 换行</div></footer></main></div><div id="shade" class="shade hidden"></div>
+<section id="messages" class="messages"></section><div id="error" class="error hidden"></div><footer><div class="composer"><button class="pageView" id="pageView" title="让 G 看当前页面">▣</button><button class="mic" id="mic" title="语音输入">◉</button><div class="composerInner"><textarea id="input" rows="1" placeholder="和 AI 说点什么…"></textarea><span class="composerGlow"></span></div><button class="send" id="send">↑</button></div><div class="hint">Enter 送出　·　Shift + Enter 换行</div></footer></main></div><div id="shade" class="shade hidden"></div>
 <dialog id="settings">
 <div class="settingsShell">
   <div class="settingsTopbar">
@@ -41,7 +41,7 @@
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>G Chat</b><small>Version 4.30 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>G Chat</b><small>Version 4.31 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -155,4 +155,4 @@
 </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.30"></script><script src="./app.js?v=4.30"></script></body></html>
+<script src="./api.js?v=4.31"></script><script src="./app.js?v=4.31"></script></body></html>
