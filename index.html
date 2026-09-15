@@ -193,22 +193,40 @@ if("serviceWorker"in navigator){
   <div class="settingsFooter"><button class="save" id="saveSettings">保存设置</button></div>
 </div>
 </dialog>
-<dialog id="nest">
-<div class="profileModal" style="width:min(92vw,420px);max-height:86vh;overflow:auto;box-sizing:border-box">
-<button class="round profileClose" id="closeNest">×</button>
-<div style="font-size:24px;font-weight:750;color:var(--ink);margin:4px 0 2px">小窝</div>
-<div style="font-size:13px;color:var(--muted);margin-bottom:18px">只属于你的一个小小空间，内容只保存在本机。</div>
-<div style="display:grid;gap:12px;text-align:left">
-<div style="padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--bg)"><small style="display:block;color:var(--muted);margin-bottom:5px">现在</small><b id="nestNow" style="font-size:16px;color:var(--ink)">—</b></div>
-<label class="settingsField"><span>今天的心情</span><input id="nestMood" maxlength="40" placeholder="例如：平静、开心、有点累"></label>
-<label class="settingsField"><span>今天想对 G 说</span><textarea id="nestToG" rows="3" maxlength="1000" placeholder="随手写一句就好"></textarea></label>
-<label class="settingsField"><span>今日小记</span><textarea id="nestNote" rows="5" maxlength="3000" placeholder="今天发生了什么，或者只是一些碎碎念"></textarea></label>
-<label class="settingsField"><span>我们的纪念日</span><input id="nestAnniversary" type="date"></label>
-<div style="padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--bg)"><small style="display:block;color:var(--muted);margin-bottom:5px">纪念日</small><b id="nestCountdown" style="font-size:16px;color:var(--ink)">—</b></div>
-</div>
-<div class="settingsNote" style="margin:14px 2px 0">小窝独立保存在本机，不会作为聊天上下文发送给 AI。</div>
-<div class="settingsFooter" style="position:static;margin-top:16px;padding:0"><button class="save full" id="saveNest">保存</button></div>
-</div>
+<dialog id="nest" class="nestDialog">
+  <div class="nestApp" id="nestApp">
+    <section class="nestPage" id="nestHome">
+      <div class="nestHomeBg"></div>
+      <div class="nestHomeInner">
+        <div class="nestTop"><button class="nestIconBtn" id="nestCloseHome" aria-label="关闭">‹</button><h1>小窝</h1><button class="nestIconBtn" id="nestOpenSettings" aria-label="设置">⌘</button></div>
+        <div class="nestHeroSpace"></div>
+        <div class="nestClockCard"><div id="nestNow">2026年9月15日 星期二 18:24</div><strong id="nestClockBig">18:24</strong></div>
+        <div class="nestCard nestMoodCard"><div class="nestCardHead"><span>今日心情</span><button id="nestMoodEdit">编辑</button></div><div class="nestMoodValue" id="nestMoodShow">今天感觉怎么样？</div></div>
+        <div class="nestCard nestToGCard"><div class="nestCardHead"><span>今天想对 G 说</span><button id="nestToGEdit">编辑</button></div><div class="nestTextPreview" id="nestToGShow">写点什么留在这里。</div></div>
+        <div class="nestCard nestNoteCard"><div class="nestCardHead"><span>今日小记</span><button id="nestNoteEdit">打开</button></div><div class="nestTextPreview" id="nestNoteShow">今天有什么想留下来？</div></div>
+        <div class="nestAnniversaryCard"><div><span>纪念日</span><strong id="nestCountdown">还没有设置纪念日</strong></div><button id="nestAnniversaryOpen">›</button></div>
+      </div>
+      <div class="nestBottomNav"><button class="active" data-nest-view="home">小窝</button><button data-nest-view="note">今日小记</button><button data-nest-view="anniversary">纪念日</button><button data-nest-view="settings">设置</button></div>
+    </section>
+
+    <section class="nestPage hidden" id="nestNotePage">
+      <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>今日小记</h2><span></span></div>
+      <div class="nestSubBody"><div class="nestDateLabel" id="nestNoteDate"></div><textarea id="nestNote" maxlength="1000" placeholder="今天想留下些什么？"></textarea><div class="nestPhotoHint">小窝里的文字只保存在这台装置。</div></div>
+      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestNoteSave">保存</button></div>
+    </section>
+
+    <section class="nestPage hidden" id="nestAnniversaryPage">
+      <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>纪念日</h2><span></span></div>
+      <div class="nestSubBody"><div class="nestBigCountdown"><span>距离下一次纪念日</span><strong id="nestCountdownBig">—</strong><small id="nestAnniversaryLabel">还没有设置日期</small></div><label class="nestField"><span>纪念日日期</span><input id="nestAnniversary" type="date"></label><div class="nestAnniversaryTip">每年会自动计算下一次纪念日。</div></div>
+      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestAnniversarySave">保存</button></div>
+    </section>
+
+    <section class="nestPage hidden" id="nestSettingsPage">
+      <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>小窝设置</h2><span></span></div>
+      <div class="nestSubBody"><div class="nestSettingGroup"><div class="nestSettingTitle">背景</div><div class="nestBackgroundRow"><div class="nestBackgroundPreview" id="nestBackgroundPreview"></div><div><b>我的背景</b><small>只影响小窝，不跟随 Iris 主题色</small></div><button id="nestBgPick">更换</button><input id="nestBgFile" type="file" accept="image/*" hidden></div><button class="nestClearBg" id="nestBgClear">恢复默认背景</button></div><div class="nestSettingGroup"><div class="nestSettingTitle">今天</div><label class="nestField"><span>今日心情</span><input id="nestMood" maxlength="40" placeholder="例如：很开心、平静、想休息"></label><label class="nestField"><span>今天想对 G 说</span><textarea id="nestToG" maxlength="500" placeholder="写一句话给 G"></textarea></label></div><div class="nestSettingNote">小窝的数据与聊天记录分开保存，不会改变现有聊天。</div></div>
+      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestSettingsSave">保存</button></div>
+    </section>
+  </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
 <script src="./api.js?v=4.33"></script><script src="./app.js?v=4.33"></script></body></html>
