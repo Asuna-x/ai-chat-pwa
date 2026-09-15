@@ -1,4 +1,4 @@
-/* Iris v4.44 */
+/* Iris v4.45 */
 /* Iris v4.42 */
 /* Iris v4.39 — AI mood writing, full chat UI context, anniversary name/background, layout polish. */
 :root{--bg:#f6f2ec;--card:#fffdf9;--ink:#282522;--muted:#9a948c;--line:#e8e0d6;--soft:#eee8df;--user:#ded5c8;--accent:#2d2925;--accent2:#fff;--shadow:rgba(57,45,32,.08);--bubbleText:#282522}
@@ -487,3 +487,6 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestQuickMood strong{display:block;font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif;font-size:16px;line-height:1.45;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nestQuickMood:active{transform:scale(.985)}
 #nestToGPageText{min-height:280px}
+
+/* v4.45 — quick mood choices in the shared nest. */
+.nestMoodQuickGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 10px}.nestMoodQuickOption{border:1px solid #eadbd0;background:rgba(255,252,248,.82);color:#806d5e;border-radius:14px;padding:10px 4px;font:inherit;font-size:11px;transition:.16s}.nestMoodQuickOption.active{background:#ead8c9;border-color:#d6bca8;color:#634b3b;font-weight:700;box-shadow:0 4px 12px rgba(116,80,58,.08)}.nestMoodCustom{min-height:62px!important}.nestMoodCustomLabel{grid-column:1/-1;padding:9px 11px;border-radius:12px;background:rgba(255,250,244,.72);color:#8a7667;font-size:10px;line-height:1.45}.nestMoodSection+.nestMoodSection{margin-top:22px}
