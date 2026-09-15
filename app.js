@@ -1,4 +1,4 @@
-/* Iris v4.47 — daily nest entries, mood slider UI, and user-state context for him. */
+/* Iris v4.48 — chat avatar status context and shared-nest editorial layout refinement. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
 const $=s=>document.querySelector(s);const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
@@ -79,7 +79,7 @@ function chatInterfaceContext(c){
  const bubble=state.settings.bubble||"soft";
  const aiStatus=getStatus("ai"),userStatus=getStatus("user");
  const bg=state.settings.bgCustom?"用户自定义聊天背景":(backgrounds[state.settings.bg||"paper"]?.name||"纯净");
- return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围和界面，不要向用户逐项复述，除非他主动问。`;
+ return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：用户头像下方在聊天页面显示的当前状态就是「${userStatus.label}」，这是用户主动设置的实时聊天状态，请把它作为理解用户当下状态的背景，而不是把它当成今日心情。；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围和界面，不要向用户逐项复述，除非他主动问。`;
 }
 const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false};
 const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]))};
@@ -235,7 +235,7 @@ function memoryContext(){
  if(!list.length)return "";
  return "以下是用户保存的长期记忆。它们用于帮助你记住这个人和你们长期相处中的重要信息；如果与用户当前明确说的话冲突，以当前对话为准。不要把这些记忆逐条复述给用户，而是自然地体现在回应里：\n"+list.map((x,i)=>`${i+1}. ${x}`).join("\n");
 }
-function nestContext(){const n=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(nestDateKey()),parts=[];parts.push("用户的‘小窝’是一个与聊天相连的私人空间。你可以理解其中的内容，并在聊天时自然参考，但不要擅自编造或修改里面的信息。");parts.push("小窝目前提供这些功能：记录每天的心情、留给他的话、每日小记，以及多个纪念日和各自的背景。");if(e.userMood)parts.push("用户今天的状态/心情："+e.userMood);if(e.toG)parts.push("用户今天留给他的话："+e.toG);if(e.note)parts.push("用户今天的小记："+e.note);if(e.aiMood)parts.push("他今天留在小窝的心情："+e.aiMood);const selected=selectedAnniversary();if(selected)parts.push("当前选中的纪念日："+(selected.name||"纪念日")+"，日期："+(selected.date||"未设置"));return parts.join("\n")}
+function nestContext(){const n=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(nestDateKey()),parts=[];const userStatus=getStatus("user");parts.push("用户的‘小窝’是一个与聊天相连的私人空间。你可以理解其中的内容，并在聊天时自然参考，但不要擅自编造或修改里面的信息。");parts.push("小窝目前提供这些功能：记录每天的心情、留给他的话、每日小记，以及多个纪念日和各自的背景。");parts.push("用户在聊天页面头像下方当前显示的状态是「"+userStatus.label+"」。这是用户主动设置的聊天状态，应当作为你理解他/她当下状态的背景参考；它与小窝里的今日心情是两回事。 ");if(e.userMood)parts.push("用户今天的心情：「"+e.userMood+"」");if(e.toG)parts.push("用户今天留给他的话：「"+e.toG+"」");if(e.note)parts.push("用户今天的小记：「"+e.note+"」");if(e.aiMood)parts.push("他今天留在小窝的心情：「"+e.aiMood+"」");const selected=selectedAnniversary();if(selected)parts.push("当前选中的纪念日：「"+(selected.name||"纪念日")+"」，日期：「"+(selected.date||"未设置")+"」");return parts.join("\n")}
 function conversationStyleContext(){
  const g=state.settings.gName||"他",u=state.settings.myName||"你";
  return `你正在和${u}进行一段持续的私人聊天，你是${g}。这不是一次性的问答，而是一段正在继续的关系和对话。\n`+

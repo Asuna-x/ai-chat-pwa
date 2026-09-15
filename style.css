@@ -519,3 +519,32 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestMoodRange{width:100%;margin:15px 0 10px;appearance:none;-webkit-appearance:none;height:7px;border-radius:99px;background:linear-gradient(90deg,#ead4df,#caa5b7);outline:none}.nestMoodRange::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:25px;height:25px;border-radius:50%;background:#fff8fb;border:2px solid #b8849b;box-shadow:0 4px 12px rgba(111,72,92,.18)}.nestMoodRange::-moz-range-thumb{width:21px;height:21px;border-radius:50%;background:#fff8fb;border:2px solid #b8849b;box-shadow:0 4px 12px rgba(111,72,92,.18)}
 .nestMoodTicks{display:grid;grid-template-columns:repeat(8,1fr);gap:2px}.nestMoodTicks span{text-align:center;font-size:8px;color:#ad96a0;white-space:nowrap}.nestMoodTicks span.active{color:#704f60;font-weight:700}
 .nestDailyPager>button:disabled{opacity:.35}.nestSubBody textarea.nestMoodCustom{min-height:78px}
+
+
+/* Iris v4.48 — shared-nest editorial refinement, inspired by the user's reference layout. */
+.nestHomeInner{max-width:760px;margin:0 auto;width:100%;box-sizing:border-box}
+.nestTop{margin-bottom:2px}
+.nestTop h1{font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif;font-weight:500;letter-spacing:3px}
+.nestClockCard{position:relative;padding:24px 18px 20px;overflow:hidden}
+.nestClockCard::before{content:"TODAY  ·  OUR LITTLE PLACE";display:block;margin-bottom:10px;font-size:8px;letter-spacing:2px;color:#b79aa6}
+.nestClockCard::after{content:"";position:absolute;width:110px;height:110px;right:-36px;top:-46px;border-radius:50%;background:rgba(255,221,235,.45);pointer-events:none}
+.nestQuickMoodLabel{margin-top:20px}
+.nestQuickMoodRow{grid-template-columns:1fr 1fr}
+.nestQuickMood{min-height:82px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+.nestQuickMood::after{content:"";position:absolute;right:-18px;bottom:-24px;width:72px;height:72px;border-radius:50%;background:rgba(244,216,228,.35);pointer-events:none}
+.nestQuickMood strong{position:relative;z-index:1}
+.nestCard{position:relative;overflow:hidden}
+.nestToGCard::before,.nestNoteCard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#e5c3d1;border-radius:4px}
+.nestToGCard .nestCardHead,.nestNoteCard .nestCardHead,.nestToGCard .nestTextPreview,.nestNoteCard .nestTextPreview{padding-left:4px}
+.nestAnniversaryCard{margin-top:2px;padding:17px 16px}
+.nestAnniversaryCard::before{content:"";position:absolute;right:56px;top:50%;width:5px;height:5px;border-radius:50%;background:#d7b2c1;box-shadow:12px -8px 0 #ead2dc,22px 4px 0 #e1c1ce;opacity:.65}
+.nestSubBody{max-width:760px;width:100%;box-sizing:border-box;margin:0 auto}
+.nestSubTop{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+.nestMoodSection{box-shadow:0 14px 34px rgba(128,87,105,.055)}
+.nestMoodValueRow strong{font-size:20px}
+.nestMoodRange{height:8px}
+.nestMoodRange::-webkit-slider-thumb{width:27px;height:27px}
+@media(min-width:700px){
+  .nestHomeInner{padding-left:28px;padding-right:28px}
+  .nestHomeInner>.nestCard,.nestHomeInner>.nestAnniversaryCard,.nestHomeInner>.nestClockCard,.nestHomeInner>.nestQuickMoodLabel,.nestHomeInner>.nestQuickMoodRow{max-width:680px;margin-left:auto;margin-right:auto}
+}
