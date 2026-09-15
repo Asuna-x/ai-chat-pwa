@@ -248,7 +248,7 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
   dialog#settings .settingsTopbar{min-height:62px}
 }
 
-/* v4.14 — exact message layout: identities at outer edges, names above avatars, read receipts beside bubbles. */
+/* v4.21 — identities slightly inward from the screen edges, names aligned to avatars. */
 .message{width:100%;max-width:none;display:flex;align-items:flex-end;gap:7px;margin-bottom:20px}
 .message.assistant{justify-content:flex-start}
 .message.user{justify-content:flex-end}
@@ -275,8 +275,8 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 
 @media(max-width:799px){
   .message{gap:6px}
-  .message.assistant .msgIdentity{margin-left:-5px}
-  .message.user .msgIdentity{margin-right:-5px}
+  .message.assistant .msgIdentity{margin-left:5px}
+  .message.user .msgIdentity{margin-right:5px}
   .msgIdentity{width:40px;flex-basis:40px}
   .msgIdentity .msgName{font-size:8px;max-width:68px}
   .msgIdentity .msgavatar{width:32px;height:32px}
@@ -292,24 +292,3 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .message.assistant .bubble{background:var(--ai-bubble-bg)!important}
 .message.user .bubble{background:var(--user-bubble-bg)!important}
 .colorField{display:flex;align-items:center;gap:10px}.colorField input[type=color]{width:44px!important;height:36px!important;padding:3px!important;border-radius:10px!important;cursor:pointer}.colorField output{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);letter-spacing:.04em}.rangeValue{display:block;margin:-2px 0 7px;color:var(--muted);font-size:10px}
-
-/* v4.19 — flatter bubbles and keep names exactly aligned with avatar bounds. */
-.bubble{line-height:1.55}
-body.bubble-soft .assistant .bubble,body.bubble-soft .user .bubble{padding:7px 13px}
-body.bubble-glass .assistant .bubble,body.bubble-glass .user .bubble{padding:7px 13px;min-height:0}
-body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding:7px 14px}
-
-/* The name label occupies the same 32px horizontal box as the avatar. */
-.msgIdentity{width:32px;flex:0 0 32px;gap:3px}
-.msgIdentity .msgName{width:32px;max-width:32px;overflow:hidden;text-overflow:ellipsis}
-.msgIdentity .msgavatar{width:32px;height:32px}
-.message.assistant .msgName{text-align:left}
-.message.user .msgName{text-align:right}
-@media(max-width:799px){
-  .msgIdentity{width:32px;flex-basis:32px}
-  .msgIdentity .msgName{width:32px;max-width:32px;font-size:8px}
-  .msgIdentity .msgavatar{width:32px;height:32px}
-  .message{gap:6px}
-  .message.assistant .msgIdentity{margin-left:-5px}
-  .message.user .msgIdentity{margin-right:-5px}
-}
