@@ -460,3 +460,15 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestAnniversaryPage>*{position:relative;z-index:1}
 .nestAnniversaryPage .nestSubBody,.nestAnniversaryPage .nestSubTop,.nestAnniversaryPage .nestSubFooter{position:relative;z-index:1}
 .nestBottomNav button{font-size:10px;padding:8px 3px}
+
+
+/* Iris v4.41 — persistent nest navigation */
+.nestPage{padding-bottom:74px;box-sizing:border-box}
+.nestHomeInner{padding-bottom:96px}
+.nestSubBody{padding-bottom:96px}
+.nestBottomNav{height:62px;box-sizing:border-box;align-items:center}
+.nestBottomNav button{display:flex;align-items:center;justify-content:center;min-height:40px;font-size:11px;letter-spacing:.2px}
+.nestBottomNav button.active{background:#f1e1d5}
+.nestTop{padding-bottom:4px}
+.nestTop p{margin-top:4px;opacity:.8}
+.nestCard,.nestAnniversaryCard,.nestClockCard{box-shadow:0 8px 26px rgba(94,65,42,.045)}

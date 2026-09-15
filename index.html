@@ -81,16 +81,16 @@ if("serviceWorker"in navigator){
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="memoryPage">
-      <div class="subIntro"><b>记忆</b><small>Iris 会在你正常聊天时，自动整理值得长期记住的信息，并在新信息出现时更新或合并旧记忆。</small></div>
-      <div class="settingsSectionTitle">你不用特意说“记住”</div>
+      <div class="subIntro"><b>记忆</b><small>这里保存长期记忆。聊天时会自动带入这些记忆；对话变长后，Iris 会自动整理旧记录，减少每次发送的上下文。</small></div>
+      <div class="settingsSectionTitle">添加记忆</div>
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>记住一件事</span><textarea id="memoryInput" rows="3" placeholder="例如：我喜欢晚上安静地聊天。"></textarea></label>
-        <button class="smallAction full" id="addMemory">手动添加一条记忆</button>
+        <button class="smallAction full" id="addMemory">添加到记忆</button>
       </div>
-      <div class="settingsSectionTitle">长期记忆 <small class="sectionAutoLabel">自动更新</small></div>
+      <div class="settingsSectionTitle">已保存</div>
       <div class="settingsGroup settingsFormGroup" id="memoryList"></div>
       <div class="settingsGroup settingsActionGroup"><button class="settingsAction danger" id="clearMemories"><span>清空全部记忆</span><em>›</em></button></div>
-      <p class="settingsNote">长期记忆由聊天内容自动维护：新增、合并、修改和删除过时信息。手动输入“记住：……”仍然可以立即保存。聊天摘要和长期记忆都会包含在数据导出文件中。</p>
+      <p class="settingsNote">你也可以在聊天中直接说“记住：……”；Iris 会把这句话保存为记忆。对话达到一定长度后，Iris 会自动总结旧记录，只保留最近消息和摘要用于后续聊天，以减少 Token 消耗。摘要和记忆都会包含在数据导出文件中。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="themePage">
@@ -194,39 +194,51 @@ if("serviceWorker"in navigator){
 </div>
 </dialog>
 <dialog id="nest" class="nestDialog">
-  <div class="nestApp" id="nestApp">
-    <section class="nestPage" id="nestHome">
-      <div class="nestHomeBg"></div>
-      <div class="nestHomeInner">
-        <div class="nestTop"><button class="nestIconBtn" id="nestCloseHome" aria-label="关闭">‹</button><h1>小窝</h1><button class="nestIconBtn" id="nestOpenSettings" aria-label="设置">⌘</button></div>
-        <div class="nestHeroSpace"></div>
-        <div class="nestClockCard"><div id="nestNow">2026年9月15日 星期二 18:24</div><strong id="nestClockBig">18:24</strong></div>
-        <div class="nestCard nestMoodCard"><div class="nestCardHead"><span>今日心情</span><button id="nestMoodEdit">编辑</button></div><div class="nestMoodValue" id="nestMoodShow">今天感觉怎么样？</div></div>
-        <div class="nestCard nestToGCard"><div class="nestCardHead"><span>今天想对 G 说</span><button id="nestToGEdit">编辑</button></div><div class="nestTextPreview" id="nestToGShow">写点什么留在这里。</div></div>
-        <div class="nestCard nestNoteCard"><div class="nestCardHead"><span>今日小记</span><button id="nestNoteEdit">打开</button></div><div class="nestTextPreview" id="nestNoteShow">今天有什么想留下来？</div></div>
-        <div class="nestAnniversaryCard"><div><span>纪念日</span><strong id="nestCountdown">还没有设置纪念日</strong></div><button id="nestAnniversaryOpen">›</button></div>
-      </div>
-      <div class="nestBottomNav"><button class="active" data-nest-view="home">小窝</button><button data-nest-view="note">今日小记</button><button data-nest-view="anniversary">纪念日</button><button data-nest-view="settings">设置</button></div>
-    </section>
+<div class="nestApp" id="nestApp">
+  <section class="nestPage" id="nestHome">
+    <div class="nestTop"><button class="nestClose" id="nestCloseHome" type="button">×</button><div class="nestEyebrow">OUR LITTLE PLACE</div><h1>小窝</h1><p>只属于我们的小小空间</p></div>
+    <div class="nestHomeInner">
+      <div class="nestClockCard"><span id="nestNow">—</span><strong id="nestClockBig">--:--</strong></div>
+      <div class="nestCard nestMoodCard"><div class="nestCardHead"><span>今日心情</span><button id="nestMoodEdit" type="button">编辑</button></div><div class="nestMoodValue" id="nestMoodShow">今天感觉怎么样？</div></div>
+      <div class="nestCard nestToGCard"><div class="nestCardHead"><span>留给彼此的话</span><button id="nestToGEdit" type="button">编辑</button></div><div class="nestTextPreview" id="nestToGShow">写点什么留在这里。</div></div>
+      <div class="nestCard"><div class="nestCardHead"><span>今日小记</span><button id="nestNoteEdit" type="button">打开</button></div><div class="nestTextPreview" id="nestNoteShow">今天有什么想留下来？</div></div>
+      <div class="nestAnniversaryCard"><div><span>纪念日</span><strong id="nestAnniversaryLabel">还没有设置纪念日</strong></div><button id="nestAnniversaryOpen" type="button">›</button></div>
+    </div>
+  </section>
 
-    <section class="nestPage hidden" id="nestNotePage">
-      <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>今日小记</h2><span></span></div>
-      <div class="nestSubBody"><div class="nestDateLabel" id="nestNoteDate"></div><textarea id="nestNote" maxlength="1000" placeholder="今天想留下些什么？"></textarea><div class="nestPhotoHint">小窝里的文字只保存在这台装置。</div></div>
-      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestNoteSave">保存</button></div>
-    </section>
+  <section class="nestPage hidden" id="nestNotePage">
+    <div class="nestSubTop"><button class="nestBack" data-nest-back type="button">‹</button><h2>今日小记</h2></div>
+    <div class="nestSubBody"><div class="nestDateLabel" id="nestNoteDate">—</div><textarea id="nestNote" maxlength="3000" placeholder="今天发生了什么，或者只是一些碎碎念"></textarea></div>
+    <div class="nestSubFooter"><button class="nestSaveBtn" id="nestNoteSave" type="button">保存</button></div>
+  </section>
 
-    <section class="nestPage hidden" id="nestAnniversaryPage">
-      <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>纪念日</h2><span></span></div>
-      <div class="nestSubBody"><div class="nestBigCountdown"><span>距离下一次纪念日</span><strong id="nestCountdownBig">—</strong><small id="nestAnniversaryLabel">还没有设置日期</small></div><label class="nestField"><span>纪念日日期</span><input id="nestAnniversary" type="date"></label><div class="nestAnniversaryTip">每年会自动计算下一次纪念日。</div></div>
-      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestAnniversarySave">保存</button></div>
-    </section>
+  <section class="nestPage hidden nestAnniversaryPage" id="nestAnniversaryPage">
+    <div class="nestSubTop"><button class="nestBack" data-nest-back type="button">‹</button><h2>我们的纪念日</h2></div>
+    <div class="nestSubBody">
+      <div class="nestBigCountdown"><span id="nestAnniversaryBigLabel">我们的纪念日</span><strong id="nestCountdownBig">—</strong><small>距离下一次纪念日</small></div>
+      <div class="nestField"><span>日期</span><input id="nestAnniversary" type="date"></div>
+      <p class="nestAnniversaryTip">每年都会记得这一天。</p>
+    </div>
+    <div class="nestSubFooter"><button class="nestSaveBtn" id="nestAnniversarySave" type="button">保存纪念日</button></div>
+  </section>
 
-    <section class="nestPage hidden" id="nestSettingsPage">
-      <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>小窝设置</h2><span></span></div>
-      <div class="nestSubBody"><div class="nestSettingGroup"><div class="nestSettingTitle">背景</div><div class="nestBackgroundRow"><div class="nestBackgroundPreview" id="nestBackgroundPreview"></div><div><b>我的背景</b><small>只影响小窝，不跟随 Iris 主题色</small></div><button id="nestBgPick">更换</button><input id="nestBgFile" type="file" accept="image/*" hidden></div><button class="nestClearBg" id="nestBgClear">恢复默认背景</button></div><div class="nestSettingGroup"><div class="nestSettingTitle">今天</div><label class="nestField"><span>今日心情</span><input id="nestMood" maxlength="40" placeholder="例如：很开心、平静、想休息"></label><label class="nestField"><span>今天想对 G 说</span><textarea id="nestToG" maxlength="500" placeholder="写一句话给 G"></textarea></label></div><div class="nestSettingNote">小窝的数据与聊天记录分开保存，不会改变现有聊天。</div></div>
-      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestSettingsSave">保存</button></div>
-    </section>
-  </div>
+  <section class="nestPage hidden" id="nestSettingsPage">
+    <div class="nestSubTop"><button class="nestBack" data-nest-back type="button">‹</button><h2>小窝设置</h2></div>
+    <div class="nestSubBody">
+      <div class="nestSettingGroup"><div class="nestSettingTitle">今天的心情</div><label class="nestField"><span>留下今天的心情</span><textarea id="nestMood" maxlength="300" placeholder="可以是一句话，也可以慢慢写。"></textarea></label></div>
+      <div class="nestSettingGroup"><div class="nestSettingTitle">留给 G 的话</div><label class="nestField"><span>只留在我们的小窝里</span><textarea id="nestToG" maxlength="1000" placeholder="随手写一句就好"></textarea></label></div>
+      <div class="nestSettingGroup"><div class="nestSettingTitle">小窝背景</div><div class="nestBackgroundRow"><div id="nestBackgroundPreview" class="nestBackgroundPreview"></div><div><b>专属背景</b><small>只影响小窝，不改变聊天页面。</small></div><button id="nestBgPick" type="button">选择</button></div><input id="nestBgFile" type="file" accept="image/*" hidden><button id="nestBgClear" class="nestClearBg" type="button">恢复默认背景</button></div>
+    </div>
+    <div class="nestSubFooter"><button class="nestSaveBtn" id="nestSettingsSave" type="button">保存设置</button></div>
+  </section>
+
+  <nav class="nestBottomNav" aria-label="小窝导航">
+    <button type="button" data-nest-view="home" class="active"><span>小窝</span></button>
+    <button type="button" data-nest-view="note"><span>小记</span></button>
+    <button type="button" data-nest-view="anniversary"><span>纪念日</span></button>
+    <button type="button" data-nest-view="settings"><span>设置</span></button>
+  </nav>
+</div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.33"></script><script src="./app.js?v=4.33"></script></body></html>
+<script src="./api.js?v=4.33"></script><script src="./app.js?v=4.41"></script></body></html>
