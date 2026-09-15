@@ -317,3 +317,5 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .statusOption{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 3px;border-radius:10px;background:transparent;color:var(--muted);font-size:9px}
 .statusOption.active{background:var(--soft);color:var(--ink);font-weight:650}
 .statusOption:active{background:var(--soft)}
+
+/* v4.24 bugfix: restore drawer open/close handlers; no visual layout change. */
