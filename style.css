@@ -255,3 +255,9 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .message.assistant .msgIdentity{order:0}
 .message.user .msgIdentity{order:2}
 @media(max-width:799px){.msgName{font-size:8px;max-width:64px}.message{align-items:flex-end}}
+
+
+/* v4.11: subtle read receipt for the user's messages. */
+.message.user{position:relative}
+.message.user .readStatus{order:3;align-self:flex-end;margin:0 2px 5px 1px;color:var(--muted);font-size:8px;line-height:1;letter-spacing:.01em;opacity:.72;white-space:nowrap}
+@media(max-width:799px){.message.user .readStatus{font-size:8px;margin-bottom:5px}}
