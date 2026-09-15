@@ -319,19 +319,3 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .statusOption:active{background:var(--soft)}
 
 /* v4.24 bugfix: restore drawer open/close handlers; no visual layout change. */
-
-
-/* v4.29 — dual independent status, vertically stacked under each avatar. */
-.msgIdentity{display:flex;flex-direction:column;align-items:center!important;justify-content:flex-start;gap:3px;overflow:visible;width:42px;flex:0 0 42px}
-.msgIdentity .msgName{order:0;width:auto!important;max-width:none!important;overflow:visible;text-overflow:clip;text-align:center!important;white-space:nowrap}
-.msgIdentity .msgavatar{order:1;flex:0 0 32px;width:32px;height:32px;align-self:center!important;margin:0}
-.msgIdentity .msgStatus{order:2;display:flex;align-items:center;justify-content:center;align-self:center!important;gap:3px;padding:0;font-size:7px;line-height:1;white-space:nowrap}
-.message.user .msgIdentity,.message.assistant .msgIdentity{align-items:center!important}
-.message.user .msgName,.message.assistant .msgName{text-align:center!important}
-.message.user .msgavatar,.message.assistant .msgavatar{align-self:center!important}
-.onlineDot.status-busy{background:#d65d57!important;box-shadow:0 0 0 3px color-mix(in srgb,#d65d57 12%,transparent)}
-.onlineDot.status-away{background:#d3a33f!important;box-shadow:0 0 0 3px color-mix(in srgb,#d3a33f 12%,transparent)}
-.onlineDot.status-invisible{background:#9da0a5!important;box-shadow:0 0 0 3px color-mix(in srgb,#9da0a5 12%,transparent)}
-.msgStatus.busy i,.statusDot.busy{background:#d65d57}
-.msgStatus.away i,.statusDot.away{background:#d3a33f}
-.msgStatus.invisible i,.statusDot.invisible{background:#9da0a5}
