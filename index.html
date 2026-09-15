@@ -212,22 +212,22 @@ if("serviceWorker"in navigator){
     <section class="nestPage hidden" id="nestMoodPage">
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2 id="nestMoodPageTitle">我的心情</h2><span></span></div>
       <div class="nestSubBody">
-        <div class="nestMoodSection" id="nestUserMoodSection"><div class="nestMoodIntro">今天的你</div><div class="nestMoodQuickGrid" id="nestUserMoodQuick"></div><textarea id="nestMood" maxlength="80" placeholder="也可以自己写一句" class="nestMoodCustom"></textarea></div>
-        <div class="nestMoodSection hidden" id="nestAiMoodSection"><div class="nestMoodIntro">今天的他</div><div class="nestMoodQuickGrid" id="nestAiMoodQuick"></div><textarea id="nestAiMood" maxlength="120" placeholder="写一句留在这里" class="nestMoodCustom"></textarea></div>
+        <div class="nestMoodSection" id="nestUserMoodSection"><div class="nestMoodIntro">今天的你</div><div class="nestDailyPager nestMoodPager"><button type="button" id="nestMoodPrev">‹</button><div><small>正在查看</small><strong id="nestMoodDate"></strong></div><button type="button" id="nestMoodNext">›</button></div><div class="nestMoodSliderCard"><div class="nestMoodValueRow"><span>现在的感觉</span><strong id="nestMoodValue">开心</strong></div><input id="nestMoodRange" class="nestMoodRange" type="range" min="0" max="7" step="1" value="0"><div class="nestMoodTicks" id="nestMoodTicks"></div></div><textarea id="nestMood" maxlength="80" placeholder="也可以自己写一句" class="nestMoodCustom"></textarea></div>
+        <div class="nestMoodSection hidden" id="nestAiMoodSection"><div class="nestMoodIntro">今天的他</div><div class="nestDailyPager nestMoodPager"><button type="button" id="nestAiMoodPrev">‹</button><div><small>正在查看</small><strong id="nestAiMoodDate"></strong></div><button type="button" id="nestAiMoodNext">›</button></div><div class="nestMoodSliderCard"><div class="nestMoodValueRow"><span>现在的感觉</span><strong id="nestAiMoodValue">开心</strong></div><input id="nestAiMoodRange" class="nestMoodRange" type="range" min="0" max="7" step="1" value="0"><div class="nestMoodTicks" id="nestAiMoodTicks"></div></div><textarea id="nestAiMood" maxlength="120" placeholder="写一句留在这里" class="nestMoodCustom"></textarea></div>
       </div>
       <div class="nestSubFooter"><button class="nestSaveBtn" id="nestMoodSave">保存</button></div>
     </section>
 
     <section class="nestPage hidden" id="nestToGPage">
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>今天想对他说</h2><span></span></div>
-      <div class="nestSubBody"><div class="nestDateLabel">今天</div><textarea id="nestToGPageText" maxlength="500" placeholder="想对他说点什么？写下来吧。"></textarea><div class="nestPhotoHint">这句话会留在你们的小窝里。</div></div>
-      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestToGSave">保存</button></div>
+      <div class="nestSubBody"><div class="nestDailyPager"><button type="button" id="nestToGPrev">‹</button><div><small>正在记录</small><strong id="nestToGDate"></strong></div><button type="button" id="nestToGNext">›</button></div><textarea id="nestToGPageText" maxlength="500" placeholder="想对他说点什么？写下来吧。"></textarea><div class="nestPhotoHint">每天的文字都会留在小窝里，可以回头看看。</div></div>
+      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestToGSave">保存这一天</button></div>
     </section>
 
     <section class="nestPage hidden" id="nestNotePage">
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>今日小记</h2><span></span></div>
-      <div class="nestSubBody"><div class="nestDateLabel" id="nestNoteDate"></div><textarea id="nestNote" maxlength="1000" placeholder="今天想留下些什么？"></textarea><div class="nestPhotoHint">小窝里的文字只保存在这台装置。</div></div>
-      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestNoteSave">保存</button></div>
+      <div class="nestSubBody"><div class="nestDailyPager"><button type="button" id="nestNotePrev">‹</button><div><small>正在记录</small><strong id="nestNoteDate"></strong></div><button type="button" id="nestNoteNext">›</button></div><textarea id="nestNote" maxlength="1000" placeholder="今天想留下些什么？"></textarea><div class="nestPhotoHint">每天的小记都会留下来，可以回头看看。</div></div>
+      <div class="nestSubFooter"><button class="nestSaveBtn" id="nestNoteSave">保存这一天</button></div>
     </section>
 
     <section class="nestPage hidden" id="nestAnniversaryPage">
@@ -251,4 +251,4 @@ if("serviceWorker"in navigator){
   </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.46"></script><script src="./app.js?v=4.46"></script></body></html>
+<script src="./api.js?v=4.47"></script><script src="./app.js?v=4.47"></script></body></html>
