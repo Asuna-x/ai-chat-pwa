@@ -16,7 +16,7 @@ if("serviceWorker"in navigator){
   });
 }</script></head>
 <body><div class="app" id="app"><aside id="drawer" class="drawer"><div class="drawer-top"><div class="brand"><div class="brand-mark" id="brandAvatar">G</div><div><b>G Chat</b><small>私人 AI 對話</small></div></div><button class="round" id="closeDrawer">×</button></div>
-<button class="new" id="newChat">＋ 新對話</button><div id="chatSelectBar" class="chatSelectBar hidden"><div><b id="selectedChatCount">已选择 0 个</b></div><button id="cancelChatSelect">取消</button><button id="renameSelected">重命名</button><button id="deleteSelected" class="danger">删除</button></div><div class="section">對話 <span id="chatCount"></span></div><div id="chatList" class="list"></div><div class="bottom"><button id="openNest">小窝</button><button id="openSettings">设置</button><small>聊天记录与个性化资料只保存在这台装置</small></div></aside>
+<button class="new" id="newChat">＋ 新對話</button><div id="chatSelectBar" class="chatSelectBar hidden"><div><b id="selectedChatCount">已选择 0 个</b></div><button id="cancelChatSelect">取消</button><button id="renameSelected">重命名</button><button id="deleteSelected" class="danger">删除</button></div><div class="section">對話 <span id="chatCount"></span></div><div id="chatList" class="list"></div><div class="bottom"><button id="openSettings">设置</button><small>聊天记录与个性化资料只保存在这台装置</small></div></aside>
 <main class="main"><header><button class="round" id="openDrawer">☰</button><button class="head profileHead" id="openProfile"><span class="headAvatar" id="headAvatar">G</span><span class="headText"><b id="title">新对话</b><small><i class="onlineDot" id="headerStatusDot"></i><span id="modelStatus"><span id="modelName">未設定模型</span><em id="headerTime"></em></span><span id="typingStatus" class="typingStatus hidden">正在输入中<span class="typingDots"><i></i><i></i><i></i></span></span></small></span></button><button class="round" id="headerSettings">⚙</button></header>
 <section id="messages" class="messages"></section><div id="error" class="error hidden"></div><footer><div class="composer"><button class="mic" id="mic" title="语音输入">◉</button><div class="composerInner"><textarea id="input" rows="1" placeholder="和 AI 说点什么…"></textarea><span class="composerGlow"></span></div><button class="send" id="send">↑</button></div><div class="hint">Enter 送出　·　Shift + Enter 换行</div></footer></main></div><div id="shade" class="shade hidden"></div>
 <dialog id="settings">
@@ -193,52 +193,5 @@ if("serviceWorker"in navigator){
   <div class="settingsFooter"><button class="save" id="saveSettings">保存设置</button></div>
 </div>
 </dialog>
-<dialog id="nest" class="nestDialog">
-<div class="nestApp" id="nestApp">
-  <section class="nestPage" id="nestHome">
-    <div class="nestTop"><button class="nestClose" id="nestCloseHome" type="button">×</button><div class="nestEyebrow">OUR LITTLE PLACE</div><h1>小窝</h1><p>只属于我们的小小空间</p></div>
-    <div class="nestHomeInner">
-      <div class="nestClockCard"><span id="nestNow">—</span><strong id="nestClockBig">--:--</strong></div>
-      <div class="nestCard nestMoodCard"><div class="nestCardHead"><span>今日心情</span><button id="nestMoodEdit" type="button">编辑</button></div><div class="nestMoodValue" id="nestMoodShow">今天感觉怎么样？</div></div>
-      <div class="nestCard nestToGCard"><div class="nestCardHead"><span>留给彼此的话</span><button id="nestToGEdit" type="button">编辑</button></div><div class="nestTextPreview" id="nestToGShow">写点什么留在这里。</div></div>
-      <div class="nestCard"><div class="nestCardHead"><span>今日小记</span><button id="nestNoteEdit" type="button">打开</button></div><div class="nestTextPreview" id="nestNoteShow">今天有什么想留下来？</div></div>
-      <div class="nestAnniversaryCard"><div><span>纪念日</span><strong id="nestAnniversaryLabel">还没有设置纪念日</strong></div><button id="nestAnniversaryOpen" type="button">›</button></div>
-    </div>
-  </section>
-
-  <section class="nestPage hidden" id="nestNotePage">
-    <div class="nestSubTop"><button class="nestBack" data-nest-back type="button">‹</button><h2>今日小记</h2></div>
-    <div class="nestSubBody"><div class="nestDateLabel" id="nestNoteDate">—</div><textarea id="nestNote" maxlength="3000" placeholder="今天发生了什么，或者只是一些碎碎念"></textarea></div>
-    <div class="nestSubFooter"><button class="nestSaveBtn" id="nestNoteSave" type="button">保存</button></div>
-  </section>
-
-  <section class="nestPage hidden nestAnniversaryPage" id="nestAnniversaryPage">
-    <div class="nestSubTop"><button class="nestBack" data-nest-back type="button">‹</button><h2>我们的纪念日</h2></div>
-    <div class="nestSubBody">
-      <div class="nestBigCountdown"><span id="nestAnniversaryBigLabel">我们的纪念日</span><strong id="nestCountdownBig">—</strong><small>距离下一次纪念日</small></div>
-      <div class="nestField"><span>日期</span><input id="nestAnniversary" type="date"></div>
-      <p class="nestAnniversaryTip">每年都会记得这一天。</p>
-    </div>
-    <div class="nestSubFooter"><button class="nestSaveBtn" id="nestAnniversarySave" type="button">保存纪念日</button></div>
-  </section>
-
-  <section class="nestPage hidden" id="nestSettingsPage">
-    <div class="nestSubTop"><button class="nestBack" data-nest-back type="button">‹</button><h2>小窝设置</h2></div>
-    <div class="nestSubBody">
-      <div class="nestSettingGroup"><div class="nestSettingTitle">今天的心情</div><label class="nestField"><span>留下今天的心情</span><textarea id="nestMood" maxlength="300" placeholder="可以是一句话，也可以慢慢写。"></textarea></label></div>
-      <div class="nestSettingGroup"><div class="nestSettingTitle">留给 G 的话</div><label class="nestField"><span>只留在我们的小窝里</span><textarea id="nestToG" maxlength="1000" placeholder="随手写一句就好"></textarea></label></div>
-      <div class="nestSettingGroup"><div class="nestSettingTitle">小窝背景</div><div class="nestBackgroundRow"><div id="nestBackgroundPreview" class="nestBackgroundPreview"></div><div><b>专属背景</b><small>只影响小窝，不改变聊天页面。</small></div><button id="nestBgPick" type="button">选择</button></div><input id="nestBgFile" type="file" accept="image/*" hidden><button id="nestBgClear" class="nestClearBg" type="button">恢复默认背景</button></div>
-    </div>
-    <div class="nestSubFooter"><button class="nestSaveBtn" id="nestSettingsSave" type="button">保存设置</button></div>
-  </section>
-
-  <nav class="nestBottomNav" aria-label="小窝导航">
-    <button type="button" data-nest-view="home" class="active"><span>小窝</span></button>
-    <button type="button" data-nest-view="note"><span>小记</span></button>
-    <button type="button" data-nest-view="anniversary"><span>纪念日</span></button>
-    <button type="button" data-nest-view="settings"><span>设置</span></button>
-  </nav>
-</div>
-</dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">G</div><h2 id="profileName">G</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.33"></script><script src="./app.js?v=4.40"></script></body></html>
+<script src="./api.js?v=4.33"></script><script src="./app.js?v=4.33"></script></body></html>
