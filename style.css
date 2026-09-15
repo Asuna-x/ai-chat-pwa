@@ -348,6 +348,3 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .tokenStat small{grid-column:1/-1;color:var(--muted);font-size:10px}
 .tokenStat b{font-size:17px;font-variant-numeric:tabular-nums}
 .tokenStat span{font-size:9px;color:var(--muted)}
-
-/* v4.39 memory */
-.memoryGroup{padding:8px 12px}.memoryEmpty{padding:14px 3px;font-size:11px;line-height:1.6;color:var(--muted)}.memoryItem{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}.memoryItem:last-child{border-bottom:0}.memoryItem>div{min-width:0;flex:1}.memoryItem b{display:block;font-size:12px;font-weight:600;line-height:1.5;word-break:break-word}.memoryItem small{display:block;margin-top:3px;font-size:9px;color:var(--muted)}.memoryItem button{border:0;background:var(--soft);color:var(--muted);border-radius:9px;padding:7px 9px;font-size:10px}.brand-mark.is-hidden,.headAvatar.is-hidden{display:none!important}

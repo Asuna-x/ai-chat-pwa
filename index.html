@@ -35,7 +35,6 @@
         <button class="settingsRow" data-settings-page="backgroundPage"><span class="rowIcon">▧</span><span><b>聊天背景</b><small>背景样式、图片与透明度</small></span><em>›</em></button>
         <button class="settingsRow" data-settings-page="bubblePage"><span class="rowIcon">▢</span><span><b>气泡</b><small>样式、颜色与透明度</small></span><em>›</em></button>
         <button class="settingsRow" data-settings-page="avatarPage"><span class="rowIcon">◎</span><span><b>头像</b><small>我的头像、G头像与顶部头像</small></span><em>›</em></button>
-        <button class="settingsRow" data-settings-page="memoryPage"><span class="rowIcon">◇</span><span><b>长期记忆</b><small>G 可以长期记住重要的事情</small></span><em>›</em></button>
       </div>
 
       <div class="settingsSectionTitle">聊天</div>
@@ -43,7 +42,7 @@
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>G Chat</b><small>Version 4.39 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>G Chat</b><small>Version 4.37 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -129,14 +128,6 @@
         <label class="settingsField"><span>我的名字</span><output class="rangeValue" id="userNameOffsetOut">0 px</output><input id="userNameOffset" type="range" min="-24" max="24" step="1" value="0"></label>
         <button class="smallAction ghost full" id="resetNameOffsets">恢复默认位置</button>
       </div>
-    </section>
-
-    <section class="settingsPage subSettingsPage hidden" id="memoryPage">
-      <div class="subIntro"><b>长期记忆</b><small>G 会在聊天中自行判断哪些信息值得长期保留，也可以根据你的要求修改或删除。</small></div>
-      <div class="settingsSectionTitle">G 记住的事情</div>
-      <div class="settingsGroup memoryGroup" id="memoryList"></div>
-      <button class="smallAction full memoryAdd" id="memoryAdd">＋ 手动添加记忆</button>
-      <p class="settingsNote">记忆保存在这台装置的本地数据中，只会作为相关聊天的上下文提供给 G。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="chatPage">
