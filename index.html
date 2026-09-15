@@ -131,7 +131,7 @@
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="chatPage">
-      <div class="subIntro"><b>聊天与数据</b><small>管理当前对话，以及你的本地备份。</small></div>
+      <div class="subIntro"><b>聊天与数据</b><small>管理当前对话，以及导出和导入数据文件。</small></div>
       <div class="settingsSectionTitle">Token 统计</div>
       <div class="settingsGroup tokenStatsGroup">
         <div class="tokenStat"><small>输入</small><b id="tokenPrompt">0</b><span>tokens</span></div>
@@ -147,14 +147,15 @@
       </div>
       <div class="settingsSectionTitle">数据</div>
       <div class="settingsGroup settingsActionGroup">
-        <button class="settingsAction" id="exportAll"><span>备份全部数据</span><em>›</em></button>
-        <button class="settingsAction" id="importAll"><span>恢复备份</span><em>›</em></button>
+        <button class="settingsAction" id="exportAll"><span>导出数据文件</span><em>›</em></button>
+        <button class="settingsAction" id="importAll"><span>导入数据文件</span><em>›</em></button>
         <input id="importFile" type="file" accept="application/json" hidden>
       </div>
       <div class="settingsSectionTitle">危险操作</div>
       <div class="settingsGroup settingsActionGroup">
         <button class="settingsAction danger" id="clearCurrent"><span>清空当前对话</span><em>›</em></button>
       </div>
+      <p class="settingsNote">导出的数据文件可以放进“文件”App，再在另一台设备或主屏幕 App 中导入。导入会覆盖当前聊天和设置，请谨慎操作。</p>
       <p class="settingsNote">长按消息可复制文字。语音输入需要 Safari 支持语音识别。</p>
     </section>
   </div>
