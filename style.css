@@ -292,3 +292,11 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .message.assistant .bubble{background:var(--ai-bubble-bg)!important}
 .message.user .bubble{background:var(--user-bubble-bg)!important}
 .colorField{display:flex;align-items:center;gap:10px}.colorField input[type=color]{width:44px!important;height:36px!important;padding:3px!important;border-radius:10px!important;cursor:pointer}.colorField output{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);letter-spacing:.04em}.rangeValue{display:block;margin:-2px 0 7px;color:var(--muted);font-size:10px}
+
+
+/* v4.22 — independently adjustable name offsets. */
+:root{--g-name-offset:0px;--user-name-offset:0px}
+.message.assistant .msgName{transform:translateX(var(--g-name-offset))}
+.message.user .msgName{transform:translateX(var(--user-name-offset))}
+.subSettingHint{margin:-2px 0 4px;color:var(--muted);font-size:10px;line-height:1.55}
+.namePositionGroup .settingsField{gap:0}

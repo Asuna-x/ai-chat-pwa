@@ -41,7 +41,7 @@
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>G Chat</b><small>Version 4.21 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>G Chat</b><small>Version 4.22 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -120,6 +120,13 @@
       <div class="settingsGroup avatarGroup"><div class="largePreview aiPreview" id="aiAvatarPreview">G</div><div class="avatarButtons"><button class="smallAction" id="uploadAiAvatar">上传头像</button><button class="smallAction ghost" id="clearAiAvatar">恢复默认</button><input id="aiAvatarFile" type="file" accept="image/*" hidden></div></div>
       <div class="settingsSectionTitle">顶部显示</div>
       <div class="settingsGroup visualGroup"><div class="bubbleGrid topAvatarGrid" id="topAvatarGrid"><button data-top-avatar="user">我的头像</button><button data-top-avatar="ai">G 头像</button><button data-top-avatar="none">不显示</button></div></div>
+      <div class="settingsSectionTitle">名字位置</div>
+      <div class="settingsGroup settingsFormGroup namePositionGroup">
+        <div class="subSettingHint">左右平移名字，正数向右，负数向左。头像位置不会跟着改变。</div>
+        <label class="settingsField"><span>G 的名字</span><output class="rangeValue" id="gNameOffsetOut">0 px</output><input id="gNameOffset" type="range" min="-24" max="24" step="1" value="0"></label>
+        <label class="settingsField"><span>我的名字</span><output class="rangeValue" id="userNameOffsetOut">0 px</output><input id="userNameOffset" type="range" min="-24" max="24" step="1" value="0"></label>
+        <button class="smallAction ghost full" id="resetNameOffsets">恢复默认位置</button>
+      </div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="chatPage">
