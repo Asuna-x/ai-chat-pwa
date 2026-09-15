@@ -1,4 +1,4 @@
-const CACHE_NAME = "iris-shell-v20260915-1";
+const CACHE_NAME = "iris-shell-v20260915-2";
 
 self.addEventListener("install", event => {
   self.skipWaiting();
