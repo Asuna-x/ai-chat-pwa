@@ -320,10 +320,14 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 
 /* v4.24 bugfix: restore drawer open/close handlers; no visual layout change. */
 
-/* v4.26 — independent status for both people; header status follows G. */
-.headAvatar.status-online:after,.onlineDot.status-online{background:#72a87a}
-.headAvatar.status-busy:after,.onlineDot.status-busy{background:#c65f5f}
-.headAvatar.status-away:after,.onlineDot.status-away{background:#c99655}
-.headAvatar.status-invisible:after,.onlineDot.status-invisible{background:#aaa}
-.headAvatar.status-busy:after,.headAvatar.status-away:after,.headAvatar.status-invisible:after{box-shadow:0 0 0 2px color-mix(in srgb,currentColor 8%,transparent)}
-.msgStatus.online i{background:#72a87a}.msgStatus.busy i{background:#c65f5f}.msgStatus.away i{background:#c99655}.msgStatus.invisible i{background:#aaa}
+
+/* v4.27 — status sits directly below each chat avatar. */
+.msgIdentity{width:40px!important;flex:0 0 40px!important;align-items:center!important;gap:3px!important;overflow:visible!important}
+.msgIdentity .msgName{width:32px!important;max-width:32px!important;text-align:center!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.msgIdentity .msgavatar{width:32px!important;height:32px!important;align-self:center!important;flex:none!important}
+.msgStatus{width:32px!important;min-width:32px!important;justify-content:center!important;align-items:center!important;gap:3px!important;font-size:7px!important;line-height:1!important;white-space:nowrap!important;padding:0!important;margin:0!important}
+.msgStatus i{width:5px!important;height:5px!important;flex:none!important}
+.msgStatus.online i,.statusDot.online{background:#72a87a!important}.msgStatus.busy i,.statusDot.busy{background:#d65d57!important}.msgStatus.away i,.statusDot.away{background:#d3a33f!important}.msgStatus.invisible i,.statusDot.invisible{background:#9da0a5!important}
+.onlineDot.status-online{background:#72a87a!important}.onlineDot.status-busy{background:#d65d57!important}.onlineDot.status-away{background:#d3a33f!important}.onlineDot.status-invisible{background:#9da0a5!important}
+.profileStatusButton.online .statusDot{background:#72a87a!important}.profileStatusButton.busy .statusDot{background:#d65d57!important}.profileStatusButton.away .statusDot{background:#d3a33f!important}.profileStatusButton.invisible .statusDot{background:#9da0a5!important}
+@media(max-width:799px){.msgIdentity{width:40px!important;flex-basis:40px!important}.msgIdentity .msgName{max-width:32px!important}.message.assistant .msgIdentity{margin-left:5px}.message.user .msgIdentity{margin-right:5px}}
