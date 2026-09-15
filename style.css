@@ -348,3 +348,6 @@ dialog#settings .settingsFooter{padding-bottom:max(13px,env(safe-area-inset-bott
 .tokenStat small{grid-column:1/-1;color:var(--muted);font-size:10px}
 .tokenStat b{font-size:17px;font-variant-numeric:tabular-nums}
 .tokenStat span{font-size:9px;color:var(--muted)}
+.memoryItem{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.memoryItem:last-child{border-bottom:0}
+.memoryText{flex:1;min-width:0;line-height:1.55;word-break:break-word;color:var(--ink)}

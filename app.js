@@ -5,8 +5,8 @@ themes.rain={name:"雨夜",bg:"#1b2025",card:"#242b31",ink:"#edf1f2",muted:"#9ba
 themes.cafe={name:"咖啡馆",bg:"#eee7dd",card:"#fbf7f0",ink:"#3b3028",muted:"#9d8e80",line:"#ddd0c0",soft:"#e7dccd",user:"#dcc7ad",accent:"#684a35",accent2:"#fffaf3"};
 themes.mono={name:"黑白",bg:"#f2f2f0",card:"#ffffff",ink:"#202020",muted:"#929292",line:"#dededb",soft:"#e8e8e5",user:"#d9d9d6",accent:"#202020",accent2:"#ffffff"};
 const backgrounds={plain:{name:"纯净",value:"none"},paper:{name:"纸张",value:"radial-gradient(circle at 50% -10%,#fffdf9 0,#f6f2ec 45%)"},mist:{name:"柔雾",value:"radial-gradient(circle at 20% 15%,rgba(255,255,255,.85),transparent 35%),radial-gradient(circle at 85% 75%,rgba(220,230,235,.55),transparent 38%)"},lav:{name:"淡紫",value:"radial-gradient(circle at 15% 20%,rgba(225,214,236,.65),transparent 40%),radial-gradient(circle at 80% 75%,rgba(242,231,239,.8),transparent 40%)"},sage:{name:"浅绿",value:"radial-gradient(circle at 20% 20%,rgba(215,230,218,.7),transparent 40%),radial-gradient(circle at 80% 70%,rgba(235,240,226,.8),transparent 42%)"},sun:{name:"晨光",value:"radial-gradient(circle at 70% 15%,rgba(255,231,187,.6),transparent 38%),radial-gradient(circle at 20% 75%,rgba(248,222,210,.55),transparent 40%)"}};
-const state={chats:JSON.parse(localStorage.getItem("gchat_chats")||"[]"),current:localStorage.getItem("gchat_current")||null,settings:JSON.parse(localStorage.getItem("gchat_settings")||"{}"),busy:false,selectedBubble:null,recognition:null,statusTarget:"ai",pageVision:false,selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false};
-const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings))};
+const state={chats:JSON.parse(localStorage.getItem("gchat_chats")||"[]"),current:localStorage.getItem("gchat_current")||null,settings:JSON.parse(localStorage.getItem("gchat_settings")||"{}"),memories:JSON.parse(localStorage.getItem("gchat_memories")||"[]"),busy:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false};
+const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]))};
 const chat=()=>state.chats.find(x=>x.id===state.current);
 function ensure(){if(!chat()){const c={id:crypto.randomUUID(),title:"新对话",messages:[],createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save()}}
 function hexToRgba(hex,opacity){let h=String(hex||"").trim().replace("#","");if(h.length===3)h=h.split("").map(x=>x+x).join("");const n=parseInt(h,16);if(!Number.isFinite(n))return `rgba(255,255,255,${opacity/100})`;return `rgba(${n>>16&255},${n>>8&255},${n&255},${Math.max(0,Math.min(100,Number(opacity)||0))/100})`}
@@ -70,8 +70,8 @@ function renderTokenStats(){const t=state.settings.tokenStats||{prompt:0,complet
 function resetTokenStats(){if(!confirm("确定清零 Token 统计吗？"))return;state.settings.tokenStats={prompt:0,completion:0,total:0,requests:0};save();renderTokenStats()}
 function settings(){fillSettings();renderTokenStats();settingsGoHome();$("#settings").showModal()}
 function settingsGoHome(){document.querySelectorAll(".settingsPage").forEach(x=>x.classList.add("hidden"));$("#settingsHome").classList.remove("hidden");$("#settingsBack").classList.add("hidden");$("#settingsTitle").textContent="设置";$("#settingsSubtitle").textContent="G Chat";$("#settingsProfileName").textContent=state.settings.gName||"G";$("#settingsProfileBio").textContent=state.settings.gBio||"你的私人 AI 对话空间";$("#settingsThemeSummary").textContent=themes[state.settings.theme||"cream"]?.name||"奶油米";$("#settingsProfileAvatar").innerHTML=avatarHTML("ai")}
-function settingsOpenPage(id){const titles={aiPage:["AI 设置","服务与模型"],personaPage:["G 的设定","个性化聊天空间"],themePage:["主题","整体配色与界面氛围"],backgroundPage:["聊天背景","背景样式与透明度"],bubblePage:["气泡","样式、颜色与透明度"],avatarPage:["头像","聊天中的头像"],chatPage:["聊天与数据","本地数据管理"]};document.querySelectorAll(".settingsPage").forEach(x=>x.classList.add("hidden"));const page=$("#"+id);if(page)page.classList.remove("hidden");const t=titles[id]||["设置","G Chat"];$("#settingsTitle").textContent=t[0];$("#settingsSubtitle").textContent=t[1];$("#settingsBack").classList.remove("hidden");}
-function fillSettings(){$("#myName").value=state.settings.myName||"你";$("#gName").value=state.settings.gName||"G";$("#gBio").value=state.settings.gBio||"你的私人 AI 对话空间";["apiBase","apiKey","model"].forEach(k=>$("#"+k).value=state.settings[k]||"");$("#systemPrompt").value=state.settings.systemPrompt??"你是一个有帮助的助手。";$("#temperature").value=state.settings.temperature??.7;renderModels();renderThemes();renderBackgrounds();renderAvatarPreviews();renderTopAvatar();$("#bgOpacity").value=state.settings.bgOpacity??18;$("#bgOpacityOut").value=(state.settings.bgOpacity??18)+"%";const t=themes[state.settings.theme]||themes.cream;const aiColor=state.settings.bubbleAiColor||t.card;const userColor=state.settings.bubbleUserColor||t.user;$("#aiBubbleColor").value=aiColor;$("#aiBubbleColorOut").value=aiColor.toUpperCase();$("#userBubbleColor").value=userColor;$("#userBubbleColorOut").value=userColor.toUpperCase();$("#aiBubbleOpacity").value=state.settings.bubbleAiOpacity??94;$("#aiBubbleOpacityOut").value=(state.settings.bubbleAiOpacity??94)+"%";$("#userBubbleOpacity").value=state.settings.bubbleUserOpacity??90;$("#userBubbleOpacityOut").value=(state.settings.bubbleUserOpacity??90)+"%";$("#animations").checked=state.settings.animations!==false;$("#gNameOffset").value=state.settings.gNameOffset??0;$("#gNameOffsetOut").value=(state.settings.gNameOffset??0)+" px";$("#userNameOffset").value=state.settings.userNameOffset??0;$("#userNameOffsetOut").value=(state.settings.userNameOffset??0)+" px";renderBubbleStyles()}
+function settingsOpenPage(id){const titles={memoryPage:["记忆","长期记忆管理"],aiPage:["AI 设置","服务与模型"],personaPage:["G 的设定","个性化聊天空间"],themePage:["主题","整体配色与界面氛围"],backgroundPage:["聊天背景","背景样式与透明度"],bubblePage:["气泡","样式、颜色与透明度"],avatarPage:["头像","聊天中的头像"],chatPage:["聊天与数据","本地数据管理"]};document.querySelectorAll(".settingsPage").forEach(x=>x.classList.add("hidden"));const page=$("#"+id);if(page)page.classList.remove("hidden");const t=titles[id]||["设置","G Chat"];$("#settingsTitle").textContent=t[0];$("#settingsSubtitle").textContent=t[1];$("#settingsBack").classList.remove("hidden");}
+function fillSettings(){$("#myName").value=state.settings.myName||"你";$("#gName").value=state.settings.gName||"G";$("#gBio").value=state.settings.gBio||"你的私人 AI 对话空间";["apiBase","apiKey","model"].forEach(k=>$("#"+k).value=state.settings[k]||"");$("#systemPrompt").value=state.settings.systemPrompt??"你是一个有帮助的助手。";$("#temperature").value=state.settings.temperature??.7;renderModels();renderMemories();renderThemes();renderBackgrounds();renderAvatarPreviews();renderTopAvatar();$("#bgOpacity").value=state.settings.bgOpacity??18;$("#bgOpacityOut").value=(state.settings.bgOpacity??18)+"%";const t=themes[state.settings.theme]||themes.cream;const aiColor=state.settings.bubbleAiColor||t.card;const userColor=state.settings.bubbleUserColor||t.user;$("#aiBubbleColor").value=aiColor;$("#aiBubbleColorOut").value=aiColor.toUpperCase();$("#userBubbleColor").value=userColor;$("#userBubbleColorOut").value=userColor.toUpperCase();$("#aiBubbleOpacity").value=state.settings.bubbleAiOpacity??94;$("#aiBubbleOpacityOut").value=(state.settings.bubbleAiOpacity??94)+"%";$("#userBubbleOpacity").value=state.settings.bubbleUserOpacity??90;$("#userBubbleOpacityOut").value=(state.settings.bubbleUserOpacity??90)+"%";$("#animations").checked=state.settings.animations!==false;$("#gNameOffset").value=state.settings.gNameOffset??0;$("#gNameOffsetOut").value=(state.settings.gNameOffset??0)+" px";$("#userNameOffset").value=state.settings.userNameOffset??0;$("#userNameOffsetOut").value=(state.settings.userNameOffset??0)+" px";renderBubbleStyles()}
 function renderModels(){const sel=$("#modelSelect");sel.innerHTML="";const models=[...(state.settings.models||[])];if(state.settings.model&&!models.includes(state.settings.model))models.unshift(state.settings.model);models.forEach(x=>{const o=document.createElement("option");o.value=x;o.textContent=x;sel.appendChild(o)});if(models.length){sel.value=state.settings.model||models[0];sel.onchange=()=>$("#model").value=sel.value}}
 function renderThemes(){const box=$("#themeGrid");box.innerHTML="";Object.entries(themes).forEach(([k,t])=>{const b=document.createElement("button");b.className="themeChoice"+(state.settings.theme===k?" active":"");b.style.background=`linear-gradient(135deg,${t.bg} 0 55%,${t.accent} 55% 100%)`;b.innerHTML=`<span>${t.name}</span>`;b.onclick=()=>{state.settings.theme=k;save();applyLook();renderThemes();renderAvatarPreviews()};box.appendChild(b)})}
 function renderBackgrounds(){const box=$("#bgGrid");box.innerHTML="";Object.entries(backgrounds).forEach(([k,bg])=>{const b=document.createElement("button");b.className="bgChoice"+(state.settings.bg===k&&!state.settings.bgCustom?" active":"");b.style.background=bg.value==="none"?(themes[state.settings.theme||"cream"].bg):bg.value;b.innerHTML=`<span>${bg.name}</span>`;b.onclick=()=>{state.settings.bg=k;state.settings.bgCustom="";save();applyLook();renderBackgrounds()};box.appendChild(b)})}
@@ -82,35 +82,45 @@ function showErr(t){const e=$("#error");e.textContent=t;e.classList.remove("hidd
 function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.min(x.scrollHeight,150)+"px"}
 function splitReply(text){const s=String(text||"").replace(/\r/g,"").trim();if(!s)return[];const out=[];let buf="";for(const ch of s){buf+=ch;if(/[。！？!?；;]|\n/.test(ch)){const v=buf.trim();if(v){out.push(v);buf=""}}}if(buf.trim())out.push(buf.trim());return out}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-function pageStateContext(){
- const c=chat(),g=getStatus("ai"),u=getStatus("user");
- return `当前 G Chat 页面状态（由网页直接读取，不依赖截图）：
-- G 状态：${g.label}
-- 用户状态：${u.label}
-- G 名称：${state.settings.gName||"G"}
-- 用户名称：${state.settings.myName||"你"}
-- 当前模型：${state.settings.model||"未设置"}
-- 当前对话：${c?.title||"新对话"}
-- 当前页面：G Chat 聊天页
-如果同时收到页面截图，请把截图和这些状态一起理解；不要把截图中的状态猜测覆盖网页直接提供的状态。`;
-}
-async function captureCurrentPage(){
- if(typeof window.html2canvas!=="function")throw new Error("页面截图组件还没有加载完成，请稍后再试。");
- const target=document.querySelector(".main");
- if(!target)throw new Error("找不到当前聊天页面。");
- const canvas=await window.html2canvas(target,{useCORS:true,allowTaint:false,backgroundColor:null,scale:Math.min(window.devicePixelRatio||1,2),logging:false});
- return canvas.toDataURL("image/jpeg",.72);
-}
 function base(u){return window.GChatAPI?window.GChatAPI.normalizeBase(u):String(u||"").trim().replace(/\/+$/,"" ).replace(/\/chat\/completions$/i,"")}
 function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading","stop");b.textContent="↑";b.title="发送"}updateTyping();save()}
 function apiHint(){return window.GChatAPI?window.GChatAPI.requestUrl(state.settings.apiBase):base(state.settings.apiBase)+"/chat/completions"}
 function stopThinking(){if(!state.busy||!state._abort)return;state.stopRequested=true;try{state._abort.abort()}catch{};showErr("已停止这次回复。你的消息已经保留在聊天记录里。")}
+function renderMemories(){
+ const box=$("#memoryList"),sum=$("#settingsMemorySummary");
+ if(sum)sum.textContent=(state.memories||[]).length+" 条";
+ if(!box)return;
+ box.innerHTML="";
+ const list=state.memories||[];
+ if(!list.length){box.innerHTML='<div class="settingsNote" style="margin:0">还没有保存的记忆。</div>';return}
+ list.forEach((m,idx)=>{
+  const row=document.createElement("div");row.className="memoryItem";
+  const text=document.createElement("div");text.className="memoryText";text.textContent=m.text||"";
+  const del=document.createElement("button");del.type="button";del.className="smallAction dangerAction";del.textContent="删除";
+  del.onclick=()=>{state.memories.splice(idx,1);save();renderMemories()};
+  row.append(text,del);box.appendChild(row);
+ });
+}
+function addMemory(text){
+ const v=String(text||"").trim().replace(/^(记住|记得|请记住)[:：]?\s*/i,"").trim();
+ if(!v)return false;
+ if((state.memories||[]).some(m=>(m.text||"").trim()===v))return true;
+ state.memories=state.memories||[];state.memories.unshift({id:crypto.randomUUID(),text:v,createdAt:Date.now()});
+ if(state.memories.length>100)state.memories.length=100;
+ save();renderMemories();return true;
+}
+function memoryContext(){
+ const list=(state.memories||[]).map(m=>String(m.text||"").trim()).filter(Boolean).slice(0,100);
+ if(!list.length)return "";
+ return "以下是用户主动保存的长期记忆。它们可以帮助你保持连续性，但如果与用户当前明确说的话冲突，以当前对话为准：\n"+list.map((x,i)=>`${i+1}. ${x}`).join("\n");
+}
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
  if(!text)return;
  if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
  ensure();const c=chat();
+ if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
  c.messages.push({role:"user",content:text,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
  i.value="";resize();save();render();
@@ -118,21 +128,12 @@ async function send(){
  const controller=new AbortController();state._abort=controller;
  const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  try{
-  let pageImage=null;
-  if(state.pageVision){
-   const pv=$("#pageView");
-   try{pageImage=await captureCurrentPage();}catch(e){state.pageVision=false;if(pv)pv.classList.remove("active","loading");throw e}
-  }
   const ms=[];
   const systemParts=[];
   if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
-  systemParts.push(pageStateContext());
+  const mc=memoryContext();if(mc)systemParts.push(mc);
   if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});
-  const requestMessages=c.messages.map((m,idx)=>{
-   if(pageImage&&idx===c.messages.length-1&&m.role==="user")return {...m,content:[{type:"text",text:String(m.content||"")},{type:"image_url",image_url:{url:pageImage}}]};
-   return m;
-  });
-  ms.push(...requestMessages);
+  ms.push(...c.messages);
   let fullAnswer="",pending="",displayQueue=Promise.resolve();
   const pushSentence=(sentence)=>{
    const v=String(sentence||"").trim();
@@ -165,7 +166,6 @@ async function send(){
   else showErr(e.message||String(e));
  }finally{
   clearTimeout(timeout);if(state._abort===controller)state._abort=null;
-  state.pageVision=false;const pv=$("#pageView");if(pv)pv.classList.remove("active","loading");
   // Streaming bubbles are already real DOM nodes and each sentence is already saved.
   // Do NOT call render() here: rebuilding #messages would recreate every bubble and
   // restart its entrance animation, causing the sentence bubbles to flash/disappear.
@@ -178,17 +178,18 @@ async function send(){
 function exportChat(){const c=chat();if(!c)return;const text=[`# ${c.title||"新对话"}`,"",...c.messages.map(m=>`${m.role==="user"?"你":"G"}：\n${m.content}\n`)].join("\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(c.title||"chat")+".txt";a.click();URL.revokeObjectURL(url)}
 function imageToData(file,max=600,quality=.78){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",quality))};im.onerror=rej;im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(file)})}
 async function uploadImage(input,target,max,quality){const f=input.files?.[0];if(!f)return;try{state.settings[target]=await imageToData(f,max,quality);save();applyLook();renderAvatarPreviews();render()}catch{showErr("图片处理失败，请换一张图片。")}}
-function exportAll(){const data={version:1,exportedAt:new Date().toISOString(),chats:state.chats,current:state.current,settings:state.settings};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="g-chat-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-async function importAll(file){try{if(!file)throw new Error("没有选择备份文件");const text=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=()=>reject(new Error("读取备份文件失败，请重新选择文件。"));r.readAsText(file,"utf-8")});const data=JSON.parse(text);if(!data||!Array.isArray(data.chats)||typeof data.settings!=="object")throw new Error("备份文件格式不正确");if(!confirm("恢复备份会覆盖当前聊天记录和设置，确定继续吗？"))return;state.chats=data.chats;state.current=data.current||state.chats[0]?.id||null;state.settings=data.settings||{};ensure();ensureDates();save();render();fillSettings();showErr("备份已恢复") }catch(e){showErr(e.message||"恢复备份失败")}}
+function exportAll(){const data={version:2,exportedAt:new Date().toISOString(),chats:state.chats,current:state.current,settings:state.settings,memories:state.memories||[]};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="g-chat-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+async function importAll(file){try{if(!file)throw new Error("没有选择备份文件");const text=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=()=>reject(new Error("读取备份文件失败，请重新选择文件。"));r.readAsText(file,"utf-8")});const data=JSON.parse(text);if(!data||!Array.isArray(data.chats)||typeof data.settings!=="object")throw new Error("备份文件格式不正确");if(!confirm("恢复备份会覆盖当前聊天记录和设置，确定继续吗？"))return;state.chats=data.chats;state.current=data.current||state.chats[0]?.id||null;state.settings=data.settings||{};state.memories=Array.isArray(data.memories)?data.memories:[];ensure();ensureDates();save();render();fillSettings();showErr("备份已恢复") }catch(e){showErr(e.message||"恢复备份失败")}}
 function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showErr("当前 Safari 不支持语音识别，请尝试系统听写或其他浏览器。");return}if(state.recognition){state.recognition.stop();state.recognition=null;$("#mic").classList.remove("active");return}const r=new SR();r.lang="zh-TW";r.continuous=false;r.interimResults=true;state.recognition=r;$("#mic").classList.add("active");r.onresult=e=>{$("#input").value=Array.from(e.results).map(x=>x[0].transcript).join("");resize()};r.onerror=e=>{showErr("语音识别失败："+(e.error||"未知错误"));$("#mic").classList.remove("active");state.recognition=null};r.onend=()=>{$("#mic").classList.remove("active");state.recognition=null}}
 $("#openDrawer").onclick=openDrawer;$("#closeDrawer").onclick=closeDrawer;$("#shade").onclick=closeDrawer;$("#newChat").onclick=()=>{const c={id:crypto.randomUUID(),title:"新对话",messages:[],createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save();render();closeDrawer()};$("#cancelChatSelect").onclick=exitChatSelectMode;$("#renameSelected").onclick=renameSelectedChat;$("#deleteSelected").onclick=deleteSelectedChats;$("#openSettings").onclick=settings;$("#headerSettings").onclick=settings;$("#closeSettings").onclick=()=>$("#settings").close();$("#saveSettings").onclick=()=>{state.settings={...state.settings,myName:$("#myName").value.trim()||"你",gName:$("#gName").value.trim()||"G",gBio:$("#gBio").value.trim()||"你的私人 AI 对话空间",apiBase:$("#apiBase").value.trim(),apiKey:$("#apiKey").value.trim(),model:$("#model").value.trim(),systemPrompt:$("#systemPrompt").value,temperature:Number($("#temperature").value),bgOpacity:Number($("#bgOpacity").value),bubbleAiColor:$("#aiBubbleColor").value,bubbleAiOpacity:Number($("#aiBubbleOpacity").value),bubbleUserColor:$("#userBubbleColor").value,bubbleUserOpacity:Number($("#userBubbleOpacity").value),animations:$("#animations").checked,gNameOffset:Number($("#gNameOffset").value),userNameOffset:Number($("#userNameOffset").value)};save();$("#settings").close();render()};$("#addModel").onclick=()=>{const m=$("#model").value.trim();if(!m)return;state.settings.models=[...new Set([...(state.settings.models||[]),m])];save();renderModels();$("#modelSelect").value=m};$("#removeModel").onclick=()=>{const m=$("#model").value.trim();state.settings.models=(state.settings.models||[]).filter(x=>x!==m);save();renderModels()};$("#modelSelect").onchange=()=>$("#model").value=$("#modelSelect").value;$("#exportChat").onclick=exportChat;$("#clearCurrent").onclick=()=>{const c=chat();if(c&&confirm("确定清空当前对话吗？")){c.messages=[];c.title="新对话";save();render();$("#settings").close()}};
 $("#uploadUserAvatar").onclick=()=>$("#userAvatarFile").click();$("#userAvatarFile").onchange=()=>uploadImage($("#userAvatarFile"),"userAvatar",320,.8);$("#clearUserAvatar").onclick=()=>{state.settings.userAvatar="";save();renderAvatarPreviews();render()};$("#uploadAiAvatar").onclick=()=>$("#aiAvatarFile").click();$("#aiAvatarFile").onchange=()=>uploadImage($("#aiAvatarFile"),"aiAvatar",320,.8);$("#clearAiAvatar").onclick=()=>{state.settings.aiAvatar="";save();renderAvatarPreviews();render()};$("#uploadBg").onclick=()=>$("#bgFile").click();$("#bgFile").onchange=async()=>{const f=$("#bgFile").files?.[0];if(!f)return;try{state.settings.bgCustom=await imageToData(f,1200,.7);save();applyLook();renderBackgrounds();render()}catch{showErr("背景图片处理失败。")}};$("#clearBg").onclick=()=>{state.settings.bgCustom="";save();applyLook();renderBackgrounds();render()};$("#bgOpacity").oninput=e=>{state.settings.bgOpacity=Number(e.target.value);$("#bgOpacityOut").value=e.target.value+"%";save();applyLook()};$("#aiBubbleColor").oninput=e=>{state.settings.bubbleAiColor=e.target.value;$("#aiBubbleColorOut").value=e.target.value.toUpperCase();save();applyLook()};$("#userBubbleColor").oninput=e=>{state.settings.bubbleUserColor=e.target.value;$("#userBubbleColorOut").value=e.target.value.toUpperCase();save();applyLook()};$("#aiBubbleOpacity").oninput=e=>{state.settings.bubbleAiOpacity=Number(e.target.value);$("#aiBubbleOpacityOut").value=e.target.value+"%";save();applyLook()};$("#userBubbleOpacity").oninput=e=>{state.settings.bubbleUserOpacity=Number(e.target.value);$("#userBubbleOpacityOut").value=e.target.value+"%";save();applyLook()};$("#animations").onchange=()=>{state.settings.animations=$("#animations").checked;save();applyLook()};$("#gNameOffset").oninput=e=>{state.settings.gNameOffset=Number(e.target.value);$("#gNameOffsetOut").value=e.target.value+" px";save();applyLook()};$("#userNameOffset").oninput=e=>{state.settings.userNameOffset=Number(e.target.value);$("#userNameOffsetOut").value=e.target.value+" px";save();applyLook()};$("#resetTokenStats").onclick=resetTokenStats;$("#resetNameOffsets").onclick=()=>{state.settings.gNameOffset=0;state.settings.userNameOffset=0;$("#gNameOffset").value=0;$("#gNameOffsetOut").value="0 px";$("#userNameOffset").value=0;$("#userNameOffsetOut").value="0 px";save();applyLook()};document.querySelectorAll("#bubbleGrid [data-bubble]").forEach(b=>b.onclick=()=>{state.settings.bubble=b.dataset.bubble;save();renderBubbleStyles();applyLook()});document.querySelectorAll("#topAvatarGrid [data-top-avatar]").forEach(b=>b.onclick=()=>{state.settings.topAvatar=b.dataset.topAvatar;save();renderTopAvatar();render()});$("#openProfile").onclick=()=>openStatusPicker((state.settings.topAvatar||"user")==="user"?"user":"ai");$("#closeProfile").onclick=()=>$("#profile").close();$("#profileStart").onclick=()=>$("#profile").close();
 $("#exportAll").onclick=exportAll;$("#importAll").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{const f=e.target.files?.[0];if(f)importAll(f);e.target.value=""};$("#mic").onclick=setupVoice;$("#send").onclick=send;$("#input").oninput=resize;$("#input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("#copyBubble").onclick=async()=>{if(!state.selectedBubble)return;try{await navigator.clipboard.writeText(state.selectedBubble.dataset.text||state.selectedBubble.textContent);$("#bubbleAction").classList.add("hidden")}catch{showErr("复制失败，请长按文字手动复制。")}};document.addEventListener("pointerdown",e=>{if(!e.target.closest(".bubbleAction")&&!e.target.closest(".bubble"))$("#bubbleAction").classList.add("hidden")});document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tabbody").forEach(x=>x.classList.add("hidden"));b.classList.add("active");$("#"+b.dataset.tab).classList.remove("hidden")});
 document.querySelectorAll("[data-settings-page]").forEach(b=>b.onclick=()=>settingsOpenPage(b.dataset.settingsPage));
-$("#pageView").onclick=()=>{if(state.busy)return;state.pageVision=!state.pageVision;$("#pageView").classList.toggle("active",state.pageVision);if(state.pageVision)showErr("已开启“看当前页面”，发送下一条消息时会把当前页面截图一起给 G。")};
+$("#addMemory").onclick=()=>{const v=$("#memoryInput").value.trim();if(!v)return;addMemory(v);$("#memoryInput").value=""};
+$("#clearMemories").onclick=()=>{if(!(state.memories||[]).length)return;if(!confirm("确定清空全部记忆吗？"))return;state.memories=[];save();renderMemories()};
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0};if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
+state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="G";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0};state.memories??=[];if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
 
 window.addEventListener("load",()=>render());
 window.addEventListener("pageshow",()=>render());
