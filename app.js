@@ -1,4 +1,4 @@
-/* Iris v4.62 — multimodal message preservation, image compression, and vision send compatibility */
+/* Iris v4.63 — tool-call null safety, nest mood reliability, and vision compatibility */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -433,7 +433,12 @@ async function send(){
   if(state.settings.mcpEnabled===true && state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}
   tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);
   if(useVision)tools=null;
-  if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel)tools.push(nestTools().find(x=>x.function?.name==="generate_image"));tools=tools.filter(Boolean);if(!tools.length)tools=null;
+  if(!useVision && state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){
+   const imageTool=nestTools().find(x=>x.function?.name==="generate_image");
+   if(imageTool)tools.push(imageTool);
+  }
+  tools=Array.isArray(tools)?tools.filter(Boolean):null;
+  if(!tools?.length)tools=null;
   let fullAnswer="",pending="",displayQueue=Promise.resolve();
   const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();const baseDelay=Math.max(80,Math.min(1200,Number(state.settings.replyDelay??360)));const naturalDelay=Math.min(1500,Math.max(80,baseDelay+Math.min(90,v.length)*7));await sleep(naturalDelay);});};
   const usageTotal={prompt:0,completion:0,total:0,requests:0};

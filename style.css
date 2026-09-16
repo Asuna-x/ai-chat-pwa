@@ -661,3 +661,10 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .attachChip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:135px;font-size:10px}
 .attachChip button{flex:0 0 auto;background:rgba(255,255,255,.7);border:1px solid var(--line);color:var(--muted)}
 @media(max-width:380px){.nestCoupleHeader{gap:15px}.nestPersonAvatar{width:52px;height:52px}.nestPerson{min-width:68px}.nestCoupleHeart{font-size:17px}}
+
+
+/* Iris v4.63 — make the mood slider reliably draggable on touch devices. */
+.nestMoodRange{position:relative;z-index:3;display:block;touch-action:none;cursor:pointer;pointer-events:auto;user-select:none;-webkit-user-select:none}
+.nestMoodSliderCard{position:relative;z-index:2}
+.nestMoodRange::-webkit-slider-runnable-track{height:8px;border-radius:99px}
+.nestMoodRange::-moz-range-track{height:8px;border-radius:99px}
