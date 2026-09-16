@@ -1,3 +1,4 @@
+/* Iris v4.56 — G Chat API with optional OpenAI-compatible tool calling. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
@@ -8,11 +9,12 @@
   async function chatStream(options,onText){
     const url=requestUrl(options.baseUrl);
     const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true,stream_options:{include_usage:true}};
+    if(Array.isArray(options.tools)&&options.tools.length)body.tools=options.tools;if(options.tool_choice)body.tool_choice=options.tool_choice;
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
     if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
     if(!r.body)throw new Error("当前浏览器不支持 API 流式响应。");
     const reader=r.body.getReader(),decoder=new TextDecoder("utf-8");
-    let buffer="",answer="",usage=null;
+    let buffer="",answer="",usage=null,toolCalls=[];
     const push=part=>{if(typeof part!=="string"||!part)return;answer+=part;if(onText)onText(part,answer)};
     while(true){
       const {value,done}=await reader.read();
@@ -28,14 +30,17 @@
         let o;try{o=JSON.parse(raw)}catch{continue}
         if(o.usage)usage=o.usage;
         const delta=o.choices?.[0]?.delta?.content;
+        const tc=o.choices?.[0]?.delta?.tool_calls;
+        if(Array.isArray(tc))for(const item of tc){const idx=Number(item.index||0);if(!toolCalls[idx])toolCalls[idx]={id:item.id||"",type:"function",function:{name:item.function?.name||"",arguments:""}};if(item.id)toolCalls[idx].id=item.id;if(item.function?.name)toolCalls[idx].function.name=item.function.name;if(typeof item.function?.arguments==="string")toolCalls[idx].function.arguments+=item.function.arguments;}
         if(typeof delta==="string")push(delta);
         else if(Array.isArray(delta))push(delta.map(x=>typeof x==="string"?x:(x?.text||"")).join(""));
       }
     }
     buffer+=decoder.decode();
-    if(buffer.trim().startsWith("data:")){const raw=buffer.trim().slice(5).trim();if(raw&&raw!=="[DONE]"){try{const o=JSON.parse(raw);if(o.usage)usage=o.usage;const d=o.choices?.[0]?.delta?.content;if(typeof d==="string")push(d);else if(Array.isArray(d))push(d.map(x=>typeof x==="string"?x:(x?.text||"")).join(""))}catch{}}}
-    if(!answer.trim())throw new Error("API 没有返回文字内容，请检查模型、API Key 和 Base URL。 ");
-    return {answer,url,usage};
+    if(buffer.trim().startsWith("data:")){const raw=buffer.trim().slice(5).trim();if(raw&&raw!=="[DONE]"){try{const o=JSON.parse(raw);if(o.usage)usage=o.usage;const d=o.choices?.[0]?.delta?.content;if(typeof d==="string")push(d);else if(Array.isArray(d))push(d.map(x=>typeof x==="string"?x:(x?.text||"")).join(""));const tc=o.choices?.[0]?.delta?.tool_calls;if(Array.isArray(tc))for(const item of tc){const idx=Number(item.index||0);if(!toolCalls[idx])toolCalls[idx]={id:item.id||"",type:"function",function:{name:item.function?.name||"",arguments:""}};if(item.id)toolCalls[idx].id=item.id;if(item.function?.name)toolCalls[idx].function.name=item.function.name;if(typeof item.function?.arguments==="string")toolCalls[idx].function.arguments+=item.function.arguments;}}catch{}}}
+    const calls=toolCalls.filter(Boolean);
+    if(!answer.trim()&&!calls.length)throw new Error("API 没有返回文字内容，请检查模型、API Key 和 Base URL。 ");
+    return {answer,url,usage,toolCalls:calls};
   }
 
   async function chat(options){

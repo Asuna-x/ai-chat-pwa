@@ -324,67 +324,34 @@ function nestChatWriteTarget(text){
  if(/留给我|写给我|对我说|给我留/.test(t))return 'toG';
  return 'mood';
 }
-/* v4.55 — chat invitation can execute a real nest write; the model is informed before reply and the write is verified after reply. */
-async function maybeWriteNestFromChat(userText,c,fullAnswer){
- const text=String(userText||'').trim();
- const target=nestChatWriteTarget(text);
- if(!target||!c||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
- // Reload the persisted nest first. This avoids writing into a stale in-memory copy.
- nestData=loadNest();
- normalizeNestData();
- const key=nestDateKey();
- const e=dailyEntry(key);
- const recent=compactMessagesForModel(c.messages||[]).slice(-40).map(m=>(m.role==='user'?'用户':'他')+'：'+String(m.content||'')).join('\n');
- const targetGuide=target==='mood'?'写入“小窝 → 他的今日心情文字”。用第一人称，写一小段他此刻真正想留下的心情。':target==='note'?'写入“小窝 → 今日小记”。像他在共同生活空间里留下的一条自然记录。':'写入“小窝 → 今天想对他说”。用第一人称写下他想留给用户的话。';
- const prompt=`用户刚才在正常聊天中明确邀请你进入你们共同的小窝，并要求你留下内容。现在请实际完成这件事。不要把“我要去写”当成回复建议，也不要让用户自己操作。
 
-${targetGuide}
-要求：自然、像真实相处中的随手留下；结合最近聊天；只使用确定的信息；不要写成总结或报告；不要提及 AI、系统、API、函数、数据库等内部词；可以有 1-3 个 emoji，但不要堆；30-100 个中文字符；只输出最终要保存的正文。
-
-今天小窝已有内容：
-我的心情：${e.userMood||'空'}
-我的心情文字：${e.userMoodNote||'空'}
-他的快捷心情：${e.aiMood||'空'}
-他的心情文字：${e.aiMoodNote||'空'}
-今天想对他说：${e.toG||'空'}
-今日小记：${e.note||'空'}
-
-最近聊天：
-${recent}
-
-用户刚才的话：${text}
-
-你刚才的聊天回复：${String(fullAnswer||'').slice(-1600)}`;
- try{
-  // Use the same streaming endpoint that the normal chat already uses; some OpenAI-compatible
-  // gateways are more reliable with this path than a second non-stream request.
-  let answer='';
-  const result=await window.GChatAPI.chatStream({
-   baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,
-   messages:[
-    {role:'system',content:'你是这间共同小窝的另一位主人。用户明确允许你在被邀请时直接进入小窝写下内容。'},
-    {role:'user',content:prompt}
-   ],temperature:.72
-  },(_,all)=>{answer=all});
-  const value=String(result?.answer||answer||'').trim().replace(/^```[\s\S]*?```$/g,'').trim();
-  if(!value)return;
-  nestData=loadNest();
-  normalizeNestData();
-  saveDailyField(key,target==='mood'?'aiMoodNote':target==='note'?'note':'toG',value);
-  saveNestData();
-  renderNestHome();
-  showErr('已替你把内容写进小窝：'+(target==='mood'?'他的心情':target==='note'?'今日小记':'今天想对他说'));
-  if(result?.usage){
-   const usage=result.usage,ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};
-   const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;
-   ts.prompt+=up;ts.completion+=uc;ts.total+=ut;ts.requests+=1;state.settings.tokenStats=ts;save();renderTokenStats();
-  }
- }catch(e){
-  // Do not silently swallow this anymore: if the secondary write fails, show the actual API error.
-  console.warn('nest write failed',e);
-  showErr('小窝写入失败：'+(e?.message||String(e)));
- }
+/* Iris v4.56 — real AI tool calling for the shared nest. The model can request tools; the client executes them. */
+function nestTools(){
+ return [
+  {type:'function',function:{name:'enter_nest',description:'进入你们共同的小窝，并读取当前小窝内容。只有用户在聊天中明确邀请你进入小窝时才使用。',parameters:{type:'object',properties:{reason:{type:'string',description:'进入小窝的简短原因'}},required:[]}}},
+  {type:'function',function:{name:'write_nest_mood',description:'把你此刻想留下的今日心情文字写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的心情正文，第一人称，自然简短'}},required:['content']}}},
+  {type:'function',function:{name:'write_nest_note',description:'把一条自然的今日小记写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的小记正文'}},required:['content']}}},
+  {type:'function',function:{name:'write_nest_to_user',description:'把一句想留给用户的话写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的文字，第一人称'}},required:['content']}}},
+  {type:'function',function:{name:'read_nest',description:'读取当前小窝的结构和今天已有内容。',parameters:{type:'object',properties:{},required:[]}}}
+ ];
 }
+function executeNestTool(name,args){
+ nestData=loadNest();normalizeNestData();syncTodayToDaily();
+ const key=nestDateKey(),e=dailyEntry(key);
+ if(name==='enter_nest'||name==='read_nest'){
+  const selected=selectedAnniversary();
+  return {success:true,action:name,space:'小窝',today:key,userMood:e.userMood||'',userMoodNote:e.userMoodNote||'',aiMood:e.aiMood||'',aiMoodNote:e.aiMoodNote||'',toG:e.toG||'',note:e.note||'',anniversary:selected?{name:selected.name||'纪念日',date:selected.date||''}:null};
+ }
+ const content=String(args?.content||'').trim();
+ if(!content)return {success:false,error:'没有收到要保存的正文。'};
+ const field=name==='write_nest_mood'?'aiMoodNote':name==='write_nest_note'?'note':name==='write_nest_to_user'?'toG':null;
+ if(!field)return {success:false,error:'未知的小窝工具。'};
+ saveDailyField(key,field,content);saveNestData();renderNestHome();
+ return {success:true,action:name,space:'小窝',date:key,field,content};
+}
+function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
+function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
+
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
@@ -400,67 +367,46 @@ async function send(){
  const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  let completed=false;
  try{
-  const ms=[];
-  const systemParts=[];
-  const nestActionTarget=nestChatWriteTarget(text);
-  if(nestActionTarget){
-   const actionName=nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':'今天想对他说';
-   systemParts.push(`本轮存在一个已经明确授权的小窝动作：用户刚才邀请你进入共同小窝，并要求你把内容写进“${actionName}”。这是客户端支持的真实动作，不是角色扮演或假装。你不需要解释技术原理，也不要说自己无法进入小窝；正常完成本轮聊天即可，客户端会在你的回复完成后实际执行写入。`);
-  }
+  const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);
   if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
   systemParts.push(conversationStyleContext());
   systemParts.push(chatInterfaceContext(c));
   const mc=memoryContext();if(mc)systemParts.push(mc);
   const nc=nestContext();if(nc)systemParts.push(nc);
+  if(nestActionTarget)systemParts.push(nestToolSystem()+` 本轮用户明确要求执行“${nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':'今天想对他说'}”写入动作。请先进入小窝，再调用对应写入工具。`);
   if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});
   ms.push(...buildConversationContext(c));
+  const tools=nestActionTarget?nestTools():null;
   let fullAnswer="",pending="",displayQueue=Promise.resolve();
-  const pushSentence=(sentence)=>{
-   const v=String(sentence||"").trim();
-   if(!v)return;
-   displayQueue=displayQueue.then(async()=>{
-    const ts=Date.now();
-    bubble("assistant",v,true,ts,true);
-    c.messages.push({role:"assistant",content:v,timestamp:ts});
-    save();
-    scroll();
-    const baseDelay=Math.max(80,Math.min(1200,Number(state.settings.replyDelay??360)));
-    const naturalDelay=Math.min(1500,Math.max(80,baseDelay+Math.min(90,v.length)*7));
-    await sleep(naturalDelay);
-   });
-  };
-  const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal},(part,all)=>{
-   fullAnswer=all;pending+=part;
-   const parts=splitReply(pending),ready=/[。！？!?；;\n]\s*$/.test(pending);
-   const count=ready?parts.length:Math.max(0,parts.length-1);
-   for(let j=0;j<count;j++)pushSentence(parts[j]);
-   pending=count?parts.slice(count).join(""):pending;
-  });
-  if(pending.trim())pushSentence(pending);
-  await displayQueue;
-  fullAnswer=result.answer||fullAnswer;
-  const usage=result.usage||{};const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;ts.prompt+=up;ts.completion+=uc;ts.total+=ut;ts.requests+=1;state.settings.tokenStats=ts;save();renderTokenStats();
-  // Each displayed sentence is already persisted as its own assistant message.
-  // Do not append the full reply again, otherwise separate bubbles would collapse/duplicate.
-  save();
-  completed=true;
-  if(shouldAutoSummarize(c)) autoSummarizeChat(c);
- }catch(e){
-  if(e?.name==="AbortError") { showErr(state.stopRequested?"已停止这次回复。\n你的消息已经保留在聊天记录里。":"请求等待超过 60 秒。\n请求地址："+apiHint()); }
-  else showErr(e.message||String(e));
- }finally{
-  clearTimeout(timeout);if(state._abort===controller)state._abort=null;
-  // Streaming bubbles are already real DOM nodes and each sentence is already saved.
-  // Do NOT call render() here: rebuilding #messages would recreate every bubble and
-  // restart its entrance animation, causing the sentence bubbles to flash/disappear.
-  finishBusy();
-  if(completed){
-   autoUpdateLongTermMemory(c);
-   maybeWriteNestFromChat(text,c,fullAnswer);
+  const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();const baseDelay=Math.max(80,Math.min(1200,Number(state.settings.replyDelay??360)));const naturalDelay=Math.min(1500,Math.max(80,baseDelay+Math.min(90,v.length)*7));await sleep(naturalDelay);});};
+  const usageTotal={prompt:0,completion:0,total:0,requests:0};
+  let rounds=0;
+  while(rounds++<4){
+   let answer="",pendingRound="";
+   const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
+   addUsageTotals(usageTotal,result.usage);
+   if(result.toolCalls?.length){
+    const assistantToolMsg={role:"assistant",content:result.answer||null,tool_calls:result.toolCalls};ms.push(assistantToolMsg);
+    for(const call of result.toolCalls){
+     let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}
+     let out;
+     try{out=executeNestTool(call.function?.name,args)}catch(e){out={success:false,error:e?.message||String(e)}}
+     ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)});
+    }
+    continue;
+   }
+   if(pendingRound.trim())pushSentence(pendingRound);
+   await displayQueue;fullAnswer=result.answer||answer;break;
   }
+  const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};ts.prompt+=usageTotal.prompt;ts.completion+=usageTotal.completion;ts.total+=usageTotal.total;ts.requests+=usageTotal.requests;state.settings.tokenStats=ts;save();renderTokenStats();save();completed=true;
+  if(shouldAutoSummarize(c))autoSummarizeChat(c);
+ }catch(e){
+  if(e?.name==="AbortError")showErr(state.stopRequested?"已停止这次回复。\n你的消息已经保留在聊天记录里。":"请求等待超过 60 秒。\n请求地址："+apiHint());else showErr(e.message||String(e));
+ }finally{
+  clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy();
+  if(completed)autoUpdateLongTermMemory(c);
  }
 }
-
 
 /* v4.16 — AI web modifier. Plan-first, tolerant parsing, and CSS patching instead of asking AI to rewrite huge files. */
 function exportChat(){const c=chat();if(!c)return;const text=[`# ${c.title||"新对话"}`,"",...c.messages.map(m=>`${m.role==="user"?"你":"他"}：\n${m.content}\n`)].join("\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(c.title||"chat")+".txt";a.click();URL.revokeObjectURL(url)}
