@@ -687,3 +687,35 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 @media(max-width:380px){.nestCoupleHeader{gap:20px!important}.nestPersonAvatar{width:62px!important;height:62px!important}.nestClockCard strong{font-size:58px!important}}
 /* Iris v4.69 — sent image bubble polish */
 .sentImageGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:2px}.sentImageGrid:has(img:only-child){grid-template-columns:1fr}.sentImageGrid img{display:block;width:100%;max-width:260px;max-height:360px;object-fit:cover;border-radius:14px}.message.user .sentImageGrid{justify-items:end}.message.user .sentImageGrid img{max-width:min(62vw,260px)}
+
+
+/* Iris v4.87 — nest mood picker + memory/nest visual polish */
+.nestQuickMood{position:relative;min-height:88px;padding-right:52px!important}
+.nestQuickMoodIcon,.nestMoodIcon{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.48);border:1px solid rgba(190,146,164,.15);font-size:18px;color:#8f6b7a}
+.nestQuickMood.ai{padding-right:15px!important}
+.nestQuickMood.ai small{display:block;margin-top:6px;color:#a78e9b;font-size:10px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nestMoodPickerCard,.nestAiMoodCard{padding:16px;border:1px solid rgba(190,146,164,.13);border-radius:20px;background:rgba(255,252,253,.68);box-shadow:0 10px 26px rgba(128,87,105,.05)}
+.nestMoodOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:14px}
+.nestMoodOption{min-height:76px;border:1px solid rgba(190,146,164,.13);border-radius:17px;background:rgba(255,255,255,.42);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:#745b67;transition:transform .15s ease,border-color .15s ease,background .15s ease}
+.nestMoodOption span{font-size:22px;line-height:1;color:#9a7284}
+.nestMoodOption b{font-size:12px;font-weight:550}
+.nestMoodOption.selected{background:rgba(221,191,205,.24);border-color:rgba(166,117,139,.34);box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+.nestMoodOption:active{transform:scale(.97)}
+.nestAiMoodQuote{margin-top:12px;padding:13px 14px;border-radius:15px;background:rgba(255,255,255,.35);color:#735e68;font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif;font-size:14px;line-height:1.65;min-height:48px}
+#nestAiMoodShow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:390px){.nestMoodOptions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* v4.87 memory center refinement */
+#memoryList{display:flex;flex-direction:column;gap:10px}
+.memorySummaryCard{padding:16px 17px;border:1px solid rgba(190,146,164,.14);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.64),rgba(255,248,251,.46));box-shadow:0 10px 28px rgba(105,73,91,.06)}
+.memorySummaryCard b{display:block;font-size:12px;letter-spacing:.3px;color:#795d69;margin-bottom:7px}
+.memorySummaryCard div{font-size:13px;line-height:1.7;color:var(--ink)}
+.memorySubTitle{padding:8px 3px 1px;font-size:11px;letter-spacing:1.4px;color:#9b7d8b;font-weight:650}
+.memoryItem{padding:13px 12px!important;border:1px solid rgba(190,146,164,.10);border-radius:16px;background:rgba(255,255,255,.34);border-bottom:1px solid rgba(190,146,164,.10)!important}
+.memoryItemIcon{background:rgba(222,197,208,.22)!important}
+.memoryEpisodeCard{display:grid;grid-template-columns:72px 1fr;gap:12px;padding:15px 16px;border:1px solid rgba(190,146,164,.12);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.58),rgba(255,248,251,.40));box-shadow:0 9px 24px rgba(105,73,91,.05)}
+.memoryEpisodeDate{font-size:10px;color:#a18692;line-height:1.5;padding-top:2px}
+.memoryEpisodeBody b{display:block;font-size:13px;color:#735766;margin-bottom:5px}
+.memoryEpisodeBody div{font-size:12px;line-height:1.65;color:#806d76}
+.nestMoodIcon{font-style:normal}

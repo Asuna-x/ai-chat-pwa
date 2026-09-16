@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-Hant"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f6f2ec"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Iris">
-<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>Iris</title><link rel="stylesheet" href="./style.css?v=4.85"><script>/* Iris PWA: update the installed Home Screen app automatically when GitHub Pages publishes a new version. */
+<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>Iris</title><link rel="stylesheet" href="./style.css?v=4.87"><script>/* Iris PWA: update the installed Home Screen app automatically when GitHub Pages publishes a new version. */
 if("serviceWorker"in navigator){
   let reloadedForUpdate=false;
   navigator.serviceWorker.addEventListener("controllerchange",()=>{
@@ -10,11 +10,11 @@ if("serviceWorker"in navigator){
     window.location.reload();
   });
   window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("./sw.js?v=4.85",{updateViaCache:"none"})
+    navigator.serviceWorker.register("./sw.js?v=4.87",{updateViaCache:"none"})
       .then(reg=>reg.update())
       .catch(err=>console.warn("PWA update",err));
   });
-}</script><meta name="iris-version" content="4.85">
+}</script><meta name="iris-version" content="4.87">
 </head>
 <body><div class="app" id="app"><aside id="drawer" class="drawer"><div class="drawer-top"><div class="brand"><div class="brand-mark" id="brandAvatar">他</div><div><b>Iris</b><small>私人 AI 對話</small></div></div><button class="round" id="closeDrawer">×</button></div>
 <button class="new" id="newChat">＋ 新對話</button><div id="chatSelectBar" class="chatSelectBar hidden"><div><b id="selectedChatCount">已选择 0 个</b></div><button id="cancelChatSelect">取消</button><button id="renameSelected">重命名</button><button id="deleteSelected" class="danger">删除</button></div><div class="section">對話 <span id="chatCount"></span></div><div id="chatList" class="list"></div><div class="bottom"><button id="openNest">小窝</button><button id="openSettings">设置</button><small>聊天记录与个性化资料只保存在这台装置</small></div></aside>
@@ -62,7 +62,7 @@ if("serviceWorker"in navigator){
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>Iris</b><small>Version 4.80 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>Iris</b><small>Version 4.87 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -247,7 +247,7 @@ if("serviceWorker"in navigator){
         <div class="nestTop"><button class="nestIconBtn" id="nestCloseHome" aria-label="关闭">‹</button><h1>小窝</h1><button class="nestIconBtn" id="nestOpenSettings" aria-label="设置">⌘</button></div>
         <div class="nestClockCard"><span class="nestTimeKicker">现在</span><strong id="nestClockBig">18:24</strong><div id="nestNow">2026年9月15日 星期二</div></div>
         <div class="nestCoupleHeader" aria-label="我们的小窝"><div class="nestPerson"><div class="nestPersonAvatar" id="nestUserAvatar">你</div><strong id="nestUserName">你</strong></div><div class="nestCoupleHeart" aria-hidden="true">♥</div><div class="nestPerson"><div class="nestPersonAvatar" id="nestAiAvatar">他</div><strong id="nestAiName">他</strong></div></div><div class="nestQuickMoodLabel">快捷心情</div>
-        <div class="nestQuickMoodRow"><button class="nestQuickMood" id="nestMoodEdit" type="button"><span>我的心情</span><strong id="nestMoodShow">今天感觉怎么样？</strong></button><button class="nestQuickMood" id="nestAiMoodEdit" type="button"><span>他的心情</span><strong id="nestAiMoodShow">他今天想留下一句话。</strong></button></div>
+        <div class="nestQuickMoodRow"><button class="nestQuickMood" id="nestMoodEdit" type="button"><span>我的心情</span><strong id="nestMoodShow">今天感觉怎么样？</strong><i id="nestMoodIcon" class="nestMoodIcon">○</i></button><button class="nestQuickMood ai" id="nestAiMoodEdit" type="button"><span>他的心情</span><strong id="nestAiMoodShow">他今天想留下一句话。</strong><small id="nestAiMoodNoteShow"></small></button></div>
         <div class="nestCard nestToGCard" id="nestToGCard" role="button" tabindex="0" aria-label="打开今天想对他说"><div class="nestCardHead"><span>今天想对他说</span><span class="nestCardArrow">›</span></div><div class="nestTextPreview" id="nestToGShow">写点什么留在这里。</div></div>
         <div class="nestCard nestNoteCard" id="nestNoteCard" role="button" tabindex="0" aria-label="打开今日小记"><div class="nestCardHead"><span>今日小记</span><span class="nestCardArrow">›</span></div><div class="nestTextPreview" id="nestNoteShow">今天有什么想留下来？</div></div>
         <div class="nestAnniversaryCard"><div><span>纪念日</span><strong id="nestCountdown">还没有设置纪念日</strong></div><button id="nestAnniversaryOpen">›</button></div>
@@ -257,8 +257,8 @@ if("serviceWorker"in navigator){
     <section class="nestPage hidden" id="nestMoodPage">
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2 id="nestMoodPageTitle">我的心情</h2><span></span></div>
       <div class="nestSubBody">
-        <div class="nestMoodSection" id="nestUserMoodSection"><div class="nestMoodIntro">今天的你</div><div class="nestDailyPager nestMoodPager"><button type="button" id="nestMoodPrev">‹</button><div><small>正在查看</small><strong id="nestMoodDate"></strong></div><button type="button" id="nestMoodNext">›</button></div><div class="nestMoodSliderCard"><div class="nestMoodValueRow"><span>现在的感觉</span><strong id="nestMoodValue">开心</strong></div><input id="nestMoodRange" class="nestMoodRange" type="range" min="0" max="7" step="1" value="0"><div class="nestMoodTicks" id="nestMoodTicks"></div></div><div class="nestMoodWriting"><div class="nestMoodWritingLabel"><span>自己写一点</span><small>不会改变上面的快捷心情</small></div><textarea id="nestMood" maxlength="120" placeholder="今天还有什么想写下来？" class="nestMoodCustom"></textarea></div></div>
-        <div class="nestMoodSection hidden" id="nestAiMoodSection"><div class="nestMoodIntro">今天的他</div><div class="nestDailyPager nestMoodPager"><button type="button" id="nestAiMoodPrev">‹</button><div><small>正在查看</small><strong id="nestAiMoodDate"></strong></div><button type="button" id="nestAiMoodNext">›</button></div><div class="nestMoodSliderCard"><div class="nestMoodValueRow"><span>现在的感觉</span><strong id="nestAiMoodValue">开心</strong></div><input id="nestAiMoodRange" class="nestMoodRange" type="range" min="0" max="7" step="1" value="0"><div class="nestMoodTicks" id="nestAiMoodTicks"></div></div><div class="nestMoodWriting"><div class="nestMoodWritingLabel"><span>他想写一点</span><small>不会改变上面的快捷心情</small></div><textarea id="nestAiMood" maxlength="160" placeholder="想留下一句话的话，写在这里。" class="nestMoodCustom"></textarea></div></div>
+        <div class="nestMoodSection" id="nestUserMoodSection"><div class="nestMoodIntro">今天的你</div><div class="nestDailyPager nestMoodPager"><button type="button" id="nestMoodPrev">‹</button><div><small>正在查看</small><strong id="nestMoodDate"></strong></div><button type="button" id="nestMoodNext">›</button></div><div class="nestMoodPickerCard"><div class="nestMoodValueRow"><span>选择今天的心情</span><strong id="nestMoodValue">还没有选择</strong></div><div class="nestMoodOptions" id="nestMoodOptions"></div><input id="nestMoodRange" class="nestMoodRange" type="range" min="0" max="11" step="1" value="0" hidden></div><div class="nestMoodWriting"><div class="nestMoodWritingLabel"><span>自己写一点</span><small>不会改变上面的快捷心情</small></div><textarea id="nestMood" maxlength="120" placeholder="今天还有什么想写下来？" class="nestMoodCustom"></textarea></div></div>
+        <div class="nestMoodSection hidden" id="nestAiMoodSection"><div class="nestMoodIntro">今天的他</div><div class="nestDailyPager nestMoodPager"><button type="button" id="nestAiMoodPrev">‹</button><div><small>正在查看</small><strong id="nestAiMoodDate"></strong></div><button type="button" id="nestAiMoodNext">›</button></div><div class="nestAiMoodCard"><div class="nestMoodValueRow"><span>他今天留下的心情</span><strong id="nestAiMoodValue">还没有写下</strong></div><div class="nestAiMoodQuote" id="nestAiMoodQuote">他今天还没有留下心情。</div></div><div class="nestMoodWriting"><div class="nestMoodWritingLabel"><span>他想写一点</span><small>不会改变上面的快捷心情</small></div><textarea id="nestAiMood" maxlength="160" placeholder="想留下一句话的话，写在这里。" class="nestMoodCustom"></textarea></div></div>
       </div>
       <div class="nestSubFooter"><button class="nestSaveBtn" id="nestMoodSave">保存</button></div>
     </section>
@@ -296,4 +296,4 @@ if("serviceWorker"in navigator){
   </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
-<script src="./api.js?v=4.85"></script><script src="./app.js?v=4.85"></script></body></html>
+<script src="./api.js?v=4.85"></script><script src="./app.js?v=4.87"></script></body></html>
