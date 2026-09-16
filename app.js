@@ -405,7 +405,7 @@ function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
- if(!text && !(state.attachments||[]).length)return;
+ if(!text)return;
  if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
  ensure();const c=chat();
  if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
@@ -419,8 +419,8 @@ async function send(){
  const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  let completed=false;
  try{
-  const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);const hasImage=sentAttachments.some(a=>a.kind==="image");const hasVisionConfig=!!(state.settings.visionEnabled&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel);if(hasImage&&!hasVisionConfig){throw new Error("已选择图片，但还没有完整启用视觉模型。请到「设置 → 视觉与图像」填写 Base URL、API Key 和视觉模型。")}const activeBase=hasImage?state.settings.visionBase:state.settings.apiBase;const activeKey=hasImage?state.settings.visionKey:state.settings.apiKey;const activeModel=hasImage?state.settings.visionModel:state.settings.model;
-  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
+  const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);const hasImage=sentAttachments.some(a=>a.kind==="image");const useVision=hasImage&&state.settings.visionEnabled&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;const activeBase=useVision?state.settings.visionBase:state.settings.apiBase;const activeKey=useVision?state.settings.visionKey:state.settings.apiKey;const activeModel=useVision?state.settings.visionModel:state.settings.model;
+  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);if(useVision)systemParts.push("本轮包含用户上传的图片。你正在使用已配置的视觉模型，请直接理解图片内容并结合用户文字回答；不要声称自己看不到图片。只能描述图片中实际可见或可合理读取的信息。");
   systemParts.push(conversationStyleContext());
   systemParts.push(chatInterfaceContext(c));
   const mc=memoryContext();if(mc)systemParts.push(mc);
@@ -432,6 +432,7 @@ async function send(){
   if(state.settings.mcpNestEnabled!==false && (nestActionTarget || state.settings.mcpEnabled===true)) tools.push(...nestTools());
   if(state.settings.mcpEnabled===true && state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}
   tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);
+  if(useVision)tools=null;
   if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel)tools.push(nestTools().find(x=>x.function?.name==="generate_image"));tools=tools.filter(Boolean);if(!tools.length)tools=null;
   let fullAnswer="",pending="",displayQueue=Promise.resolve();
   const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();const baseDelay=Math.max(80,Math.min(1200,Number(state.settings.replyDelay??360)));const naturalDelay=Math.min(1500,Math.max(80,baseDelay+Math.min(90,v.length)*7));await sleep(naturalDelay);});};
@@ -439,7 +440,7 @@ async function send(){
   let rounds=0;
   while(rounds++<4){
    let answer="",pendingRound="";
-   let result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools:hasImage?undefined:tools,tool_choice:hasImage?undefined:(tools?"auto":undefined)},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
+   const result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
    addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){
     const assistantToolMsg={role:"assistant",content:result.answer||null,tool_calls:result.toolCalls};ms.push(assistantToolMsg);
