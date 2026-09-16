@@ -1,4 +1,4 @@
-/* Iris v4.73 — vision send stabilized; explicit version marker for manual edits. */
+/* Iris v4.74 — fixed cache/versioning and unified text + vision send pipeline. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -401,18 +401,17 @@ function executeNestTool(name,args){
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
-/* v4.73 — image attachment transport: separate UI display from Vision API payload. */
+/* Iris v4.72 — rebuilt image sending path: UI display and vision transport are separated. */
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
  const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
  if(!text&&!attachments.length)return;
  const hasImage=attachments.some(a=>a.kind==="image");
- const visionReady=state.settings.visionEnabled===true&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;
- const normalReady=state.settings.apiBase&&state.settings.apiKey&&state.settings.model;
- if(hasImage){
-  if(!visionReady){settingsOpenPage("visionPage");showErr("要识别图片，请先在「设置 → 视觉与图像」启用视觉模型，并填写 Base URL、API Key 和视觉模型。");return}
- }else if(!normalReady){settings();showErr("请先完成 API 与模型设置。");return}
+ const visionReady=state.settings.visionEnabled===true&&String(state.settings.visionBase||"").trim()&&String(state.settings.visionKey||"").trim()&&String(state.settings.visionModel||"").trim();
+ const normalReady=String(state.settings.apiBase||"").trim()&&String(state.settings.apiKey||"").trim()&&String(state.settings.model||"").trim();
+ if(hasImage&&!visionReady){settings();settingsOpenPage("visionPage");showErr("图片消息需要先启用视觉模型，并填写 Vision Base URL、Vision API Key 和视觉模型。");return}
+ if(!hasImage&&!normalReady){settings();settingsOpenPage("aiPage");showErr("请先完成 AI Base URL、API Key 和模型设置。");return}
  ensure();const c=chat();
  if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
  const attachmentParts=[];
@@ -432,8 +431,7 @@ async function send(){
  try{
   const ms=[];const systemParts=[];
   const nestActionTarget=nestChatWriteTarget(text);
-  const hasImage=attachments.some(a=>a.kind==="image");
-  const useVision=hasImage&&state.settings.visionEnabled===true&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;
+  const useVision=hasImage&&visionReady;
   const activeBase=useVision?state.settings.visionBase:state.settings.apiBase;
   const activeKey=useVision?state.settings.visionKey:state.settings.apiKey;
   const activeModel=useVision?state.settings.visionModel:state.settings.model;
