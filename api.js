@@ -45,7 +45,12 @@
 
   async function visionChat(options){
     const url=requestUrl(options.baseUrl);
-    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false,max_tokens:Number(options.max_tokens||1024)};
+    // Zhipu's official model IDs are lowercase. Keep the UI/display value untouched,
+    // but normalize the known GLM-4.6V-Flash ID on the wire so Iris matches clients
+    // that send the official model identifier.
+    let model=String(options.model||"").trim();
+    if(/^GLM-4\.6V-Flash$/i.test(model))model="glm-4.6v-flash";
+    const body={model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false,max_tokens:Number(options.max_tokens||1024)};
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
     const raw=await r.text();
     if(!r.ok)throw new Error(`HTTP ${r.status} · ${url}\n${raw.slice(0,1600)}`);
