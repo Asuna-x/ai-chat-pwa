@@ -1,4 +1,4 @@
-/* Iris v4.56 — G Chat API with optional OpenAI-compatible tool calling. */
+/* Iris v4.62 — G Chat API with optional OpenAI-compatible tool calling. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
