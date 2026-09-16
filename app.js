@@ -1,4 +1,4 @@
-/* Iris v4.79 — vision transport rebuilt from scratch; text send path preserved. */
+/* Iris v4.81 — vision transport rebuilt from scratch; text send path preserved. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -401,13 +401,13 @@ function executeNestTool(name,args){
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
-/* Iris v4.79 — minimal vision request: no chat history, no extra system prompt, no detail field. */
-async function sendVisionMessage(c,text,attachments){
+/* Iris v4.81 — minimal vision request: no chat history, no extra system prompt, no detail field. */
+async function sendVisionMessage(c,text,attachments,overrideContent){
  const base=String(state.settings.visionBase||state.settings.apiBase||"").trim();
  const key=String(state.settings.visionKey||state.settings.apiKey||"").trim();
  const model=String(state.settings.visionModel||state.settings.model||"").trim();
  const images=(attachments||[]).filter(a=>a&&a.kind==="image"&&typeof a.data==="string"&&a.data.startsWith("data:image/"));
- const fail=msg=>{const detail=String(msg||"未知错误");console.error("Iris v4.79 vision",detail);showErr("图片发送失败："+detail);c.messages.push({role:"assistant",content:"图片发送失败：\n"+detail,timestamp:Date.now()});save();render()};
+ const fail=msg=>{const detail=String(msg||"未知错误");console.error("Iris v4.81 vision",detail);showErr("图片发送失败："+detail);c.messages.push({role:"assistant",content:"图片发送失败：\n"+detail,timestamp:Date.now()});save();render()};
  if(!base||!key||!model){fail("视觉配置不完整。请检查 Vision Base URL、API Key 和视觉模型。");return false}
  if(!images.length){fail("图片没有成功读取。请重新选择照片。");return false}
  showErr("图片已读取，正在请求视觉模型…");
@@ -415,9 +415,7 @@ async function sendVisionMessage(c,text,attachments){
  const btn=$("#send");if(btn){btn.disabled=false;btn.classList.add("loading");btn.textContent="…";btn.title="发送中"}updateTyping();
  const timeout=setTimeout(()=>controller.abort(),90000);
  try{
-  const content=[];
-  content.push({type:"text",text:String(text||"请直接描述并分析这张图片。")});
-  images.forEach(a=>content.push({type:"image_url",image_url:{url:a.data}}));
+  const content=Array.isArray(overrideContent)?overrideContent:[{type:"text",text:String(text||"请直接描述并分析这张图片。")},...images.map(a=>({type:"image_url",image_url:{url:a.data}}))];
   const messages=[{role:"user",content}];
   showErr("正在发送图片："+model);
   const result=await window.GChatAPI.visionChat({baseUrl:base,apiKey:key,model,messages,temperature:state.settings.temperature,signal:controller.signal});
@@ -428,28 +426,59 @@ async function sendVisionMessage(c,text,attachments){
  finally{clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy()}
 }
 
+function recentChatImages(c){
+ const out=[];
+ for(let n=(c?.messages?.length||0)-1;n>=0&&out.length<4;n--){
+  const m=c.messages[n];
+  if(!Array.isArray(m?.content))continue;
+  for(const x of m.content){
+   const u=x?.type==="image_url"?x.image_url?.url:"";
+   if(typeof u==="string"&&u.startsWith("data:image/"))out.push(u);
+  }
+ }
+ return out;
+}
+
+async function askVisionAboutRecentImages(c,text){
+ const urls=recentChatImages(c);
+ if(!urls.length)return false;
+ const content=[{type:"text",text:String(text||"请识别最近发送的图片并回答。")},...urls.reverse().map(url=>({type:"image_url",image_url:{url}}))];
+ const attachments=urls.map((data,i)=>({kind:"image",name:"聊天图片"+(i+1),data}));
+ return sendVisionMessage(c,text,attachments,content);
+}
+
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
  const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
  if(!text&&!attachments.length)return;
- const imageAttachments=attachments.filter(a=>a&&a.kind==="image");
+ const imageAttachments=attachments.filter(a=>a&&a.kind==="image"&&typeof a.data==="string"&&a.data.startsWith("data:image/"));
  ensure();const c=chat();
  if(imageAttachments.length){
   try{
-   showErr("检测到图片，准备发送…");
-   const userContent=[...(text?[{type:"text",text}]:[]),...imageAttachments.map(a=>({type:"image_url",image_url:{url:a.data,detail:"auto"}}))];
+   /* v4.81: put the image into the chat immediately, then automatically ask Vision to read it. */
+   const userContent=[...(text?[{type:"text",text}]:[]),...imageAttachments.map(a=>({type:"image_url",image_url:{url:a.data}}))];
    c.messages.push({role:"user",content:userContent,timestamp:Date.now()});
    if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"图片消息";
-   save();render();
-   const ok=await sendVisionMessage(c,text,attachments);
-   if(ok){i.value="";state.attachments=[];renderAttachments();resize();save();render()}
-  }catch(e){console.error("Iris v4.79 image send",e);showErr("图片发送流程出错："+(e?.message||String(e)))}
+   i.value="";state.attachments=[];renderAttachments();resize();save();render();
+   showErr("图片已发送，正在让视觉模型识别…");
+   await sendVisionMessage(c,text,imageAttachments,userContent);
+  }catch(e){console.error("Iris v4.81 image bubble",e);showErr("图片加入聊天失败："+(e?.message||String(e)))}
   return;
  }
  /* Below this point is the existing text-only send path. */
  const normalReady=Boolean(String(state.settings.apiBase||"").trim()&&String(state.settings.apiKey||"").trim()&&String(state.settings.model||"").trim());
  if(!normalReady){settings();settingsOpenPage("aiPage");showErr("请先完成 AI Base URL、API Key 和模型设置。");return}
+ // If the chat contains a recent image, a following text message explicitly asks the Vision model to inspect it.
+ const recentImages=recentChatImages(c);
+ if(recentImages.length){
+  c.messages.push({role:"user",content:text,timestamp:Date.now()});
+  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"新对话";
+  save();render();
+  await askVisionAboutRecentImages(c,text);
+  i.value="";resize();save();render();
+  return;
+ }
  if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
  c.messages.push({role:"user",content:text,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"新对话";
@@ -494,7 +523,7 @@ function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechReco
 $("#openDrawer").onclick=openDrawer;$("#closeDrawer").onclick=closeDrawer;$("#shade").onclick=closeDrawer;$("#openNest").onclick=openNest;$("#nestCloseHome").onclick=closeNest;$("#nestOpenSettings").onclick=()=>showNestView("settings");$("#nestMoodEdit").onclick=()=>showNestMood("user");$("#nestAiMoodEdit").onclick=()=>showNestMood("ai");const openToG=()=>{nestViewDateKey=nestDateKey();showNestView("toG")};const openNote=()=>{nestViewDateKey=nestDateKey();showNestView("note")};$("#nestToGCard").onclick=openToG;$("#nestNoteCard").onclick=openNote;$("#nestToGCard").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openToG()}};$("#nestNoteCard").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openNote()}};$("#nestToGSave").onclick=()=>{saveToGPage();showNestView("home")};$("#nestAnniversaryOpen").onclick=()=>showNestView("anniversary");document.querySelectorAll("#nest .nestBottomNav button[data-nest-view]").forEach(b=>b.onclick=()=>b.dataset.nestView==="mood"?showNestMood("user"):showNestView(b.dataset.nestView));document.querySelectorAll("#nest [data-nest-back]").forEach(b=>b.onclick=()=>showNestView("home"));$("#nestMoodRange").oninput=e=>setMoodFromRange("user",e.target.value);$("#nestAiMoodRange").oninput=e=>setMoodFromRange("ai",e.target.value);$("#nestMood").oninput=e=>{saveDailyField(nestViewDateKey,"userMoodNote",e.target.value.trim())};$("#nestAiMood").oninput=e=>{saveDailyField(nestViewDateKey,"aiMoodNote",e.target.value.trim())};$("#nestMoodSave").onclick=()=>{saveMoodPage();renderNestHome();showNestView("home")};$("#nestMoodPrev").onclick=()=>{saveMoodPage();nestViewDateKey=shiftNestDate(nestViewDateKey,-1);renderMoodPage()};$("#nestMoodNext").onclick=()=>{saveMoodPage();nestViewDateKey=shiftNestDate(nestViewDateKey,1);renderMoodPage()};$("#nestAiMoodPrev").onclick=()=>{saveMoodPage();nestViewDateKey=shiftNestDate(nestViewDateKey,-1);renderMoodPage()};$("#nestAiMoodNext").onclick=()=>{saveMoodPage();nestViewDateKey=shiftNestDate(nestViewDateKey,1);renderMoodPage()};$("#nestNoteSave").onclick=()=>{saveNotePage();showNestView("home")};$("#nestToGPrev").onclick=()=>{saveToGPage();nestViewDateKey=shiftNestDate(nestViewDateKey,-1);loadDailyPages()};$("#nestToGNext").onclick=()=>{saveToGPage();nestViewDateKey=shiftNestDate(nestViewDateKey,1);loadDailyPages()};$("#nestNotePrev").onclick=()=>{saveNotePage();nestViewDateKey=shiftNestDate(nestViewDateKey,-1);loadDailyPages()};$("#nestNoteNext").onclick=()=>{saveNotePage();nestViewDateKey=shiftNestDate(nestViewDateKey,1);loadDailyPages()};$("#nestAnniversarySelect").onchange=e=>selectAnniversary(e.target.value);$("#nestAnniversarySave").onclick=()=>{saveSelectedAnniversary();showNestView("home")};$("#nestAnniversaryNew").onclick=createNewAnniversary;$("#nestAnniversaryDelete").onclick=deleteSelectedAnniversary;$("#nestSettingsSave").onclick=()=>{saveNest();showNestView("home")};$("#nestBgPick").onclick=()=>$("#nestBgFile").click();$("#nestBgFile").onchange=async()=>{const f=$("#nestBgFile").files?.[0];if(!f)return;try{nestData.background=await imageToData(f,1400,.78);saveNestData();applyNestBackground()}catch{showErr("小窝背景图片处理失败。")}};$("#nestBgClear").onclick=()=>{nestData.background="";saveNestData();applyNestBackground()};setupAnniversaryBackground();
 $("#newChat").onclick=()=>{const c={id:crypto.randomUUID(),title:"新对话",messages:[],createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save();render();closeDrawer()};$("#cancelChatSelect").onclick=exitChatSelectMode;$("#renameSelected").onclick=renameSelectedChat;$("#deleteSelected").onclick=deleteSelectedChats;$("#openSettings").onclick=settings;$("#headerSettings").onclick=settings;$("#closeSettings").onclick=()=>$("#settings").close();$("#saveSettings").onclick=()=>{state.settings={...state.settings,myName:$("#myName").value.trim()||"你",gName:$("#gName").value.trim()||"他",gBio:$("#gBio").value.trim()||"你的私人 AI 对话空间",apiBase:$("#apiBase").value.trim(),apiKey:$("#apiKey").value.trim(),model:$("#model").value.trim(),systemPrompt:$("#systemPrompt").value,temperature:Number($("#temperature").value),bgOpacity:Number($("#bgOpacity").value),bubbleAiColor:$("#aiBubbleColor").value,bubbleAiOpacity:Number($("#aiBubbleOpacity").value),bubbleUserColor:$("#userBubbleColor").value,bubbleUserOpacity:Number($("#userBubbleOpacity").value),animations:$("#animations").checked,gNameOffset:Number($("#gNameOffset").value),userNameOffset:Number($("#userNameOffset").value),replyDelay:Number($("#replyDelay")?.value||state.settings.replyDelay||360),mcpNestEnabled:$("#mcpNestEnabled")?.checked!==false,mcpEnabled:$("#mcpEnabled")?.checked===true,mcpServerUrl:$("#mcpServerUrl")?.value.trim()||"",mcpServerToken:$("#mcpServerToken")?.value.trim()||"",visionEnabled:$("#visionEnabled")?.checked===true,visionBase:$("#visionBase")?.value.trim()||"",visionKey:$("#visionKey")?.value.trim()||"",visionModel:$("#visionModel")?.value.trim()||"",imageGenEnabled:$("#imageGenEnabled")?.checked===true,imageGenBase:$("#imageGenBase")?.value.trim()||"",imageGenKey:$("#imageGenKey")?.value.trim()||"",imageGenModel:$("#imageGenModel")?.value.trim()||""};save();$("#settings").close();render()};$("#addModel").onclick=()=>{const m=$("#model").value.trim();if(!m)return;state.settings.models=[...new Set([...(state.settings.models||[]),m])];save();renderModels();$("#modelSelect").value=m};$("#removeModel").onclick=()=>{const m=$("#model").value.trim();state.settings.models=(state.settings.models||[]).filter(x=>x!==m);save();renderModels()};$("#modelSelect").onchange=()=>$("#model").value=$("#modelSelect").value;$("#exportChat").onclick=exportChat;$("#clearCurrent").onclick=()=>{const c=chat();if(c&&confirm("确定清空当前对话吗？")){c.messages=[];c.title="新对话";save();render();$("#settings").close()}};
 $("#uploadUserAvatar").onclick=()=>$("#userAvatarFile").click();$("#userAvatarFile").onchange=()=>uploadImage($("#userAvatarFile"),"userAvatar",320,.8);$("#clearUserAvatar").onclick=()=>{state.settings.userAvatar="";save();renderAvatarPreviews();render()};$("#uploadAiAvatar").onclick=()=>$("#aiAvatarFile").click();$("#aiAvatarFile").onchange=()=>uploadImage($("#aiAvatarFile"),"aiAvatar",320,.8);$("#clearAiAvatar").onclick=()=>{state.settings.aiAvatar="";save();renderAvatarPreviews();render()};$("#uploadBg").onclick=()=>$("#bgFile").click();$("#bgFile").onchange=async()=>{const f=$("#bgFile").files?.[0];if(!f)return;try{state.settings.bgCustom=await imageToData(f,1200,.7);save();applyLook();renderBackgrounds();render()}catch{showErr("背景图片处理失败。")}};$("#clearBg").onclick=()=>{state.settings.bgCustom="";save();applyLook();renderBackgrounds();render()};$("#bgOpacity").oninput=e=>{state.settings.bgOpacity=Number(e.target.value);$("#bgOpacityOut").value=e.target.value+"%";save();applyLook()};$("#aiBubbleColor").oninput=e=>{state.settings.bubbleAiColor=e.target.value;$("#aiBubbleColorOut").value=e.target.value.toUpperCase();save();applyLook()};$("#userBubbleColor").oninput=e=>{state.settings.bubbleUserColor=e.target.value;$("#userBubbleColorOut").value=e.target.value.toUpperCase();save();applyLook()};$("#aiBubbleOpacity").oninput=e=>{state.settings.bubbleAiOpacity=Number(e.target.value);$("#aiBubbleOpacityOut").value=e.target.value+"%";save();applyLook()};$("#userBubbleOpacity").oninput=e=>{state.settings.bubbleUserOpacity=Number(e.target.value);$("#userBubbleOpacityOut").value=e.target.value+"%";save();applyLook()};$("#animations").onchange=()=>{state.settings.animations=$("#animations").checked;save();applyLook()};$("#gNameOffset").oninput=e=>{state.settings.gNameOffset=Number(e.target.value);$("#gNameOffsetOut").value=e.target.value+" px";save();applyLook()};$("#userNameOffset").oninput=e=>{state.settings.userNameOffset=Number(e.target.value);$("#userNameOffsetOut").value=e.target.value+" px";save();applyLook()};$("#resetTokenStats").onclick=resetTokenStats;$("#resetNameOffsets").onclick=()=>{state.settings.gNameOffset=0;state.settings.userNameOffset=0;$("#gNameOffset").value=0;$("#gNameOffsetOut").value="0 px";$("#userNameOffset").value=0;$("#userNameOffsetOut").value="0 px";save();applyLook()};document.querySelectorAll("#bubbleGrid [data-bubble]").forEach(b=>b.onclick=()=>{state.settings.bubble=b.dataset.bubble;save();renderBubbleStyles();applyLook()});document.querySelectorAll("#topAvatarGrid [data-top-avatar]").forEach(b=>b.onclick=()=>{state.settings.topAvatar=b.dataset.topAvatar;save();renderTopAvatar();render()});$("#openProfile").onclick=()=>openStatusPicker((state.settings.topAvatar||"user")==="user"?"user":"ai");$("#closeProfile").onclick=()=>$("#profile").close();$("#profileStart").onclick=()=>$("#profile").close();
-$("#exportAll").onclick=exportAll;$("#importAll").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{const f=e.target.files?.[0];if(f)importAll(f);e.target.value=""};$("#mic").onclick=setupVoice;$("#attach").onclick=()=>$("#fileInput").click();$("#fileInput").onchange=e=>{handleFiles(e.target.files).catch(err=>{console.error("Iris v4.79 file handler",err);showErr("图片选择失败："+(err?.message||String(err)))});e.target.value=""};$("#send").onclick=()=>{try{if(state.busy)stopThinking();else Promise.resolve(send()).catch(e=>{console.error("Iris v4.79 send click",e);showErr("发送流程出错："+(e?.message||String(e)))})}catch(e){console.error("Iris v4.79 send click sync",e);showErr("发送流程出错："+(e?.message||String(e)))} };$("#input").oninput=resize;$("#input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("#copyBubble").onclick=async()=>{if(!state.selectedBubble)return;try{await navigator.clipboard.writeText(state.selectedBubble.dataset.text||state.selectedBubble.textContent);$("#bubbleAction").classList.add("hidden")}catch{showErr("复制失败，请长按文字手动复制。")}};document.addEventListener("pointerdown",e=>{if(!e.target.closest(".bubbleAction")&&!e.target.closest(".bubble"))$("#bubbleAction").classList.add("hidden")});document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tabbody").forEach(x=>x.classList.add("hidden"));b.classList.add("active");$("#"+b.dataset.tab).classList.remove("hidden")});
+$("#exportAll").onclick=exportAll;$("#importAll").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{const f=e.target.files?.[0];if(f)importAll(f);e.target.value=""};$("#mic").onclick=setupVoice;$("#attach").onclick=()=>$("#fileInput").click();$("#fileInput").onchange=e=>{handleFiles(e.target.files).catch(err=>{console.error("Iris v4.81 file handler",err);showErr("图片选择失败："+(err?.message||String(err)))});e.target.value=""};$("#send").onclick=()=>{try{if(state.busy)stopThinking();else Promise.resolve(send()).catch(e=>{console.error("Iris v4.81 send click",e);showErr("发送流程出错："+(e?.message||String(e)))})}catch(e){console.error("Iris v4.81 send click sync",e);showErr("发送流程出错："+(e?.message||String(e)))} };$("#input").oninput=resize;$("#input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("#copyBubble").onclick=async()=>{if(!state.selectedBubble)return;try{await navigator.clipboard.writeText(state.selectedBubble.dataset.text||state.selectedBubble.textContent);$("#bubbleAction").classList.add("hidden")}catch{showErr("复制失败，请长按文字手动复制。")}};document.addEventListener("pointerdown",e=>{if(!e.target.closest(".bubbleAction")&&!e.target.closest(".bubble"))$("#bubbleAction").classList.add("hidden")});document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tabbody").forEach(x=>x.classList.add("hidden"));b.classList.add("active");$("#"+b.dataset.tab).classList.remove("hidden")});
 document.querySelectorAll("[data-settings-page]").forEach(b=>b.onclick=()=>settingsOpenPage(b.dataset.settingsPage));
 $("#addMemory").onclick=()=>{const v=$("#memoryInput").value.trim();if(!v)return;addMemory(v);$("#memoryInput").value=""};
 $("#mcpEnabled").onchange=()=>{state.settings.mcpEnabled=$("#mcpEnabled").checked;save();$("#mcpSummary").textContent=state.settings.mcpEnabled?"已启用":"关闭";refreshMcpUI(false)};$("#mcpNestEnabled").onchange=()=>{state.settings.mcpNestEnabled=$("#mcpNestEnabled").checked;save()};$("#mcpServerUrl").onchange=()=>{state.settings.mcpServerUrl=$("#mcpServerUrl").value.trim();save()};$("#mcpServerToken").onchange=()=>{state.settings.mcpServerToken=$("#mcpServerToken").value.trim();save()};$("#toggleMcpToken").onclick=()=>{const i=$("#mcpServerToken"),b=$("#toggleMcpToken");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};$("#mcpTest").onclick=()=>refreshMcpUI(true);$("#mcpRefresh").onclick=()=>refreshMcpUI(true);$("#visionEnabled").onchange=()=>{state.settings.visionEnabled=$("#visionEnabled").checked;save()};$("#imageGenEnabled").onchange=()=>{state.settings.imageGenEnabled=$("#imageGenEnabled").checked;save()};["visionBase","visionKey","visionModel","imageGenBase","imageGenKey","imageGenModel"].forEach(id=>$("#"+id).onchange=()=>{state.settings[id]=$("#"+id).value.trim();save()});$("#toggleVisionKey").onclick=()=>{const i=$("#visionKey"),b=$("#toggleVisionKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};$("#toggleImageGenKey").onclick=()=>{const i=$("#imageGenKey"),b=$("#toggleImageGenKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
