@@ -1,4 +1,4 @@
-/* Iris v4.75 — robust vision send, fallback config and visible diagnostics. */
+/* Iris v4.76 — vision transport rebuilt from scratch; text send path preserved. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -175,7 +175,7 @@ function resize(){const x=$("#input");x.style.height="auto";x.style.height=Math.
 function splitReply(text){const s=String(text||"").replace(/\r/g,"").trim();if(!s)return[];const out=[];let buf="";for(const ch of s){buf+=ch;if(/[。！？!?；;]|\n/.test(ch)){const v=buf.trim();if(v){out.push(v);buf=""}}}if(buf.trim())out.push(buf.trim());return out}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function base(u){return window.GChatAPI?window.GChatAPI.normalizeBase(u):String(u||"").trim().replace(/\/+$/,"" ).replace(/\/chat\/completions$/i,"")}
-function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading","stop");b.textContent="↑";b.title="发送"}state._abort=nullupdateTyping();save()}
+function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading","stop");b.textContent="↑";b.title="发送"}state._abort=null;updateTyping();save()}
 function apiHint(){return window.GChatAPI?window.GChatAPI.requestUrl(state.settings.apiBase):base(state.settings.apiBase)+"/chat/completions"}
 function stopThinking(){if(!state.busy||!state._abort)return;state.stopRequested=true;try{state._abort.abort()}catch{};const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading");b.classList.add("stop");b.textContent="■";b.title="停止回复"}}
 function renderMemories(){
@@ -401,114 +401,80 @@ function executeNestTool(name,args){
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
-/* Iris v4.72 — rebuilt image sending path: UI display and vision transport are separated. */
+/* Iris v4.76 — vision transport is intentionally isolated from the normal chat pipeline. */
+async function sendVisionMessage(c,text,attachments){
+ const base=String(state.settings.visionBase||state.settings.apiBase||"").trim();
+ const key=String(state.settings.visionKey||state.settings.apiKey||"").trim();
+ const model=String(state.settings.visionModel||state.settings.model||"").trim();
+ if(!base||!key||!model){showErr("视觉模型配置不完整：请填写 Base URL、API Key 和视觉模型。");return false}
+ const images=attachments.filter(a=>a.kind==="image"&&a.data);
+ if(!images.length){showErr("没有读取到图片。请重新选择照片后再发送。");return false}
+ const controller=new AbortController();state._abort=controller;state.busy=true;
+ const btn=$("#send");btn.disabled=false;btn.classList.add("loading");btn.textContent="…";updateTyping();
+ const timeout=setTimeout(()=>controller.abort(),90000);
+ try{
+  const cleanHistory=(c.messages||[]).filter(m=>m.role==="user"||m.role==="assistant").slice(-12).map(m=>({role:m.role,content:typeof m.content==="string"?m.content:(Array.isArray(m.content)?m.content.filter(x=>x?.type==="text").map(x=>x.text||"").join(" "):String(m.content||""))})).filter(m=>m.content.trim());
+  const content=[];
+  if(text)content.push({type:"text",text});
+  for(const a of images)content.push({type:"image_url",image_url:{url:a.data,detail:"auto"}});
+  const messages=[{role:"system",content:(state.settings.systemPrompt||"你是一个有帮助的助手。")+"\n本轮用户上传了图片。请直接理解图片内容，并结合用户文字回答；不要声称看到了图片中不存在的内容。"},...cleanHistory,{role:"user",content}];
+  const result=await window.GChatAPI.visionChat({baseUrl:base,apiKey:key,model,messages,temperature:state.settings.temperature,signal:controller.signal});
+  const answer=String(result.answer||"").trim();
+  if(!answer)throw new Error("视觉模型没有返回内容。请确认所选模型支持图片输入。");
+  const stat=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};addUsageTotals(stat,result.usage);state.settings.tokenStats=stat;
+  const ts=Date.now();c.messages.push({role:"assistant",content:answer,timestamp:ts});save();render();return true;
+ }catch(e){
+  const detail=e?.name==="AbortError"?"视觉请求超时（90 秒）。":(e?.message||String(e));
+  console.error("Iris v4.76 vision failed",e);
+  showErr("图片发送失败："+detail);
+  const ts=Date.now();c.messages.push({role:"assistant",content:"图片发送失败："+detail,timestamp:ts});save();render();return false;
+ }finally{clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy()}
+}
+
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
  const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
  if(!text&&!attachments.length)return;
  const hasImage=attachments.some(a=>a.kind==="image");
- const visionBase=String(state.settings.visionBase||"").trim()||String(state.settings.apiBase||"").trim();
- const visionKey=String(state.settings.visionKey||"").trim()||String(state.settings.apiKey||"").trim();
- const visionModel=String(state.settings.visionModel||"").trim()||String(state.settings.model||"").trim();
- const visionReady=hasImage&&Boolean(visionBase&&visionKey&&visionModel);
- const normalReady=Boolean(String(state.settings.apiBase||"").trim()&&String(state.settings.apiKey||"").trim()&&String(state.settings.model||"").trim());
- if(hasImage&&!visionReady){settings();settingsOpenPage("visionPage");showErr("图片消息缺少 API 配置。可以直接使用普通 AI 的 Base URL、Key 和模型；如果该模型不支持图片，请在「视觉与图像」填写视觉模型。");return}
- if(!hasImage&&!normalReady){settings();settingsOpenPage("aiPage");showErr("请先完成 AI Base URL、API Key 和模型设置。");return}
  ensure();const c=chat();
+ if(hasImage){
+  const userContent=[...(text?[{type:"text",text}]:[]),...attachments.filter(a=>a.kind==="image").map(a=>({type:"image_url",image_url:{url:a.data}}))];
+  c.messages.push({role:"user",content:userContent,timestamp:Date.now()});
+  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"图片消息";
+  i.value="";state.attachments=[];renderAttachments();resize();save();render();
+  await sendVisionMessage(c,text,attachments);return;
+ }
+ /* Below this point is the existing text-only send path. */
+ const normalReady=Boolean(String(state.settings.apiBase||"").trim()&&String(state.settings.apiKey||"").trim()&&String(state.settings.model||"").trim());
+ if(!normalReady){settings();settingsOpenPage("aiPage");showErr("请先完成 AI Base URL、API Key 和模型设置。");return}
  if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
- const attachmentParts=[];
- for(const a of attachments){
-  if(a.kind==="image")attachmentParts.push({type:"image_url",image_url:{url:a.data}});
-  else if(a.kind==="text")attachmentParts.push({type:"text",text:`[文件：${a.name}]\n${a.text}`});
-  else if(a.kind==="file")attachmentParts.push({type:"file",file:{filename:a.name,file_data:a.data}});
- }
- const userContent=attachmentParts.length?([...(text?[{type:"text",text:text}]:[]),...attachmentParts]):text;
- c.messages.push({role:"user",content:userContent,timestamp:Date.now()});
- if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"图片消息";
- i.value="";state.attachments=[];renderAttachments();resize();save();render();
+ c.messages.push({role:"user",content:text,timestamp:Date.now()});
+ if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"新对话";
+ i.value="";save();render();
  state.busy=true;const sendBtn=$("#send");sendBtn.disabled=false;sendBtn.classList.add("loading");sendBtn.classList.remove("stop");sendBtn.textContent="…";sendBtn.title="停止回复";updateTyping();
- const controller=new AbortController();state._abort=controller;
- const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
- let completed=false;
+ const controller=new AbortController();state._abort=controller;const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);let completed=false;
  try{
-  const ms=[];const systemParts=[];
-  const nestActionTarget=nestChatWriteTarget(text);
-  const useVision=hasImage&&visionReady;
-  const activeBase=useVision?visionBase:state.settings.apiBase;
-  const activeKey=useVision?visionKey:state.settings.apiKey;
-  const activeModel=useVision?visionModel:state.settings.model;
-  if(hasImage&&!useVision)throw new Error("已选择图片，但视觉模型还没有完整配置。请到「设置 → 视觉与图像」填写 Base URL、API Key 和视觉模型。");
-  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
-  if(useVision)systemParts.push("本轮包含用户上传的图片。请直接理解图片内容，并结合用户文字回答。只能描述图片中实际可见或合理读取的信息。");
-  systemParts.push(conversationStyleContext());
-  systemParts.push(chatInterfaceContext(c));
-  const mc=memoryContext();if(mc)systemParts.push(mc);
-  const nc=nestContext();if(nc)systemParts.push(nc);
-  if(nestActionTarget)systemParts.push(nestToolSystem()+` 本轮用户明确要求执行“${nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':'今天想对他说'}”写入动作。请先进入小窝，再调用对应写入工具。`);
-  if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});
-  ms.push(...buildConversationContext(c));
-  let tools=[];
-  if(!useVision&&state.settings.mcpNestEnabled!==false&&(nestActionTarget||state.settings.mcpEnabled===true))tools.push(...nestTools());
-  if(!useVision&&state.settings.mcpEnabled===true&&state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}
-  if(!useVision&&state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){const gtool=nestTools().find(x=>x.function?.name==="generate_image");if(gtool)tools.push(gtool)}
-  tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);
-  if(!tools.length)tools=null;
-  let pendingDisplay="",displayQueue=Promise.resolve();
-  const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();const baseDelay=Math.max(80,Math.min(1200,Number(state.settings.replyDelay??360)));const naturalDelay=Math.min(1500,Math.max(80,baseDelay+Math.min(90,v.length)*7));await sleep(naturalDelay);})};
-  const usageTotal={prompt:0,completion:0,total:0,requests:0};
-  let rounds=0,fullAnswer="";
-  while(rounds++<4){
-   let answer="",pendingRound="";
-   const onText=(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound};
-   const result=useVision
-    ?await window.GChatAPI.visionChatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal},onText)
-    :await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},onText);
-   addUsageTotals(usageTotal,result.usage);
-   if(result.toolCalls?.length){
-    const assistantToolMsg={role:"assistant",content:result.answer||null,tool_calls:result.toolCalls};ms.push(assistantToolMsg);
-    for(const call of result.toolCalls){
-     let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}
-     let out;
-     try{
-      const callName=call.function?.name||'';
-      if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName))out=executeNestTool(callName,args);
-      else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c)}
-      else out=await mcpCallTool(callName,args);
-     }catch(e){out={success:false,error:e?.message||String(e)}}
-     ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)});
-    }
-    continue;
-   }
-   if(pendingRound.trim())pushSentence(pendingRound);
-   await displayQueue;fullAnswer=result.answer||answer;break;
-  }
-  const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};ts.prompt+=usageTotal.prompt;ts.completion+=usageTotal.completion;ts.total+=usageTotal.total;ts.requests+=usageTotal.requests;state.settings.tokenStats=ts;save();renderTokenStats();completed=true;
+  const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);
+  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);systemParts.push(conversationStyleContext());systemParts.push(chatInterfaceContext(c));const mc=memoryContext();if(mc)systemParts.push(mc);const nc=nestContext();if(nc)systemParts.push(nc);if(nestActionTarget)systemParts.push(nestToolSystem()+` 本轮用户明确要求执行“${nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':'今天想对他说'}”写入动作。请先进入小窝，再调用对应写入工具。`);if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});ms.push(...buildConversationContext(c));
+  let tools=[];if(state.settings.mcpNestEnabled!==false&&(nestActionTarget||state.settings.mcpEnabled===true))tools.push(...nestTools());if(state.settings.mcpEnabled===true&&state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){const gtool=nestTools().find(x=>x.function?.name==="generate_image");if(gtool)tools.push(gtool)}tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);if(!tools.length)tools=null;
+  let displayQueue=Promise.resolve();const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();await sleep(Math.min(1500,Math.max(80,Number(state.settings.replyDelay??360)+Math.min(90,v.length)*7)))})};const usageTotal={prompt:0,completion:0,total:0,requests:0};let rounds=0,fullAnswer="";
+  while(rounds++<4){let answer="",pendingRound="";const onText=(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound),count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound};const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},onText);addUsageTotals(usageTotal,result.usage);if(result.toolCalls?.length){ms.push({role:"assistant",content:result.answer||null,tool_calls:result.toolCalls});for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;try{const callName=call.function?.name||'';if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName))out=executeNestTool(callName,args);else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c)}else out=await mcpCallTool(callName,args)}catch(e){out={success:false,error:e?.message||String(e)}}ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)})}continue}if(pendingRound.trim())pushSentence(pendingRound);await displayQueue;fullAnswer=result.answer||answer;break}
+  const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};addUsageTotals(ts,usageTotal);state.settings.tokenStats=ts;save();renderTokenStats();completed=true;
   if(shouldAutoSummarize(c))autoSummarizeChat(c);
- }catch(e){
-  const detail=e?.name==="AbortError"?(state.stopRequested?"已停止这次回复。":"请求超时（60 秒）。"):(e?.message||String(e));
-  console.error("Iris send failed",{vision:hasImage,base:activeBase,model:activeModel,error:e});
-  showErr((hasImage?"图片消息发送失败：":"发送失败：")+detail);
-  // Keep a visible diagnostic bubble so failures are not lost on iOS/PWA.
-  const et=Date.now();
-  c.messages.push({role:"assistant",content:"发送失败："+detail,timestamp:et});
-  save();render();
- }finally{
-  clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy();
-  if(completed)autoUpdateLongTermMemory(c);
- }
+ }catch(e){const detail=e?.name==="AbortError"?(state.stopRequested?"已停止这次回复。":"请求超时（60 秒）。"):(e?.message||String(e));console.error("Iris send failed",e);showErr("发送失败："+detail);c.messages.push({role:"assistant",content:"发送失败："+detail,timestamp:Date.now()});save();render()}finally{clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy();if(completed)autoUpdateLongTermMemory(c)}
 }
 
 /* v4.16 — AI web modifier. Plan-first, tolerant parsing, and CSS patching instead of asking AI to rewrite huge files. */
 function exportChat(){const c=chat();if(!c)return;const text=[`# ${c.title||"新对话"}`,"",...c.messages.map(m=>`${m.role==="user"?"你":"他"}：\n${m.content}\n`)].join("\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(c.title||"chat")+".txt";a.click();URL.revokeObjectURL(url)}
-function imageToData(file,max=600,quality=.78){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",quality))};im.onerror=rej;im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(file)})}
+function imageToData(file,max=600,quality=.78){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const original=String(fr.result||"");const im=new Image();im.onload=()=>{try{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",quality))}catch{res(original)}};im.onerror=()=>res(original);im.src=original};fr.onerror=rej;fr.readAsDataURL(file)})}
 async function uploadImage(input,target,max,quality){const f=input.files?.[0];if(!f)return;try{state.settings[target]=await imageToData(f,max,quality);save();applyLook();renderAvatarPreviews();render()}catch{showErr("图片处理失败，请换一张图片。")}}
 function exportAll(){const data={version:5,exportedAt:new Date().toISOString(),chats:state.chats,current:state.current,settings:state.settings,memories:state.memories||[],nest:loadNest()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="g-chat-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 async function importAll(file){try{if(!file)throw new Error("没有选择备份文件");const text=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=()=>reject(new Error("读取备份文件失败，请重新选择文件。"));r.readAsText(file,"utf-8")});const data=JSON.parse(text);if(!data||!Array.isArray(data.chats)||typeof data.settings!=="object")throw new Error("备份文件格式不正确");if(!confirm("恢复备份会覆盖当前聊天记录和设置，确定继续吗？"))return;state.chats=data.chats.map(c=>({...c,summary:typeof c.summary==="string"?c.summary:"",summaryUpdatedAt:Number(c.summaryUpdatedAt||0),summaryMessageCount:Number(c.summaryMessageCount||0)}));state.current=data.current||state.chats[0]?.id||null;state.settings=data.settings||{};state.memories=Array.isArray(data.memories)?data.memories:[];if(data.nest&&typeof data.nest==="object"){nestData=data.nest;saveNestData()}ensure();ensureDates();save();render();fillSettings();showErr("备份已恢复") }catch(e){showErr(e.message||"恢复备份失败")}}
 
 function appendGeneratedImage(src,c){const wrap=document.createElement("div");wrap.className="message assistant generatedImageMessage";const img=document.createElement("img");img.src=src;img.alt="生成的图片";wrap.appendChild(img);$("#messages").appendChild(wrap);scroll();if(c){c.messages.push({role:"assistant",content:"[生成图片]",image:src,timestamp:Date.now()});save()}}
 function renderAttachments(){const box=$("#attachmentPreview");if(!box)return;const arr=state.attachments||[];box.classList.toggle("hidden",!arr.length);box.innerHTML=arr.map((a,i)=>a.kind==="image"?`<div class="attachChip imageChip"><img src="${a.data}"><span>${escapeHtml(a.name)}</span><button data-remove-attach="${i}">×</button></div>`:`<div class="attachChip"><span>文件 · ${escapeHtml(a.name)}</span><button data-remove-attach="${i}">×</button></div>`).join("");box.querySelectorAll("[data-remove-attach]").forEach(b=>b.onclick=()=>{state.attachments.splice(Number(b.dataset.removeAttach),1);renderAttachments()})}
-async function handleFiles(files){for(const f of Array.from(files||[])){try{if(f.type.startsWith("image/")){const data=await imageToData(f,1600,.82);state.attachments.push({kind:"image",name:f.name,data})}else if(/^(text\/|application\/(json|xml)|.*\/(javascript|css))/.test(f.type)||/\.(txt|md|json|csv|html|css|js|py|log|xml)$/i.test(f.name)){const text=await f.text();state.attachments.push({kind:"text",name:f.name,text:text.slice(0,30000)})}else{const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result||""));r.onerror=rej;r.readAsDataURL(f)});state.attachments.push({kind:"file",name:f.name,data})}}catch(e){showErr("读取文件失败："+f.name)}}renderAttachments()}
+async function handleFiles(files){const list=Array.from(files||[]);for(const f of list){try{if(f.type.startsWith("image/")){const data=await imageToData(f,1600,.82);if(!data)throw new Error("图片为空");state.attachments.push({kind:"image",name:f.name,data})}else if(/^(text\/|application\/(json|xml)|.*\/(javascript|css))/.test(f.type)||/\.(txt|md|json|csv|html|css|js|py|log|xml)$/i.test(f.name)){const text=await f.text();state.attachments.push({kind:"text",name:f.name,text:text.slice(0,30000)})}else{const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result||""));r.onerror=rej;r.readAsDataURL(f)});state.attachments.push({kind:"file",name:f.name,data})}}catch(e){console.error("Iris attachment read failed",e);showErr("读取图片失败："+f.name+"。如果是 HEIC/HEIF，请尝试在系统照片里选择兼容格式。")}}renderAttachments()}
 function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showErr("当前 Safari 不支持语音识别，请尝试系统听写或其他浏览器。");return}if(state.recognition){state.recognition.stop();state.recognition=null;$("#mic").classList.remove("active");return}const r=new SR();r.lang="zh-TW";r.continuous=false;r.interimResults=true;state.recognition=r;$("#mic").classList.add("active");r.onresult=e=>{$("#input").value=Array.from(e.results).map(x=>x[0].transcript).join("");resize()};r.onerror=e=>{showErr("语音识别失败："+(e.error||"未知错误"));$("#mic").classList.remove("active");state.recognition=null};r.onend=()=>{$("#mic").classList.remove("active");state.recognition=null}}
 $("#openDrawer").onclick=openDrawer;$("#closeDrawer").onclick=closeDrawer;$("#shade").onclick=closeDrawer;$("#openNest").onclick=openNest;$("#nestCloseHome").onclick=closeNest;$("#nestOpenSettings").onclick=()=>showNestView("settings");$("#nestMoodEdit").onclick=()=>showNestMood("user");$("#nestAiMoodEdit").onclick=()=>showNestMood("ai");const openToG=()=>{nestViewDateKey=nestDateKey();showNestView("toG")};const openNote=()=>{nestViewDateKey=nestDateKey();showNestView("note")};$("#nestToGCard").onclick=openToG;$("#nestNoteCard").onclick=openNote;$("#nestToGCard").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openToG()}};$("#nestNoteCard").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openNote()}};$("#nestToGSave").onclick=()=>{saveToGPage();showNestView("home")};$("#nestAnniversaryOpen").onclick=()=>showNestView("anniversary");document.querySelectorAll("#nest .nestBottomNav button[data-nest-view]").forEach(b=>b.onclick=()=>b.dataset.nestView==="mood"?showNestMood("user"):showNestView(b.dataset.nestView));document.querySelectorAll("#nest [data-nest-back]").forEach(b=>b.onclick=()=>showNestView("home"));$("#nestMoodRange").oninput=e=>setMoodFromRange("user",e.target.value);$("#nestAiMoodRange").oninput=e=>setMoodFromRange("ai",e.target.value);$("#nestMood").oninput=e=>{saveDailyField(nestViewDateKey,"userMoodNote",e.target.value.trim())};$("#nestAiMood").oninput=e=>{saveDailyField(nestViewDateKey,"aiMoodNote",e.target.value.trim())};$("#nestMoodSave").onclick=()=>{saveMoodPage();renderNestHome();showNestView("home")};$("#nestMoodPrev").onclick=()=>{saveMoodPage();nestViewDateKey=shiftNestDate(nestViewDateKey,-1);renderMoodPage()};$("#nestMoodNext").onclick=()=>{saveMoodPage();nestViewDateKey=shiftNestDate(nestViewDateKey,1);renderMoodPage()};$("#nestAiMoodPrev").onclick=()=>{saveMoodPage();nestViewDateKey=shiftNestDate(nestViewDateKey,-1);renderMoodPage()};$("#nestAiMoodNext").onclick=()=>{saveMoodPage();nestViewDateKey=shiftNestDate(nestViewDateKey,1);renderMoodPage()};$("#nestNoteSave").onclick=()=>{saveNotePage();showNestView("home")};$("#nestToGPrev").onclick=()=>{saveToGPage();nestViewDateKey=shiftNestDate(nestViewDateKey,-1);loadDailyPages()};$("#nestToGNext").onclick=()=>{saveToGPage();nestViewDateKey=shiftNestDate(nestViewDateKey,1);loadDailyPages()};$("#nestNotePrev").onclick=()=>{saveNotePage();nestViewDateKey=shiftNestDate(nestViewDateKey,-1);loadDailyPages()};$("#nestNoteNext").onclick=()=>{saveNotePage();nestViewDateKey=shiftNestDate(nestViewDateKey,1);loadDailyPages()};$("#nestAnniversarySelect").onchange=e=>selectAnniversary(e.target.value);$("#nestAnniversarySave").onclick=()=>{saveSelectedAnniversary();showNestView("home")};$("#nestAnniversaryNew").onclick=createNewAnniversary;$("#nestAnniversaryDelete").onclick=deleteSelectedAnniversary;$("#nestSettingsSave").onclick=()=>{saveNest();showNestView("home")};$("#nestBgPick").onclick=()=>$("#nestBgFile").click();$("#nestBgFile").onchange=async()=>{const f=$("#nestBgFile").files?.[0];if(!f)return;try{nestData.background=await imageToData(f,1400,.78);saveNestData();applyNestBackground()}catch{showErr("小窝背景图片处理失败。")}};$("#nestBgClear").onclick=()=>{nestData.background="";saveNestData();applyNestBackground()};setupAnniversaryBackground();
 $("#newChat").onclick=()=>{const c={id:crypto.randomUUID(),title:"新对话",messages:[],createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save();render();closeDrawer()};$("#cancelChatSelect").onclick=exitChatSelectMode;$("#renameSelected").onclick=renameSelectedChat;$("#deleteSelected").onclick=deleteSelectedChats;$("#openSettings").onclick=settings;$("#headerSettings").onclick=settings;$("#closeSettings").onclick=()=>$("#settings").close();$("#saveSettings").onclick=()=>{state.settings={...state.settings,myName:$("#myName").value.trim()||"你",gName:$("#gName").value.trim()||"他",gBio:$("#gBio").value.trim()||"你的私人 AI 对话空间",apiBase:$("#apiBase").value.trim(),apiKey:$("#apiKey").value.trim(),model:$("#model").value.trim(),systemPrompt:$("#systemPrompt").value,temperature:Number($("#temperature").value),bgOpacity:Number($("#bgOpacity").value),bubbleAiColor:$("#aiBubbleColor").value,bubbleAiOpacity:Number($("#aiBubbleOpacity").value),bubbleUserColor:$("#userBubbleColor").value,bubbleUserOpacity:Number($("#userBubbleOpacity").value),animations:$("#animations").checked,gNameOffset:Number($("#gNameOffset").value),userNameOffset:Number($("#userNameOffset").value),replyDelay:Number($("#replyDelay")?.value||state.settings.replyDelay||360),mcpNestEnabled:$("#mcpNestEnabled")?.checked!==false,mcpEnabled:$("#mcpEnabled")?.checked===true,mcpServerUrl:$("#mcpServerUrl")?.value.trim()||"",mcpServerToken:$("#mcpServerToken")?.value.trim()||"",visionEnabled:$("#visionEnabled")?.checked===true,visionBase:$("#visionBase")?.value.trim()||"",visionKey:$("#visionKey")?.value.trim()||"",visionModel:$("#visionModel")?.value.trim()||"",imageGenEnabled:$("#imageGenEnabled")?.checked===true,imageGenBase:$("#imageGenBase")?.value.trim()||"",imageGenKey:$("#imageGenKey")?.value.trim()||"",imageGenModel:$("#imageGenModel")?.value.trim()||""};save();$("#settings").close();render()};$("#addModel").onclick=()=>{const m=$("#model").value.trim();if(!m)return;state.settings.models=[...new Set([...(state.settings.models||[]),m])];save();renderModels();$("#modelSelect").value=m};$("#removeModel").onclick=()=>{const m=$("#model").value.trim();state.settings.models=(state.settings.models||[]).filter(x=>x!==m);save();renderModels()};$("#modelSelect").onchange=()=>$("#model").value=$("#modelSelect").value;$("#exportChat").onclick=exportChat;$("#clearCurrent").onclick=()=>{const c=chat();if(c&&confirm("确定清空当前对话吗？")){c.messages=[];c.title="新对话";save();render();$("#settings").close()}};

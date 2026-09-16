@@ -1,4 +1,4 @@
-/* Iris v4.75 — robust vision send + visible diagnostics. */
+/* Iris v4.76 — clean OpenAI-compatible vision transport. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
@@ -43,20 +43,22 @@
     return {answer,url,usage,toolCalls:calls};
   }
 
-  async function visionChatStream(options,onText){
+  async function visionChat(options){
     const url=requestUrl(options.baseUrl);
     const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false};
-    // Some OpenAI-compatible gateways require an explicit image detail field.
-    // Add it only to image_url parts so ordinary text requests remain untouched.
-    for(const m of (body.messages||[])){if(Array.isArray(m.content))for(const part of m.content){if(part?.type==="image_url"&&part.image_url&&typeof part.image_url==="object"&&!part.image_url.detail)part.image_url.detail="auto"}}
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
-    if(!r.ok){const detail=(await r.text()).slice(0,1200);throw new Error(`Vision HTTP ${r.status} · ${url}\n${detail}`)}
-    let o;try{o=await r.json()}catch{throw new Error("视觉接口返回的不是 JSON。请检查 Vision Base URL 是否为 OpenAI-compatible 的 /v1 地址。")}
+    const raw=await r.text();
+    if(!r.ok)throw new Error(`HTTP ${r.status} · ${url}\n${raw.slice(0,1600)}`);
+    let o;try{o=JSON.parse(raw)}catch{throw new Error("视觉接口返回的不是 JSON。请检查 Vision Base URL 是否正确。")}
     let ans=o.choices?.[0]?.message?.content;
     if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
-    if(typeof ans!=="string"||!ans.trim())throw new Error("视觉模型没有返回文字内容。请确认视觉模型支持图片输入，并检查模型名称。");
-    if(onText)onText(ans,ans);
-    return {answer:ans,url,usage:o.usage||null,toolCalls:[]};
+    if(typeof ans!=="string"||!ans.trim())throw new Error("视觉模型没有返回文字内容。请确认模型支持图片输入。\n"+JSON.stringify(o).slice(0,700));
+    return {answer:ans,url,usage:o.usage||null,data:o};
+  }
+
+  // Kept as an alias for compatibility with older app code.
+  async function visionChatStream(options,onText){
+    const r=await visionChat(options);if(onText)onText(r.answer,r.answer);return {...r,toolCalls:[]};
   }
 
   async function imageGenerate(options){
@@ -97,5 +99,5 @@
     return {answer:ans,data:o,url};
   }
 
-  window.GChatAPI={chat,chatStream,visionChatStream,imageGenerate,normalizeBase,requestUrl};
+  window.GChatAPI={chat,chatStream,visionChat,visionChatStream,imageGenerate,normalizeBase,requestUrl};
 })();
