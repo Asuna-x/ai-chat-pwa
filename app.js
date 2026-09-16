@@ -1,4 +1,4 @@
-/* Iris v4.66 — stable send path based on v4.58, with minimal multimodal fixes */
+/* Iris v4.67 — stable send path based on v4.58, with minimal multimodal fixes */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -267,7 +267,7 @@ function compactMessagesForModel(messages){
   const last=out[out.length-1];
   const bothText=typeof last?.content==='string'&&typeof content==='string';
   if(last&&last.role===m.role&&bothText)last.content+="\n"+content;
-  else out.push({...m,content});
+  else out.push({role:m.role,content});
  }
  return out;
 }
