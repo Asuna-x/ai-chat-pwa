@@ -685,3 +685,5 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .attachChip span{font-size:11px!important;max-width:145px!important}
 .attachChip button{width:24px!important;height:24px!important;border-radius:9px!important}
 @media(max-width:380px){.nestCoupleHeader{gap:20px!important}.nestPersonAvatar{width:62px!important;height:62px!important}.nestClockCard strong{font-size:58px!important}}
+/* Iris v4.69 — sent image bubble polish */
+.sentImageGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:2px}.sentImageGrid:has(img:only-child){grid-template-columns:1fr}.sentImageGrid img{display:block;width:100%;max-width:260px;max-height:360px;object-fit:cover;border-radius:14px}.message.user .sentImageGrid{justify-items:end}.message.user .sentImageGrid img{max-width:min(62vw,260px)}
