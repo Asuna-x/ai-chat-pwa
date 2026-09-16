@@ -433,8 +433,17 @@ async function sendVisionMessage(c,text,attachments){
  showErr("图片已读取，正在识别…");const controller=new AbortController();state._abort=controller;state.busy=true;const btn=$("#send");if(btn){btn.disabled=false;btn.classList.add("loading");btn.textContent="…";btn.title="发送中"}updateTyping();const timeout=setTimeout(()=>controller.abort(),90000);
  try{
   const content=[{type:"text",text:String(text||"请准确理解这张图片，并提取与用户当前聊天最相关的客观信息。只提供给另一个聊天模型作为视觉参考，不要和用户寒暄，不要自行扮演聊天对象。")}];images.forEach(a=>content.push({type:"image_url",image_url:{url:a.data}}));
-  const vision=await window.GChatAPI.visionChat({baseUrl:visionBase,apiKey:visionKey,model:visionModel,messages:[{role:"user",content}],temperature:.2,signal:controller.signal,max_tokens:1024});const visualAnswer=String(vision.answer||"").trim();if(!visualAnswer)throw new Error("视觉模型返回为空");
-  const stat=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};addUsageTotals(stat,vision.usage);
+  const stat=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};
+  let visualAnswer="";
+  try{
+   const vision=await window.GChatAPI.visionChat({baseUrl:visionBase,apiKey:visionKey,model:visionModel,messages:[{role:"user",content}],temperature:.2,signal:controller.signal,max_tokens:512});
+   visualAnswer=String(vision.answer||"").trim();
+   if(!visualAnswer)throw new Error("视觉模型返回为空");
+   addUsageTotals(stat,vision.usage);state.settings.tokenStats=stat;
+  }catch(e){
+   const detail=e?.name==="AbortError"?"视觉模型请求超时（90 秒）。":(e?.message||String(e));
+   throw new Error("Vision 识图请求失败：\n"+detail);
+  }
   const normalBase=String(state.settings.apiBase||"").trim(),normalKey=String(state.settings.apiKey||"").trim(),normalModel=String(state.settings.model||"").trim();if(!normalBase||!normalKey||!normalModel)throw new Error("主聊天模型配置不完整。请检查 AI Base URL、API Key 和当前模型。");
   showErr("图片已经看懂了，正在由聊天模型回复…");const ms=[],systemParts=[];if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);systemParts.push(conversationStyleContext());systemParts.push(chatInterfaceContext(c));const mc=memoryContext();if(mc)systemParts.push(mc);const nc=nestContext();if(nc)systemParts.push(nc);systemParts.push("本轮用户刚刚发送了图片。视觉模型已经完成图片观察，下面的内容是视觉参考，不是用户原话。请由你这个主聊天模型负责最终回复用户，保持你自己的聊天人格、上下文和自然语气。不要提到视觉模型、识别模型、API 或内部流程，也不要逐字复述视觉分析；只在与用户当前话题相关时使用这些信息。\n【图片视觉参考】\n"+visualAnswer);ms.push({role:"system",content:systemParts.join("\n\n")});ms.push(...buildConversationContext(c));
   const result=await window.GChatAPI.chat({baseUrl:normalBase,apiKey:normalKey,model:normalModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal});const answer=String(result.answer||"").trim();if(!answer)throw new Error("主聊天模型返回为空");addUsageTotals(stat,result.usage);state.settings.tokenStats=stat;c.messages.push({role:"assistant",content:answer,timestamp:Date.now()});save();render();renderTokenStats();if(shouldAutoSummarize(c))autoSummarizeChat(c);return true;
