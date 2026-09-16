@@ -330,6 +330,7 @@ function nestChatWriteTarget(text){
  return 'mood';
 }
 
+/* Iris v4.64 — robust attachments, tool fallback, and nest tools */
 /* Iris v4.58 — real AI tool calling for the shared nest. The model can request tools; the client executes them. */
 function nestTools(){
  return [
@@ -405,12 +406,12 @@ function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
- if(!text)return;
+ if(!text && !(state.attachments||[]).length)return;
  if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
  ensure();const c=chat();
  if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
  const attachmentParts=[];for(const a of state.attachments||[]){if(a.kind==="image")attachmentParts.push({type:"image_url",image_url:{url:a.data}});else if(a.kind==="text")attachmentParts.push({type:"text",text:`[文件：${a.name}]\n${a.text}`});else if(a.kind==="file")attachmentParts.push({type:"file",file:{filename:a.name,file_data:a.data}});}
- const userContent=attachmentParts.length?[{type:"text",text:text},...attachmentParts]:text;
+ const userContent=attachmentParts.length?[{type:"text",text:text||"请看看我上传的内容。"},...attachmentParts]:text;
  c.messages.push({role:"user",content:userContent,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
  const sentAttachments=state.attachments.slice();i.value="";state.attachments=[];renderAttachments();resize();save();render();
@@ -429,7 +430,7 @@ async function send(){
   if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});
   ms.push(...buildConversationContext(c));
   let tools=[];
-  if(state.settings.mcpNestEnabled!==false && (nestActionTarget || state.settings.mcpEnabled===true)) tools.push(...nestTools());
+  if(state.settings.mcpNestEnabled!==false && nestActionTarget) tools.push(...nestTools().filter(t=>t.function?.name!=='generate_image'));
   if(state.settings.mcpEnabled===true && state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}
   tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);
   if(useVision)tools=null;
@@ -445,7 +446,15 @@ async function send(){
   let rounds=0;
   while(rounds++<4){
    let answer="",pendingRound="";
-   const result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
+   let result;
+   try{
+    result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound),count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
+   }catch(firstErr){
+    if(!tools || controller.signal.aborted) throw firstErr;
+    console.warn('tool-enabled request failed; retrying without tools',firstErr);
+    tools=null;
+    result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools:null},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound),count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
+   }
    addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){
     const assistantToolMsg={role:"assistant",content:result.answer||null,tool_calls:result.toolCalls};ms.push(assistantToolMsg);
