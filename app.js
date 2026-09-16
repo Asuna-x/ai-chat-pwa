@@ -1,4 +1,4 @@
-/* Iris v4.69 — stable text send path preserved; vision uses isolated non-stream request */
+/* Iris v4.70 — stable text send path preserved; vision uses isolated non-stream request */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -439,7 +439,7 @@ async function send(){
   let rounds=0;
   while(rounds++<4){
    let answer="",pendingRound="";
-   let result;if(hasImage){result=await window.GChatAPI.chat({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal});answer=String(result.answer||"");if(answer.trim())pushSentence(answer);}else{result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});}
+   let result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools:hasImage?undefined:tools,tool_choice:hasImage?undefined:(tools?"auto":undefined)},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
    addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){
     const assistantToolMsg={role:"assistant",content:result.answer||null,tool_calls:result.toolCalls};ms.push(assistantToolMsg);
