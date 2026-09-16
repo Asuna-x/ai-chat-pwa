@@ -1,4 +1,4 @@
-/* Iris v4.62 — G Chat API with optional OpenAI-compatible tool calling. */
+/* Iris v4.73 — G Chat API; Vision uses non-stream JSON for proxy compatibility. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
@@ -45,7 +45,7 @@
 
   async function visionChatStream(options,onText){
     const url=requestUrl(options.baseUrl);
-    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true,stream_options:{include_usage:true}};
+    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false};
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
     if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
     const type=(r.headers.get("content-type")||"").toLowerCase();

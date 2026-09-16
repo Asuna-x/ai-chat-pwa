@@ -1,4 +1,4 @@
-/* Iris v4.70 — stable text send path preserved; vision uses isolated non-stream request */
+/* Iris v4.73 — vision send stabilized; explicit version marker for manual edits. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -401,7 +401,7 @@ function executeNestTool(name,args){
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
-/* Iris v4.72 — rebuilt image sending path: UI display and vision transport are separated. */
+/* v4.73 — image attachment transport: separate UI display from Vision API payload. */
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
