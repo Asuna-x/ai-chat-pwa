@@ -1,4 +1,4 @@
-/* Iris v4.58 — vision, image generation, attachments, voice and stoppable replies */
+/* Iris v4.60 — vision fix, couple header, attachment polish and anniversary contrast */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -37,7 +37,7 @@ function nestDaysText(){const d=nestDays();if(d===null)return"还没有设置纪
 function nestTodayText(){const d=new Date();return d.toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"long"})}
 function updateNestClock(){const n=$("#nestNow"),big=$("#nestClockBig");const d=new Date();if(n)n.textContent=nestTodayText();if(big)big.textContent=d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false});const c=$("#nestCountdown"),cb=$("#nestCountdownBig");if(c)c.textContent=nestDaysText();if(cb){const days=nestDays();cb.textContent=days===null?"—":String(days)}const item=selectedAnniversary(),lab=$("#nestAnniversaryLabel");if(lab)lab.textContent=item?.name||item?.date||"还没有设置纪念日"}
 function applyNestBackground(){const app=$("#nestApp"),preview=$("#nestBackgroundPreview");if(!app)return;app.style.setProperty("--nest-bg-image",nestData.background?`url(${nestData.background})`:"none");if(preview)preview.style.backgroundImage=nestData.background?`url(${nestData.background})`:"linear-gradient(135deg,#f5e9dc,#fffaf3)";const page=$("#nestAnniversaryPage"),item=selectedAnniversary();if(page){const bg=item?.background?`url(${item.background})`:"none";page.style.setProperty("--anniversary-bg-image",bg);page.style.backgroundImage=bg}const ap=$("#nestAnniversaryPreview");if(ap)ap.style.backgroundImage=item?.background?`url(${item.background})`:"linear-gradient(135deg,#f5e9dc,#fffaf3)"}
-function renderNestHome(){syncTodayToDaily();const e=dailyEntry(),mood=$("#nestMoodShow"),aiMood=$("#nestAiMoodShow"),toG=$("#nestToGShow"),note=$("#nestNoteShow");if(mood)mood.textContent=e.userMood||"今天感觉怎么样？";if(aiMood)aiMood.textContent=e.aiMood||"他今天想留下一句话。";if(toG)toG.textContent=e.toG||"写点什么留在这里。";if(note)note.textContent=e.note||"今天有什么想留下来？";updateNestClock();applyNestBackground()}
+function renderNestHome(){syncTodayToDaily();const e=dailyEntry(),mood=$("#nestMoodShow"),aiMood=$("#nestAiMoodShow"),toG=$("#nestToGShow"),note=$("#nestNoteShow");if(mood)mood.textContent=e.userMood||"今天感觉怎么样？";if(aiMood)aiMood.textContent=e.aiMood||"他今天想留下一句话。";if(toG)toG.textContent=e.toG||"写点什么留在这里。";if(note)note.textContent=e.note||"今天有什么想留下来？";const un=$("#nestUserName"),gn=$("#nestAiName"),ua=$("#nestUserAvatar"),ga=$("#nestAiAvatar");if(un)un.textContent=state.settings.myName||"你";if(gn)gn.textContent=state.settings.gName||"他";if(ua)ua.innerHTML=avatarHTML("user");if(ga)ga.innerHTML=avatarHTML("ai");updateNestClock();applyNestBackground()}
 const nestMoodOptions=["开心","难过","平静","期待","疲惫","烦躁","想念","甜甜的"];
 function currentMoodTarget(){return nestData.moodTarget==="ai"?"ai":"user"}
 function showNestMood(target="user"){nestData.moodTarget=target==="ai"?"ai":"user";nestViewDateKey=nestDateKey();showNestView("mood")}
@@ -409,14 +409,14 @@ async function send(){
  const userContent=attachmentParts.length?[{type:"text",text:text},...attachmentParts]:text;
  c.messages.push({role:"user",content:userContent,timestamp:Date.now()});
  if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
- i.value="";const sentAttachments=state.attachments.slice();state.attachments=[];renderAttachments();resize();save();render();
+ const sentAttachments=state.attachments.slice();i.value="";state.attachments=[];renderAttachments();resize();save();render();
  state.busy=true;const sendBtn=$("#send");sendBtn.disabled=false;sendBtn.classList.add("loading");sendBtn.classList.remove("stop");sendBtn.textContent="…";sendBtn.title="停止回复";updateTyping();
  const controller=new AbortController();state._abort=controller;
  const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  let completed=false;
  try{
-  const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);const hasImage=(state.attachments||[]).some(a=>a.kind==="image");const activeBase=hasImage&&state.settings.visionEnabled&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel?state.settings.visionBase:state.settings.apiBase;const activeKey=hasImage&&state.settings.visionEnabled&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel?state.settings.visionKey:state.settings.apiKey;const activeModel=hasImage&&state.settings.visionEnabled&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel?state.settings.visionModel:state.settings.model;
-  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
+  const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);const hasImage=sentAttachments.some(a=>a.kind==="image");const useVision=hasImage&&state.settings.visionEnabled&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;const activeBase=useVision?state.settings.visionBase:state.settings.apiBase;const activeKey=useVision?state.settings.visionKey:state.settings.apiKey;const activeModel=useVision?state.settings.visionModel:state.settings.model;
+  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);if(useVision)systemParts.push("本轮包含用户上传的图片。你正在使用已配置的视觉模型，请直接理解图片内容并结合用户文字回答；不要声称自己看不到图片。只能描述图片中实际可见或可合理读取的信息。");
   systemParts.push(conversationStyleContext());
   systemParts.push(chatInterfaceContext(c));
   const mc=memoryContext();if(mc)systemParts.push(mc);

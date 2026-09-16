@@ -642,3 +642,22 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .attachmentPreview{max-width:780px;margin:0 auto 6px;display:flex;gap:7px;flex-wrap:wrap}.attachChip{display:flex;align-items:center;gap:7px;padding:5px 7px 5px 9px;border:1px solid var(--line);border-radius:13px;background:color-mix(in srgb,var(--card) 80%,transparent);backdrop-filter:blur(14px);font-size:10px;color:var(--muted)}.attachChip button{width:20px;height:20px;border-radius:8px}.attachChip img{width:28px;height:28px;border-radius:8px;object-fit:cover}.imageChip{color:var(--ink)}.send.stop{font-size:0!important}.send.stop:after{content:"■";font-size:13px!important}.send.stop:before{display:none!important}.send.stop{opacity:1!important;cursor:pointer}.generatedImageMessage{display:block!important}.generatedImageMessage img{display:block;max-width:min(82vw,520px);width:auto;height:auto;max-height:60vh;object-fit:contain;border-radius:18px;box-shadow:0 12px 35px var(--shadow)}
 /* Let the nest background remain visible through every glass layer. */
 .nestApp:before{background:linear-gradient(180deg,rgba(255,250,244,.22),rgba(255,250,244,.36))!important}.nestApp:after{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015))!important}.nestClockCard,.nestCard,.nestQuickMood,.nestAnniversaryCard,.nestBigCountdown,.nestSettingGroup,.nestAnniversaryBgBox{background:linear-gradient(145deg,rgba(255,255,255,.36),rgba(255,247,250,.20))!important;backdrop-filter:blur(18px) saturate(130%)!important;-webkit-backdrop-filter:blur(18px) saturate(130%)!important}.nestSubTop,.nestSubFooter,.nestBottomNav{background:rgba(255,255,255,.20)!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important}.nestSubBody textarea,.nestField input,.nestField textarea,.nestAnniversaryPickerGroup select{background:rgba(255,255,255,.34)!important}
+
+
+/* Iris v4.59 — couple header, clearer anniversary labels, and attachment polish */
+.nestCoupleHeader{display:flex;align-items:center;justify-content:center;gap:24px;margin:18px auto 2px;max-width:420px;padding:2px 8px 6px;position:relative;z-index:2}
+.nestPerson{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:78px}
+.nestPersonAvatar{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:rgba(255,255,255,.48);border:1px solid rgba(255,255,255,.82);box-shadow:0 10px 24px rgba(105,73,91,.10),inset 0 1px 0 rgba(255,255,255,.8);color:#765565;font-size:15px;font-weight:600}
+.nestPersonAvatar img{width:100%;height:100%;object-fit:cover;display:block}
+.nestPerson strong{font-size:11px;line-height:1.2;font-weight:600;color:#765565;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nestCoupleHeart{width:28px;height:28px;display:grid;place-items:center;color:#b57991;font-size:19px;line-height:1;filter:drop-shadow(0 5px 10px rgba(120,70,95,.12));transform:translateY(-7px)}
+.nestBigCountdown span,.nestBigCountdown small{color:#7f6973!important;text-shadow:0 1px 1px rgba(255,255,255,.65);font-weight:500!important}
+.nestBigCountdown small{font-size:13px!important;letter-spacing:.2px!important}
+.nestBigCountdown strong{color:#624756!important;text-shadow:0 2px 12px rgba(255,255,255,.55)}
+.attachmentPreview{padding:2px 4px 5px;align-items:stretch;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+.attachmentPreview::-webkit-scrollbar{display:none}
+.attachChip{min-width:0;max-width:210px;padding:6px 7px 6px 6px;border-radius:15px;background:rgba(255,255,255,.72);border-color:rgba(255,255,255,.86);box-shadow:0 7px 18px rgba(70,55,65,.08);color:var(--ink);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.attachChip img{width:36px;height:36px;border-radius:10px;flex:0 0 auto}
+.attachChip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:135px;font-size:10px}
+.attachChip button{flex:0 0 auto;background:rgba(255,255,255,.7);border:1px solid var(--line);color:var(--muted)}
+@media(max-width:380px){.nestCoupleHeader{gap:15px}.nestPersonAvatar{width:52px;height:52px}.nestPerson{min-width:68px}.nestCoupleHeart{font-size:17px}}
