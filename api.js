@@ -1,6 +1,7 @@
 /* Iris v4.79 — clean OpenAI-compatible vision transport. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
+  let visionLock=Promise.resolve();
   function normalizeBase(value){
     return String(value||"").trim().replace(/\/+$/,"").replace(/\/chat\/completions$/i,"");
   }
@@ -44,16 +45,20 @@
   }
 
   async function visionChat(options){
-    const url=requestUrl(options.baseUrl);
-    const body={model:String(options.model||""),messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false};if(options.max_tokens!=null)body.max_tokens=Number(options.max_tokens);
-    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
-    const raw=await r.text();
-    if(!r.ok)throw new Error(`HTTP ${r.status} · ${url}\n${raw.slice(0,1600)}`);
-    let o;try{o=JSON.parse(raw)}catch{throw new Error("视觉接口返回的不是 JSON。请检查 Vision Base URL 是否正确。")}
-    let ans=o.choices?.[0]?.message?.content;
-    if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
-    if(typeof ans!=="string"||!ans.trim())throw new Error("视觉模型没有返回文字内容。请确认模型支持图片输入。\n"+JSON.stringify(o).slice(0,700));
-    return {answer:ans,url,usage:o.usage||null,data:o};
+    const previous=visionLock;let release;visionLock=new Promise(resolve=>{release=resolve});await previous;
+    try{
+      const url=requestUrl(options.baseUrl);
+      const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false};
+      if(options.max_tokens!=null)body.max_tokens=Number(options.max_tokens);
+      const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
+      const raw=await r.text();
+      if(!r.ok)throw new Error(`HTTP ${r.status} · ${url}\n${raw.slice(0,1600)}`);
+      let o;try{o=JSON.parse(raw)}catch{throw new Error("视觉接口返回的不是 JSON。请检查 Vision Base URL 是否正确。")}
+      let ans=o.choices?.[0]?.message?.content;
+      if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
+      if(typeof ans!=="string"||!ans.trim())throw new Error("视觉模型没有返回文字内容。请确认模型支持图片输入。\n"+JSON.stringify(o).slice(0,700));
+      return {answer:ans,url,usage:o.usage||null,data:o};
+    }finally{release()}
   }
 
   // Kept as an alias for compatibility with older app code.
