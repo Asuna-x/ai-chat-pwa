@@ -1,4 +1,4 @@
-/* Iris v4.76 — vision transport rebuilt from scratch; text send path preserved. */
+/* Iris v4.77 — vision transport rebuilt from scratch; text send path preserved. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -401,34 +401,27 @@ function executeNestTool(name,args){
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
-/* Iris v4.76 — vision transport is intentionally isolated from the normal chat pipeline. */
+/* Iris v4.77 — vision transport is intentionally isolated from the normal chat pipeline. */
 async function sendVisionMessage(c,text,attachments){
  const base=String(state.settings.visionBase||state.settings.apiBase||"").trim();
  const key=String(state.settings.visionKey||state.settings.apiKey||"").trim();
  const model=String(state.settings.visionModel||state.settings.model||"").trim();
- if(!base||!key||!model){showErr("视觉模型配置不完整：请填写 Base URL、API Key 和视觉模型。");return false}
- const images=attachments.filter(a=>a.kind==="image"&&a.data);
- if(!images.length){showErr("没有读取到图片。请重新选择照片后再发送。");return false}
+ const images=(attachments||[]).filter(a=>a&&a.kind==="image"&&typeof a.data==="string"&&a.data.startsWith("data:image/"));
+ const fail=msg=>{const detail=String(msg||"未知错误");console.error("Iris v4.77 vision",detail);showErr("图片发送失败："+detail);c.messages.push({role:"assistant",content:"图片发送失败：\n"+detail,timestamp:Date.now()});save();render()};
+ if(!base||!key||!model){fail("视觉配置不完整。请在「设置 → 视觉与图像」填写 Vision Base URL、API Key、视觉模型。");return false}
+ if(!images.length){fail("图片没有成功读取。请重新选择照片。");return false}
  const controller=new AbortController();state._abort=controller;state.busy=true;
- const btn=$("#send");btn.disabled=false;btn.classList.add("loading");btn.textContent="…";updateTyping();
+ const btn=$("#send");if(btn){btn.disabled=false;btn.classList.add("loading");btn.textContent="…";btn.title="发送中"}updateTyping();
  const timeout=setTimeout(()=>controller.abort(),90000);
  try{
-  const cleanHistory=(c.messages||[]).filter(m=>m.role==="user"||m.role==="assistant").slice(-12).map(m=>({role:m.role,content:typeof m.content==="string"?m.content:(Array.isArray(m.content)?m.content.filter(x=>x?.type==="text").map(x=>x.text||"").join(" "):String(m.content||""))})).filter(m=>m.content.trim());
-  const content=[];
-  if(text)content.push({type:"text",text});
-  for(const a of images)content.push({type:"image_url",image_url:{url:a.data,detail:"auto"}});
-  const messages=[{role:"system",content:(state.settings.systemPrompt||"你是一个有帮助的助手。")+"\n本轮用户上传了图片。请直接理解图片内容，并结合用户文字回答；不要声称看到了图片中不存在的内容。"},...cleanHistory,{role:"user",content}];
+  const history=(c.messages||[]).slice(-10).map(m=>{let v=m.content;if(Array.isArray(v))v=v.filter(x=>x?.type==="text").map(x=>x.text||"").join(" ");return {role:m.role,content:String(v||"").trim()}}).filter(m=>(m.role==="user"||m.role==="assistant")&&m.content);
+  const content=[];if(text)content.push({type:"text",text});images.forEach(a=>content.push({type:"image_url",image_url:{url:a.data,detail:"auto"}}));
+  const messages=[{role:"system",content:(state.settings.systemPrompt||"你是一个有帮助的助手。")+"\n用户本轮上传了图片，请直接理解图片内容并结合文字回答。"},...history,{role:"user",content}];
   const result=await window.GChatAPI.visionChat({baseUrl:base,apiKey:key,model,messages,temperature:state.settings.temperature,signal:controller.signal});
-  const answer=String(result.answer||"").trim();
-  if(!answer)throw new Error("视觉模型没有返回内容。请确认所选模型支持图片输入。");
-  const stat=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};addUsageTotals(stat,result.usage);state.settings.tokenStats=stat;
-  const ts=Date.now();c.messages.push({role:"assistant",content:answer,timestamp:ts});save();render();return true;
- }catch(e){
-  const detail=e?.name==="AbortError"?"视觉请求超时（90 秒）。":(e?.message||String(e));
-  console.error("Iris v4.76 vision failed",e);
-  showErr("图片发送失败："+detail);
-  const ts=Date.now();c.messages.push({role:"assistant",content:"图片发送失败："+detail,timestamp:ts});save();render();return false;
- }finally{clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy()}
+  const answer=String(result.answer||"").trim();if(!answer)throw new Error("视觉模型返回为空");
+  const stat=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};addUsageTotals(stat,result.usage);state.settings.tokenStats=stat;c.messages.push({role:"assistant",content:answer,timestamp:Date.now()});save();render();return true;
+ }catch(e){const detail=e?.name==="AbortError"?"视觉请求超时（90 秒）。":(e?.message||String(e));fail(detail);return false}
+ finally{clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy()}
 }
 
 async function send(){
@@ -436,14 +429,16 @@ async function send(){
  const i=$("#input"),text=i.value.trim();
  const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
  if(!text&&!attachments.length)return;
- const hasImage=attachments.some(a=>a.kind==="image");
+ const imageAttachments=attachments.filter(a=>a&&a.kind==="image");
  ensure();const c=chat();
- if(hasImage){
-  const userContent=[...(text?[{type:"text",text}]:[]),...attachments.filter(a=>a.kind==="image").map(a=>({type:"image_url",image_url:{url:a.data}}))];
+ if(imageAttachments.length){
+  const userContent=[...(text?[{type:"text",text}]:[]),...imageAttachments.map(a=>({type:"image_url",image_url:{url:a.data,detail:"auto"}}))];
   c.messages.push({role:"user",content:userContent,timestamp:Date.now()});
   if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"图片消息";
-  i.value="";state.attachments=[];renderAttachments();resize();save();render();
-  await sendVisionMessage(c,text,attachments);return;
+  save();render();
+  const ok=await sendVisionMessage(c,text,attachments);
+  if(ok){i.value="";state.attachments=[];renderAttachments();resize();save();render()}
+  return;
  }
  /* Below this point is the existing text-only send path. */
  const normalReady=Boolean(String(state.settings.apiBase||"").trim()&&String(state.settings.apiKey||"").trim()&&String(state.settings.model||"").trim());
@@ -467,7 +462,20 @@ async function send(){
 
 /* v4.16 — AI web modifier. Plan-first, tolerant parsing, and CSS patching instead of asking AI to rewrite huge files. */
 function exportChat(){const c=chat();if(!c)return;const text=[`# ${c.title||"新对话"}`,"",...c.messages.map(m=>`${m.role==="user"?"你":"他"}：\n${m.content}\n`)].join("\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(c.title||"chat")+".txt";a.click();URL.revokeObjectURL(url)}
-function imageToData(file,max=600,quality=.78){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const original=String(fr.result||"");const im=new Image();im.onload=()=>{try{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",quality))}catch{res(original)}};im.onerror=()=>res(original);im.src=original};fr.onerror=rej;fr.readAsDataURL(file)})}
+async function imageToData(file,max=1600,quality=.84){
+ if(!file)throw new Error("没有选择图片");
+ const type=String(file.type||"").toLowerCase();
+ if(!type.startsWith("image/"))throw new Error("选择的文件不是图片");
+ const original=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result||""));fr.onerror=()=>rej(new Error("图片读取失败"));fr.readAsDataURL(file)});
+ if(!original)throw new Error("图片内容为空");
+ if(!["image/jpeg","image/png","image/webp"].includes(type))return original;
+ try{
+  const im=await new Promise((res,rej)=>{const x=new Image();x.onload=()=>res(x);x.onerror=()=>rej(new Error("浏览器无法解码此图片"));x.src=original});
+  const scale=Math.min(1,max/Math.max(im.naturalWidth||im.width,im.naturalHeight||im.height));
+  const w=Math.max(1,Math.round((im.naturalWidth||im.width)*scale)),h=Math.max(1,Math.round((im.naturalHeight||im.height)*scale));
+  const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d");if(!ctx)return original;ctx.drawImage(im,0,0,w,h);return c.toDataURL("image/jpeg",quality);
+ }catch{return original}
+}
 async function uploadImage(input,target,max,quality){const f=input.files?.[0];if(!f)return;try{state.settings[target]=await imageToData(f,max,quality);save();applyLook();renderAvatarPreviews();render()}catch{showErr("图片处理失败，请换一张图片。")}}
 function exportAll(){const data={version:5,exportedAt:new Date().toISOString(),chats:state.chats,current:state.current,settings:state.settings,memories:state.memories||[],nest:loadNest()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="g-chat-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 async function importAll(file){try{if(!file)throw new Error("没有选择备份文件");const text=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=()=>reject(new Error("读取备份文件失败，请重新选择文件。"));r.readAsText(file,"utf-8")});const data=JSON.parse(text);if(!data||!Array.isArray(data.chats)||typeof data.settings!=="object")throw new Error("备份文件格式不正确");if(!confirm("恢复备份会覆盖当前聊天记录和设置，确定继续吗？"))return;state.chats=data.chats.map(c=>({...c,summary:typeof c.summary==="string"?c.summary:"",summaryUpdatedAt:Number(c.summaryUpdatedAt||0),summaryMessageCount:Number(c.summaryMessageCount||0)}));state.current=data.current||state.chats[0]?.id||null;state.settings=data.settings||{};state.memories=Array.isArray(data.memories)?data.memories:[];if(data.nest&&typeof data.nest==="object"){nestData=data.nest;saveNestData()}ensure();ensureDates();save();render();fillSettings();showErr("备份已恢复") }catch(e){showErr(e.message||"恢复备份失败")}}
