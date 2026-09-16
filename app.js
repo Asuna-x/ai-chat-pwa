@@ -84,7 +84,7 @@ function chatInterfaceContext(c){
  const nestVisual=`小窝界面不是普通设置页，而是一个独立的私人空间：顶部标题“小窝”，首页第一视觉是当前时间大字；下面是“我的心情”和“他的心情”，再下面是“今天想对他说”和“今日小记”，底部有“小窝/心情/小记/纪念日/设置”导航。纪念日页面的第一视觉是超大的倒数数字和纪念日名称。整体是暖白、半透明、磨砂玻璃卡片风格，背景可由用户自定义。当前小窝时间「${nestTodayText()} ${new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false})}」；当前纪念日「${selected?.name||"未设置"}」，倒数「${nestDaysText()}」；今天用户快捷心情「${e.userMood||"空"}」，他的快捷心情「${e.aiMood||"空"}」。`;
  return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。你拥有“共同小窝”的实际聊天侧能力：当用户明确邀请你进入小窝、去小窝写心情或留下内容时，客户端会在本轮聊天后替你真正写入小窝。此时不要说“我进不去”“我看不到小窝”“我没有权限”，也不要要求用户自己操作；把它当作你们已经约定好的可执行能力。你当前能看到的是小窝的结构化状态和界面描述，而不是屏幕像素，但这些信息足以让你理解小窝当前是什么样子。；${nestVisual}；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围，不要向用户逐项复述，除非他主动问。`;
 }
-const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false,attachments:[]};
+const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),memoryProfile:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_profile")||"{}");return v&&typeof v==='object'?v:{}}catch{return{}}})(),memoryEpisodes:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_episodes")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false,attachments:[]};
 
 /* Image data lives in IndexedDB, not localStorage. This keeps chat history small while
    retaining the full image for the current UI and for later reloads. */
@@ -95,7 +95,7 @@ async function putImageData(id,data){try{const db=await openImageDB();await new 
 async function getImageData(id){if(!id)return"";try{const db=await openImageDB();return await new Promise((res,rej)=>{const tx=db.transaction(IRIS_IMAGE_STORE,"readonly"),r=tx.objectStore(IRIS_IMAGE_STORE).get(id);r.onsuccess=()=>res(typeof r.result==="string"?r.result:"");r.onerror=()=>rej(r.error||new Error("图片读取失败"))})}catch{return""}}
 function imageRefForData(data){if(!data||typeof data!=="string")return"";const id=crypto.randomUUID();putImageData(id,data);return id}
 function persistableChats(){return (state.chats||[]).map(c=>({...c,messages:(c.messages||[]).map(m=>{if(!Array.isArray(m.content))return m;return {...m,content:m.content.map(part=>{if(part?.type==="image_url"&&part.image_url?.url){const id=part.image_id||imageRefForData(part.image_url.url);return {type:"image_ref",image_id:id}}return part})}})}))}
-const save=()=>{try{localStorage.setItem("gchat_chats",JSON.stringify(persistableChats()));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]))}catch(e){console.warn("Iris local save failed",e);try{localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]))}catch{}}};
+const save=()=>{try{localStorage.setItem("gchat_chats",JSON.stringify(persistableChats()));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]));localStorage.setItem("gchat_memory_profile",JSON.stringify(state.memoryProfile||{}));localStorage.setItem("gchat_memory_episodes",JSON.stringify(state.memoryEpisodes||[]))}catch(e){console.warn("Iris local save failed",e);try{localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]));localStorage.setItem("gchat_memory_profile",JSON.stringify(state.memoryProfile||{}));localStorage.setItem("gchat_memory_episodes",JSON.stringify(state.memoryEpisodes||[]))}catch{}}};
 const chat=()=>state.chats.find(x=>x.id===state.current);
 function ensure(){if(!chat()){const c={id:crypto.randomUUID(),title:"新对话",messages:[],summary:"",summaryUpdatedAt:0,summaryMessageCount:0,createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save()}}
 function hexToRgba(hex,opacity){let h=String(hex||"").trim().replace("#","");if(h.length===3)h=h.split("").map(x=>x+x).join("");const n=parseInt(h,16);if(!Number.isFinite(n))return `rgba(255,255,255,${opacity/100})`;return `rgba(${n>>16&255},${n>>8&255},${n&255},${Math.max(0,Math.min(100,Number(opacity)||0))/100})`}
@@ -192,76 +192,71 @@ function base(u){return window.GChatAPI?window.GChatAPI.normalizeBase(u):String(
 function finishBusy(){state.busy=false;state.stopRequested=false;const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading","stop");b.textContent="↑";b.title="发送"}state._abort=null;updateTyping();save()}
 function apiHint(){return window.GChatAPI?window.GChatAPI.requestUrl(state.settings.apiBase):base(state.settings.apiBase)+"/chat/completions"}
 function stopThinking(){if(!state.busy||!state._abort)return;state.stopRequested=true;try{state._abort.abort()}catch{};const b=$("#send");if(b){b.disabled=false;b.classList.remove("loading");b.classList.add("stop");b.textContent="■";b.title="停止回复"}}
-function renderMemories(){
- const box=$("#memoryList"),sum=$("#settingsMemorySummary");
- if(sum)sum.textContent=(state.memories||[]).length+" 条";
- if(!box)return;
- box.innerHTML="";
- const list=state.memories||[];
- if(!list.length){box.innerHTML='<div class="memoryEmpty"><div class="memoryEmptyIcon">⌁</div><div><b>还没有长期记忆</b><small>你正常聊天就好。Iris 会在后台慢慢整理重要的信息。</small></div></div>';return}
- list.forEach((m,idx)=>{
-  const row=document.createElement("div");row.className="memoryItem";
-  const icon=document.createElement("div");icon.className="memoryItemIcon";icon.textContent=m.type==="preference"?"○":m.type==="relationship"?"♡":m.type==="plan"?"□":"·";
-  const wrap=document.createElement("div");wrap.className="memoryItemBody";
-  const text=document.createElement("div");text.className="memoryText";text.textContent=m.text||"";
-  const meta=document.createElement("small");meta.className="memoryMeta";meta.textContent=m.source==="auto"?"Iris 自动记住":"手动添加";
-  const del=document.createElement("button");del.type="button";del.className="memoryDelete";del.textContent="删除";
-  del.onclick=()=>{state.memories.splice(idx,1);save();renderMemories()};
-  wrap.append(text,meta);row.append(icon,wrap,del);box.appendChild(row);
- });
+function memoryNormalize(){
+ state.memories=Array.isArray(state.memories)?state.memories:[];
+ state.memoryProfile=state.memoryProfile&&typeof state.memoryProfile==='object'?state.memoryProfile:{};
+ state.memoryProfile.core=String(state.memoryProfile.core||'').trim();
+ state.memoryProfile.user=String(state.memoryProfile.user||'').trim();
+ state.memoryProfile.relationship=String(state.memoryProfile.relationship||'').trim();
+ state.memoryProfile.current=String(state.memoryProfile.current||'').trim();
+ state.memoryEpisodes=Array.isArray(state.memoryEpisodes)?state.memoryEpisodes:[];
 }
-function isStableMemoryCandidate(text,type="fact"){
- const v=String(text||"").trim();
- if(!v||v.length<4||v.length>180)return false;
+function renderMemories(){
+ memoryNormalize();
+ const box=$('#memoryList'),sum=$('#settingsMemorySummary');
+ if(sum)sum.textContent=(state.memories||[]).length+' 条 · '+(state.memoryEpisodes||[]).length+' 段经历';
+ if(!box)return;
+ const p=state.memoryProfile;
+ const cards=[];
+ [['core','关于我们',p.core],['user','关于你',p.user],['relationship','关系与相处',p.relationship],['current','最近状态',p.current]].forEach(([k,title,text])=>{if(text)cards.push(`<div class="memorySummaryCard"><b>${title}</b><div>${escapeHtml(text)}</div></div>`)});
+ box.innerHTML=cards.join('')||'<div class="memoryEmpty"><div class="memoryEmptyIcon">⌁</div><div><b>还没有长期记忆</b><small>你正常聊天就好。Iris 会在后台整理真正值得长期保留的信息。</small></div></div>';
+ const list=(state.memories||[]).slice().sort((a,b)=>(Number(b.importance||0)-Number(a.importance||0))||(Number(b.updatedAt||0)-Number(a.updatedAt||0)));
+ if(list.length){const title=document.createElement('div');title.className='memorySubTitle';title.textContent='长期记忆';box.appendChild(title);list.slice(0,80).forEach(m=>{const row=document.createElement('div');row.className='memoryItem';const icon=document.createElement('div');icon.className='memoryItemIcon';icon.textContent=m.type==='preference'?'○':m.type==='relationship'?'♡':m.type==='plan'?'□':m.type==='episode'?'◆':'·';const wrap=document.createElement('div');wrap.className='memoryItemBody';const text=document.createElement('div');text.className='memoryText';text.textContent=m.text||'';const meta=document.createElement('small');meta.className='memoryMeta';meta.textContent=(m.source==='auto'?'Iris 自动整理':'手动添加')+' · 重要度 '+(m.importance||3);const del=document.createElement('button');del.type='button';del.className='memoryDelete';del.textContent='删除';del.onclick=()=>{state.memories=state.memories.filter(x=>x.id!==m.id);save();renderMemories()};wrap.append(text,meta);row.append(icon,wrap,del);box.appendChild(row)})}
+}
+function isStableMemoryCandidate(text,type='fact'){
+ const v=String(text||'').trim();
+ if(!v||v.length<4||v.length>220)return false;
  if(/^(今天|现在|刚刚|这会儿|此刻|最近好累|我好累|好开心|好难过|有点烦|睡不着|困了|饿了|无聊)$/i.test(v))return false;
- if(/(天气|气温|新闻|股票|汇率|今天吃|刚吃|正在吃|刚刚吃|现在在|等会儿|一会儿|明天再|今晚要|刚才发生|这次问答|这个问题)/.test(v)&&type!="plan")return false;
- const stable=/偏好|喜欢|不喜欢|讨厌|习惯|通常|总是|从不|希望以后|以后都|长期|记得|称呼|关系|在一起|纪念日|项目|长期计划|正在做|持续|相处|聊天方式|不要用|希望你|我会|我不会|用户希望|用户喜欢/;
- if(type!=="plan"&&!stable.test(v)&&v.length<18)return false;
+ if(/(天气|气温|新闻|股票|汇率|今天吃|刚吃|正在吃|刚刚吃|现在在|等会儿|一会儿|明天再|今晚要|刚才发生|这次问答|这个问题)/.test(v)&&type!=='plan')return false;
  return true;
 }
 function addMemory(text,meta={}){
- const type=meta.type||"fact";
- const v=String(text||"").trim().replace(/^(记住|记得|请记住)[:：]?\s*/i,"").trim();
+ const type=meta.type||'fact',v=String(text||'').trim().replace(/^(记住|记得|请记住)[:：]?\s*/i,'').trim();
  if(!isStableMemoryCandidate(v,type))return false;
- const existing=(state.memories||[]).find(m=>(m.text||"").trim()===v);
- if(existing){existing.updatedAt=Date.now();if(meta.source)existing.source=meta.source;save();renderMemories();return true}
- state.memories=state.memories||[];state.memories.unshift({id:crypto.randomUUID(),text:v,type:meta.type||"fact",source:meta.source||"manual",createdAt:Date.now(),updatedAt:Date.now()});
- if(state.memories.length>100)state.memories.length=100;
- save();renderMemories();return true;
+ const existing=(state.memories||[]).find(m=>(m.text||'').trim()===v);
+ if(existing){existing.updatedAt=Date.now();existing.importance=Math.max(Number(existing.importance||3),Number(meta.importance||3));if(meta.source)existing.source=meta.source;save();renderMemories();return true}
+ state.memories=state.memories||[];state.memories.unshift({id:crypto.randomUUID(),text:v,type,source:meta.source||'manual',importance:Number(meta.importance||3),createdAt:Date.now(),updatedAt:Date.now()});
+ if(state.memories.length>120)state.memories.length=120;save();renderMemories();return true;
 }
-function parseMemoryUpdate(raw){
- let t=String(raw||"").trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"").trim();
- try{return JSON.parse(t)}catch{const a=t.indexOf("{");const b=t.lastIndexOf("}");if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch{}}return null}
+function parseMemoryUpdate(raw){let t=String(raw||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/i,'').trim();try{return JSON.parse(t)}catch{const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch{}}return null}}
+function applyMemoryMaintenance(data){
+ memoryNormalize();let changed=false;
+ const upsert=(item,mode)=>{const text=String(item?.text||'').trim();if(!text)return;const type=item.type||'fact',importance=Math.max(1,Math.min(5,Number(item.importance||3)));let m=item.id?state.memories.find(x=>x.id===item.id):state.memories.find(x=>String(x.text||'').trim()===text);if(!m){m={id:crypto.randomUUID(),createdAt:Date.now()};state.memories.unshift(m)}m.text=text;m.type=type;m.importance=importance;m.source='auto';m.updatedAt=Date.now();changed=true};
+ (data.memories||[]).slice(0,12).forEach(item=>{const a=String(item?.action||'').toLowerCase();if(a==='add'||a==='update')upsert(item,a);else if(a==='delete'&&item.id){const before=state.memories.length;state.memories=state.memories.filter(x=>x.id!==item.id);changed=changed||before!==state.memories.length}});
+ const profile=data.profile||{};['core','user','relationship','current'].forEach(k=>{if(typeof profile[k]==='string'&&profile[k].trim()&&profile[k].trim()!==state.memoryProfile[k]){state.memoryProfile[k]=profile[k].trim();changed=true}});
+ if(Array.isArray(data.episodes)){for(const e of data.episodes.slice(0,5)){const title=String(e?.title||'').trim(),summary=String(e?.summary||'').trim();if(!title||!summary)continue;const key=(title+'|'+summary).slice(0,500);let old=state.memoryEpisodes.find(x=>x.key===key);if(!old){state.memoryEpisodes.unshift({id:crypto.randomUUID(),key,title,summary,date:String(e.date||'').trim(),importance:Math.max(1,Math.min(5,Number(e.importance||3))),createdAt:Date.now()});changed=true}}}
+ state.memoryEpisodes=state.memoryEpisodes.slice(0,40);state.memories=state.memories.slice(0,120);if(changed){save();renderMemories()}return changed;
 }
 async function autoUpdateLongTermMemory(c){
  if(!c||state.memoryUpdating||!state.settings.apiBase||!state.settings.apiKey||!state.settings.model)return;
- const userCount=(c.messages||[]).filter(m=>m.role==="user").length;
- if(userCount<6||userCount%6!==0)return;
- const grouped=compactMessagesForModel(c.messages||[]).slice(-60);
- if(grouped.length<8)return;
- state.memoryUpdating=true;
+ const userCount=(c.messages||[]).filter(m=>m.role==='user').length;if(userCount<6||userCount%6!==0)return;
+ const grouped=compactMessagesForModel(c.messages||[]).slice(-72);if(grouped.length<8)return;state.memoryUpdating=true;
  try{
-  const existing=(state.memories||[]).slice(0,60).map(m=>({id:m.id,text:m.text,type:m.type||"fact"}));
-  const transcript=grouped.map(m=>(m.role==="user"?"用户":"AI")+"："+String(m.content||"")).join("\n");
-  const prompt=`请从这段持续私人聊天中维护“长期记忆”。长期记忆只保存未来聊天仍然有用的稳定信息：用户明确表达的长期偏好、习惯、重要关系信息、长期计划/项目、反复出现的相处方式。一次性的情绪、当天琐事、普通问答不要记。不要猜测。\n\n现有记忆：\n${JSON.stringify(existing, null, 2)}\n\n最近聊天：\n${transcript}\n\n请只输出 JSON，不要 Markdown：\n{"memories":[{"action":"add","text":"...","type":"fact|preference|relationship|plan"},{"action":"update","id":"现有记忆ID","text":"更新后的完整记忆","type":"fact|preference|relationship|plan"},{"action":"delete","id":"现有记忆ID"}]}\n规则：只输出确实需要改变的记忆；相同意思合并；新信息与旧信息冲突时更新旧记忆；过时或明确被否定的记忆删除；一次性情绪、当天安排、临时状态、普通问答、具体时间点和无关细节一律不要记录；除非是明确的长期计划，否则不要把“明天/今晚/这周”之类临时安排记入长期记忆；最多新增或更新 5 条。宁可少记，也不要误记。`;
-  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:"system",content:"你是长期记忆维护器。你的工作是谨慎维护记忆，而不是记录所有聊天内容。"},{role:"user",content:prompt}],temperature:.1});
-  const data=parseMemoryUpdate(result.answer);
-  if(!data||!Array.isArray(data.memories))return;
-  let changed=false;
-  for(const item of data.memories.slice(0,8)){
-   const action=String(item?.action||"").toLowerCase();
-   if(action==="add"&&String(item.text||"").trim()){addMemory(item.text,{source:"auto",type:item.type||"fact"});changed=true}
-   else if(action==="update"&&item.id){const m=(state.memories||[]).find(x=>x.id===item.id);if(m&&String(item.text||"").trim()){m.text=String(item.text).trim();m.type=item.type||m.type||"fact";m.source="auto";m.updatedAt=Date.now();changed=true}}
-   else if(action==="delete"&&item.id){const before=state.memories.length;state.memories=state.memories.filter(x=>x.id!==item.id);if(state.memories.length!==before)changed=true}
-  }
-  if(changed){save();renderMemories()}
-  const usage=result.usage||{};const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;ts.prompt+=up;ts.completion+=uc;ts.total+=ut;ts.requests+=1;state.settings.tokenStats=ts;save();renderTokenStats();
- }catch(e){console.warn("auto memory update failed",e)}finally{state.memoryUpdating=false}
+  memoryNormalize();
+  const existing=(state.memories||[]).slice(0,80).map(m=>({id:m.id,text:m.text,type:m.type,importance:m.importance}));
+  const transcript=grouped.map(m=>(m.role==='user'?'用户':'AI')+'：'+String(m.content||'')).join('\n');
+  const prompt=`你现在负责维护 Iris 的“长期认知”，不是简单摘抄聊天。请综合现有长期记忆、已有画像、共同经历和最近聊天，做一次谨慎的增量整理。\n\n已有长期画像：${JSON.stringify(state.memoryProfile)}\n已有共同经历：${JSON.stringify((state.memoryEpisodes||[]).slice(0,20))}\n已有零散长期记忆：${JSON.stringify(existing)}\n\n最近聊天：\n${transcript}\n\n只输出 JSON：{"profile":{"core":"关于我们最稳定、最重要的认知","user":"对用户长期有效的特点、偏好、习惯","relationship":"你们长期的关系与相处方式","current":"最近阶段正在发生、对后续聊天仍有用的状态"},"memories":[{"action":"add|update|delete","id":"更新/删除时填写已有ID","text":"合并后的完整记忆","type":"fact|preference|relationship|plan","importance":1},...],"episodes":[{"title":"共同经历标题","summary":"这件事发生了什么，以及为什么对以后有用","date":"YYYY-MM-DD","importance":3}]}\n\n规则：\n1. 画像必须是总结，不要逐句引用。\n2. “关于我们”优先保留长期关系、共同建立的东西、重要约定和重要纪念日。\n3. “关于用户”只保留反复出现或明确长期有效的偏好/特点。\n4. current 只写最近阶段真正影响后续聊天的状态，过期内容下一次要主动改掉。\n5. 共同经历只记录值得以后提起的事件，不记录普通闲聊。\n6. 相同意思必须合并，不要制造重复记忆。\n7. 新旧冲突时，以用户最近明确表达为准；不能猜测。\n8. 一次性情绪、当天琐事、普通问答、临时安排不要进入长期记忆。\n9. 最多新增/更新 6 条零散记忆、3 段经历。画像每一栏尽量控制在 300 字以内。\n10. 宁可少记，也不要误记。`;
+  const result=await window.GChatAPI.chat({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:[{role:'system',content:'你是 Iris 的长期记忆整理器。你的任务是形成准确、凝练、连续的长期认知。'},{role:'user',content:prompt}],temperature:.1});
+  const data=parseMemoryUpdate(result.answer);if(data)applyMemoryMaintenance(data);
+  const usage=result.usage||{},ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0},up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;ts.prompt+=up;ts.completion+=uc;ts.total+=ut;ts.requests+=1;state.settings.tokenStats=ts;save();renderTokenStats();
+ }catch(e){console.warn('auto memory maintenance failed',e)}finally{state.memoryUpdating=false}
 }
 function memoryContext(){
- const list=(state.memories||[]).map(m=>String(m.text||"").trim()).filter(Boolean).slice(0,80);
- if(!list.length)return "";
- return "以下是用户保存的长期记忆。它们用于帮助你记住这个人和你们长期相处中的重要信息；如果与用户当前明确说的话冲突，以当前对话为准。不要把这些记忆逐条复述给用户，而是自然地体现在回应里：\n"+list.map((x,i)=>`${i+1}. ${x}`).join("\n");
+ memoryNormalize();const p=state.memoryProfile,parts=[];
+ if(p.core)parts.push('【关于我们】\n'+p.core);if(p.user)parts.push('【关于用户】\n'+p.user);if(p.relationship)parts.push('【关系与相处】\n'+p.relationship);if(p.current)parts.push('【最近状态】\n'+p.current);
+ const relevant=(state.memories||[]).slice().sort((a,b)=>(Number(b.importance||0)-Number(a.importance||0))||(Number(b.updatedAt||0)-Number(a.updatedAt||0))).slice(0,18);if(relevant.length)parts.push('【补充长期记忆】\n'+relevant.map(m=>`- ${m.text}`).join('\n'));
+ const eps=(state.memoryEpisodes||[]).slice(0,6);if(eps.length)parts.push('【重要共同经历】\n'+eps.map(e=>`- ${e.title}：${e.summary}`).join('\n'));
+ return parts.length?'以下是你对这段长期关系和用户的整理认知。优先自然运用它；与用户当前明确表达冲突时，以当前对话为准，不要主动复述记忆机制。\n'+parts.join('\n\n'):'';
 }
 function nestContext(){const n=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(nestDateKey()),parts=[];const userStatus=getStatus("user");parts.push("用户的‘小窝’是一个与聊天相连的私人空间。你可以理解其中的内容，并在聊天时自然参考，但不要擅自编造或修改里面的信息。");parts.push("小窝目前提供这些功能：记录每天的心情、留给他的话、每日小记，以及多个纪念日和各自的背景。");parts.push("用户在聊天页面头像下方当前显示的状态是「"+userStatus.label+"」。这是用户主动设置的聊天状态，应当作为你理解他/她当下状态的背景参考；它与小窝里的今日心情是两回事。 ");if(e.userMood)parts.push("用户今天选择的快捷心情：「"+e.userMood+"」");if(e.userMoodNote)parts.push("用户今天自己写下的心情：「"+e.userMoodNote+"」");if(e.toG)parts.push("用户今天留给他的话：「"+e.toG+"」");if(e.note)parts.push("用户今天的小记：「"+e.note+"」");if(e.aiMood)parts.push("他今天选择的快捷心情：「"+e.aiMood+"」");if(e.aiMoodNote)parts.push("他今天自己写下的心情：「"+e.aiMoodNote+"」");const selected=selectedAnniversary();if(selected)parts.push("当前选中的纪念日：「"+(selected.name||"纪念日")+"」，日期：「"+(selected.date||"未设置")+"」");return parts.join("\n")}
 function conversationStyleContext(){
@@ -529,8 +524,8 @@ async function imageToData(file,max=1600,quality=.84){
  }catch{return original}
 }
 async function uploadImage(input,target,max,quality){const f=input.files?.[0];if(!f)return;try{state.settings[target]=await imageToData(f,max,quality);save();applyLook();renderAvatarPreviews();render()}catch{showErr("图片处理失败，请换一张图片。")}}
-function exportAll(){const data={version:5,exportedAt:new Date().toISOString(),chats:state.chats,current:state.current,settings:state.settings,memories:state.memories||[],nest:loadNest()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="g-chat-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-async function importAll(file){try{if(!file)throw new Error("没有选择备份文件");const text=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=()=>reject(new Error("读取备份文件失败，请重新选择文件。"));r.readAsText(file,"utf-8")});const data=JSON.parse(text);if(!data||!Array.isArray(data.chats)||typeof data.settings!=="object")throw new Error("备份文件格式不正确");if(!confirm("恢复备份会覆盖当前聊天记录和设置，确定继续吗？"))return;state.chats=data.chats.map(c=>({...c,summary:typeof c.summary==="string"?c.summary:"",summaryUpdatedAt:Number(c.summaryUpdatedAt||0),summaryMessageCount:Number(c.summaryMessageCount||0)}));state.current=data.current||state.chats[0]?.id||null;state.settings=data.settings||{};state.memories=Array.isArray(data.memories)?data.memories:[];if(data.nest&&typeof data.nest==="object"){nestData=data.nest;saveNestData()}ensure();ensureDates();save();render();fillSettings();showErr("备份已恢复") }catch(e){showErr(e.message||"恢复备份失败")}}
+function exportAll(){const data={version:6,exportedAt:new Date().toISOString(),chats:state.chats,current:state.current,settings:state.settings,memories:state.memories||[],memoryProfile:state.memoryProfile||{},memoryEpisodes:state.memoryEpisodes||[],nest:loadNest()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="g-chat-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+async function importAll(file){try{if(!file)throw new Error("没有选择备份文件");const text=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=()=>reject(new Error("读取备份文件失败，请重新选择文件。"));r.readAsText(file,"utf-8")});const data=JSON.parse(text);if(!data||!Array.isArray(data.chats)||typeof data.settings!=="object")throw new Error("备份文件格式不正确");if(!confirm("恢复备份会覆盖当前聊天记录和设置，确定继续吗？"))return;state.chats=data.chats.map(c=>({...c,summary:typeof c.summary==="string"?c.summary:"",summaryUpdatedAt:Number(c.summaryUpdatedAt||0),summaryMessageCount:Number(c.summaryMessageCount||0)}));state.current=data.current||state.chats[0]?.id||null;state.settings=data.settings||{};state.memories=Array.isArray(data.memories)?data.memories:[];state.memoryProfile=data.memoryProfile&&typeof data.memoryProfile==='object'?data.memoryProfile:{};state.memoryEpisodes=Array.isArray(data.memoryEpisodes)?data.memoryEpisodes:[];memoryNormalize();if(data.nest&&typeof data.nest==="object"){nestData=data.nest;saveNestData()}ensure();ensureDates();save();render();fillSettings();showErr("备份已恢复") }catch(e){showErr(e.message||"恢复备份失败")}}
 
 function appendGeneratedImage(src,c){const wrap=document.createElement("div");wrap.className="message assistant generatedImageMessage";const img=document.createElement("img");img.src=src;img.alt="生成的图片";wrap.appendChild(img);$("#messages").appendChild(wrap);scroll();if(c){c.messages.push({role:"assistant",content:"[生成图片]",image:src,timestamp:Date.now()});save()}}
 function renderAttachments(){const box=$("#attachmentPreview");if(!box)return;const arr=state.attachments||[];box.classList.toggle("hidden",!arr.length);box.innerHTML=arr.map((a,i)=>a.kind==="image"?`<div class="attachChip imageChip"><img src="${a.data}"><span>${escapeHtml(a.name)}</span><button data-remove-attach="${i}">×</button></div>`:`<div class="attachChip"><span>文件 · ${escapeHtml(a.name)}</span><button data-remove-attach="${i}">×</button></div>`).join("");box.querySelectorAll("[data-remove-attach]").forEach(b=>b.onclick=()=>{state.attachments.splice(Number(b.dataset.removeAttach),1);renderAttachments()})}
@@ -546,7 +541,7 @@ $("#mcpEnabled").onchange=()=>{state.settings.mcpEnabled=$("#mcpEnabled").checke
 $("#clearMemories").onclick=()=>{if(!(state.memories||[]).length)return;if(!confirm("确定清空全部记忆吗？"))return;state.memories=[];save();renderMemories()};
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="他";if(state.settings.gName==="G")state.settings.gName="他";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0};state.settings.replyDelay??=360;state.settings.mcpNestEnabled??=true;state.settings.mcpEnabled??=false;state.settings.mcpServerUrl??="";state.settings.mcpServerToken??="";state.settings.visionEnabled??=false;state.settings.visionBase??="";state.settings.visionKey??="";state.settings.visionModel??="";state.settings.imageGenEnabled??=false;state.settings.imageGenBase??="";state.settings.imageGenKey??="";state.settings.imageGenModel??="";state.memories??=[];normalizeNestData();syncTodayToDaily();saveNestData();if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
+state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="他";if(state.settings.gName==="G")state.settings.gName="他";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0};state.settings.replyDelay??=360;state.settings.mcpNestEnabled??=true;state.settings.mcpEnabled??=false;state.settings.mcpServerUrl??="";state.settings.mcpServerToken??="";state.settings.visionEnabled??=false;state.settings.visionBase??="";state.settings.visionKey??="";state.settings.visionModel??="";state.settings.imageGenEnabled??=false;state.settings.imageGenBase??="";state.settings.imageGenKey??="";state.settings.imageGenModel??="";state.memories??=[];state.memoryProfile??={};state.memoryEpisodes??=[];memoryNormalize();normalizeNestData();syncTodayToDaily();saveNestData();if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
 
 window.addEventListener("load",()=>render());
 window.addEventListener("pageshow",()=>render());

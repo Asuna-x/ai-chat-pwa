@@ -134,10 +134,10 @@ if("serviceWorker"in navigator){
         <label class="settingsField"><span>记住一件事</span><textarea id="memoryInput" rows="3" placeholder="例如：我喜欢晚上安静地聊天。"></textarea></label>
         <button class="smallAction full" id="addMemory">添加到记忆</button>
       </div>
-      <div class="settingsSectionTitle">已保存</div>
+      <div class="settingsSectionTitle">Iris 的长期认知</div>
       <div class="settingsGroup settingsFormGroup" id="memoryList"></div>
       <div class="settingsGroup settingsActionGroup"><button class="settingsAction danger" id="clearMemories"><span>清空全部记忆</span><em>›</em></button></div>
-      <p class="settingsNote">你也可以在聊天中直接说“记住：……”；Iris 会把这句话保存为记忆。对话达到一定长度后，Iris 会自动总结旧记录，只保留最近消息和摘要用于后续聊天，以减少 Token 消耗。摘要和记忆都会包含在数据导出文件中。</p>
+      <p class="settingsNote">Iris 不会把每句话都当成记忆。聊天过程中会定期把重要内容整理成“关于你、关于我们、关系与相处、最近状态”和共同经历，并合并重复信息。这样记忆可以越来越完整，但每次聊天只会带入真正有用的部分。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="themePage">
