@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-Hant"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f6f2ec"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Iris">
-<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>Iris</title><link rel="stylesheet" href="./style.css?v=4.54"><script>/* Iris PWA: update the installed Home Screen app automatically when GitHub Pages publishes a new version. */
+<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>Iris</title><link rel="stylesheet" href="./style.css?v=4.55"><script>/* Iris PWA: update the installed Home Screen app automatically when GitHub Pages publishes a new version. */
 if("serviceWorker"in navigator){
   let reloadedForUpdate=false;
   navigator.serviceWorker.addEventListener("controllerchange",()=>{
@@ -10,7 +10,7 @@ if("serviceWorker"in navigator){
     window.location.reload();
   });
   window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("./sw.js?v=4.54",{updateViaCache:"none"})
+    navigator.serviceWorker.register("./sw.js?v=4.55",{updateViaCache:"none"})
       .then(reg=>reg.update())
       .catch(err=>console.warn("PWA update",err));
   });
@@ -250,4 +250,4 @@ if("serviceWorker"in navigator){
   </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.54"></script><script src="./app.js?v=4.54"></script></body></html>
+<script src="./api.js?v=4.55"></script><script src="./app.js?v=4.55"></script></body></html>

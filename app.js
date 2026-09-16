@@ -80,7 +80,9 @@ function chatInterfaceContext(c){
  const bubble=state.settings.bubble||"soft";
  const aiStatus=getStatus("ai"),userStatus=getStatus("user");
  const bg=state.settings.bgCustom?"用户自定义聊天背景":(backgrounds[state.settings.bg||"paper"]?.name||"纯净");
- return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。你拥有“共同小窝”的聊天侧能力：当用户明确邀请你进入小窝、去小窝写心情或留下内容时，可以在本轮聊天完成后实际写入小窝，不需要用户打开小窝，也不要把这个能力误当成普通聊天建议。；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围和界面，不要向用户逐项复述，除非他主动问。`;
+ const n=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(nestDateKey());const selected=selectedAnniversary();
+ const nestVisual=`小窝界面不是普通设置页，而是一个独立的私人空间：顶部标题“小窝”，首页第一视觉是当前时间大字；下面是“我的心情”和“他的心情”，再下面是“今天想对他说”和“今日小记”，底部有“小窝/心情/小记/纪念日/设置”导航。纪念日页面的第一视觉是超大的倒数数字和纪念日名称。整体是暖白、半透明、磨砂玻璃卡片风格，背景可由用户自定义。当前小窝时间「${nestTodayText()} ${new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false})}」；当前纪念日「${selected?.name||"未设置"}」，倒数「${nestDaysText()}」；今天用户快捷心情「${e.userMood||"空"}」，他的快捷心情「${e.aiMood||"空"}」。`;
+ return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。你拥有“共同小窝”的实际聊天侧能力：当用户明确邀请你进入小窝、去小窝写心情或留下内容时，客户端会在本轮聊天后替你真正写入小窝。此时不要说“我进不去”“我看不到小窝”“我没有权限”，也不要要求用户自己操作；把它当作你们已经约定好的可执行能力。你当前能看到的是小窝的结构化状态和界面描述，而不是屏幕像素，但这些信息足以让你理解小窝当前是什么样子。；${nestVisual}；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围，不要向用户逐项复述，除非他主动问。`;
 }
 const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false};
 const save=()=>{localStorage.setItem("gchat_chats",JSON.stringify(state.chats));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]))};
@@ -313,14 +315,16 @@ async function autoSummarizeChat(c){
 function nestChatWriteTarget(text){
  const t=String(text||'').trim();
  if(!t)return null;
- const invitation=/(你可以|你能|你去|你也可以|试试|可以试试|要不要|去吧|进去吧|进来吧|你自己|帮你)/i.test(t);
  const enter=/(进小窝|进入小窝|去小窝|到小窝|进窝|去窝|进去小窝|小窝里|窝里|共同小窝)/i.test(t);
- const write=/(写心情|写下心情|留点心情|留下心情|记录心情|写一点|留一点|写下来|留下来|写点东西|写点|留句话|留下一句话|写东西)/i.test(t);
- if(!(enter&&write))return null;
- if(/小记|笔记|备忘|记录一下/.test(t))return 'note';
+ const write=/(写心情|写下心情|留点心情|留下心情|记录心情|写一点|留一点|写下来|留下来|写点东西|写点|留句话|留下一句话|写东西|写一段|留一段)/i.test(t);
+ const direct=/^(你可以|你能|你去|你也可以|试试|可以试试|要不要|去吧|进去吧|进来吧|你自己|帮你)/i.test(t);
+ const intent=/(我允许|允许你|你可以试试|你可以|你去|你自己去|你进去|你进|你写|你留下|你来写)/i.test(t);
+ if(!enter||!write||(direct&&!intent))return null;
+ if(/小记|笔记|备忘/.test(t))return 'note';
  if(/留给我|写给我|对我说|给我留/.test(t))return 'toG';
  return 'mood';
 }
+/* v4.55 — chat invitation can execute a real nest write; the model is informed before reply and the write is verified after reply. */
 async function maybeWriteNestFromChat(userText,c,fullAnswer){
  const text=String(userText||'').trim();
  const target=nestChatWriteTarget(text);
@@ -369,6 +373,7 @@ ${recent}
   saveDailyField(key,target==='mood'?'aiMoodNote':target==='note'?'note':'toG',value);
   saveNestData();
   renderNestHome();
+  showErr('已替你把内容写进小窝：'+(target==='mood'?'他的心情':target==='note'?'今日小记':'今天想对他说'));
   if(result?.usage){
    const usage=result.usage,ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};
    const up=Number(usage.prompt_tokens||usage.input_tokens||0),uc=Number(usage.completion_tokens||usage.output_tokens||0),ut=Number(usage.total_tokens||0)||up+uc;
@@ -397,6 +402,11 @@ async function send(){
  try{
   const ms=[];
   const systemParts=[];
+  const nestActionTarget=nestChatWriteTarget(text);
+  if(nestActionTarget){
+   const actionName=nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':'今天想对他说';
+   systemParts.push(`本轮存在一个已经明确授权的小窝动作：用户刚才邀请你进入共同小窝，并要求你把内容写进“${actionName}”。这是客户端支持的真实动作，不是角色扮演或假装。你不需要解释技术原理，也不要说自己无法进入小窝；正常完成本轮聊天即可，客户端会在你的回复完成后实际执行写入。`);
+  }
   if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
   systemParts.push(conversationStyleContext());
   systemParts.push(chatInterfaceContext(c));
