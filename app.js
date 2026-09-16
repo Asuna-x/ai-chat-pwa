@@ -407,7 +407,12 @@ async function send(){
  const i=$("#input"),text=i.value.trim();
  const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
  if(!text&&!attachments.length)return;
- if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
+ const hasImage=attachments.some(a=>a.kind==="image");
+ const visionReady=state.settings.visionEnabled===true&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;
+ const normalReady=state.settings.apiBase&&state.settings.apiKey&&state.settings.model;
+ if(hasImage){
+  if(!visionReady){settingsOpenPage("visionPage");showErr("要识别图片，请先在「设置 → 视觉与图像」启用视觉模型，并填写 Base URL、API Key 和视觉模型。");return}
+ }else if(!normalReady){settings();showErr("请先完成 API 与模型设置。");return}
  ensure();const c=chat();
  if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
  const attachmentParts=[];
@@ -428,7 +433,7 @@ async function send(){
   const ms=[];const systemParts=[];
   const nestActionTarget=nestChatWriteTarget(text);
   const hasImage=attachments.some(a=>a.kind==="image");
-  const useVision=hasImage&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;
+  const useVision=hasImage&&state.settings.visionEnabled===true&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;
   const activeBase=useVision?state.settings.visionBase:state.settings.apiBase;
   const activeKey=useVision?state.settings.visionKey:state.settings.apiKey;
   const activeModel=useVision?state.settings.visionModel:state.settings.model;

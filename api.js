@@ -45,7 +45,7 @@
 
   async function visionChatStream(options,onText){
     const url=requestUrl(options.baseUrl);
-    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true};
+    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true,stream_options:{include_usage:true}};
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
     if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
     const type=(r.headers.get("content-type")||"").toLowerCase();
