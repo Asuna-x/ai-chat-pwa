@@ -1,4 +1,4 @@
-/* Iris v4.84 — vision transport with explicit HTTP/status metadata. */
+/* Iris v4.85 — vision transport with explicit HTTP/status metadata. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   let visionLock=Promise.resolve();
@@ -48,7 +48,19 @@
     const previous=visionLock;let release;visionLock=new Promise(resolve=>{release=resolve});await previous;
     try{
       const url=requestUrl(options.baseUrl);
-      const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false};
+      const messages=JSON.parse(JSON.stringify(options.messages||[]));
+      // 智谱官方文档对 Base64 图片示例使用的是 image_url.url=纯 Base64。
+      // Iris 内部保存的是 data:image/...;base64,...，这里仅在发往智谱时转换。
+      if(new URL(url).hostname.toLowerCase()==='open.bigmodel.cn'){
+        for(const m of messages){
+          if(!Array.isArray(m?.content))continue;
+          for(const part of m.content){
+            const u=part?.image_url?.url;
+            if(typeof u==='string' && /^data:image\/[^;]+;base64,/i.test(u))part.image_url.url=u.slice(u.indexOf(',')+1);
+          }
+        }
+      }
+      const body={model:options.model,messages,temperature:Number(options.temperature ?? .7),stream:false};
       if(options.max_tokens!=null)body.max_tokens=Number(options.max_tokens);
       const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
       const raw=await r.text();
