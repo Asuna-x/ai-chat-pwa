@@ -1,4 +1,4 @@
-/* Iris v4.56 — G Chat API with optional OpenAI-compatible tool calling. */
+/* Iris v4.62 — G Chat API with optional OpenAI-compatible tool calling. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
@@ -8,8 +8,7 @@
 
   async function chatStream(options,onText){
     const url=requestUrl(options.baseUrl);
-    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true};
-    if(options.includeUsage!==false)body.stream_options={include_usage:true};
+    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true,stream_options:{include_usage:true}};
     if(Array.isArray(options.tools)&&options.tools.length)body.tools=options.tools;if(options.tool_choice)body.tool_choice=options.tool_choice;
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
     if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
@@ -42,6 +41,48 @@
     const calls=toolCalls.filter(Boolean);
     if(!answer.trim()&&!calls.length)throw new Error("API 没有返回文字内容，请检查模型、API Key 和 Base URL。 ");
     return {answer,url,usage,toolCalls:calls};
+  }
+
+  async function visionChatStream(options,onText){
+    const url=requestUrl(options.baseUrl);
+    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true};
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
+    if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
+    const type=(r.headers.get("content-type")||"").toLowerCase();
+    if(type.includes("application/json")){
+      const o=await r.json();
+      let ans=o.choices?.[0]?.message?.content;
+      if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
+      if(typeof ans!=="string"||!ans.trim())throw new Error("视觉模型没有返回文字内容。");
+      if(onText)onText(ans,ans);
+      return {answer:ans,url,usage:o.usage||null,toolCalls:[]};
+    }
+    if(!r.body)throw new Error("当前浏览器不支持 API 流式响应。");
+    const reader=r.body.getReader(),decoder=new TextDecoder("utf-8");
+    let buffer="",answer="",usage=null;
+    const push=part=>{if(typeof part!=="string"||!part)return;answer+=part;if(onText)onText(part,answer)};
+    while(true){
+      const {value,done}=await reader.read();
+      if(done)break;
+      buffer+=decoder.decode(value,{stream:true});
+      const lines=buffer.split(/\r?\n/);buffer=lines.pop()||"";
+      for(const line of lines){
+        const t=line.trim();if(!t||t.startsWith(":")||!t.startsWith("data:"))continue;
+        const raw=t.slice(5).trim();if(raw==="[DONE]")continue;
+        let o;try{o=JSON.parse(raw)}catch{continue}
+        if(o.usage)usage=o.usage;
+        const d=o.choices?.[0]?.delta?.content;
+        if(typeof d==="string")push(d);
+        else if(Array.isArray(d))push(d.map(x=>typeof x==="string"?x:(x?.text||"")).join(""));
+      }
+    }
+    buffer+=decoder.decode();
+    if(buffer.trim().startsWith("data:")){
+      const raw=buffer.trim().slice(5).trim();
+      if(raw&&raw!=="[DONE]"){try{const o=JSON.parse(raw);if(o.usage)usage=o.usage;const d=o.choices?.[0]?.delta?.content;if(typeof d==="string")push(d);else if(Array.isArray(d))push(d.map(x=>typeof x==="string"?x:(x?.text||"")).join(""))}catch{}}
+    }
+    if(!answer.trim())throw new Error("视觉模型没有返回文字内容。");
+    return {answer,url,usage,toolCalls:[]};
   }
 
   async function imageGenerate(options){
@@ -82,5 +123,5 @@
     return {answer:ans,data:o,url};
   }
 
-  window.GChatAPI={chat,chatStream,imageGenerate,normalizeBase,requestUrl};
+  window.GChatAPI={chat,chatStream,visionChatStream,imageGenerate,normalizeBase,requestUrl};
 })();

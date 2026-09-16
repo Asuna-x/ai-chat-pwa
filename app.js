@@ -401,26 +401,40 @@ function executeNestTool(name,args){
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
-/* Iris v4.68 — vision requests use a clean no-tools/no-stream-options path; stable text path unchanged. */
+/* Iris v4.72 — rebuilt image sending path: UI display and vision transport are separated. */
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
- if(!text)return;
+ const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
+ if(!text&&!attachments.length)return;
  if(!state.settings.apiBase||!state.settings.apiKey||!state.settings.model){settings();showErr("请先完成 API 与模型设置。");return}
  ensure();const c=chat();
  if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
- const attachmentParts=[];for(const a of state.attachments||[]){if(a.kind==="image")attachmentParts.push({type:"image_url",image_url:{url:a.data}});else if(a.kind==="text")attachmentParts.push({type:"text",text:`[文件：${a.name}]\n${a.text}`});else if(a.kind==="file")attachmentParts.push({type:"file",file:{filename:a.name,file_data:a.data}});}
- const userContent=attachmentParts.length?[{type:"text",text:text},...attachmentParts]:text;
+ const attachmentParts=[];
+ for(const a of attachments){
+  if(a.kind==="image")attachmentParts.push({type:"image_url",image_url:{url:a.data}});
+  else if(a.kind==="text")attachmentParts.push({type:"text",text:`[文件：${a.name}]\n${a.text}`});
+  else if(a.kind==="file")attachmentParts.push({type:"file",file:{filename:a.name,file_data:a.data}});
+ }
+ const userContent=attachmentParts.length?([...(text?[{type:"text",text:text}]:[]),...attachmentParts]):text;
  c.messages.push({role:"user",content:userContent,timestamp:Date.now()});
- if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24);
- const sentAttachments=state.attachments.slice();i.value="";state.attachments=[];renderAttachments();resize();save();render();
+ if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"图片消息";
+ i.value="";state.attachments=[];renderAttachments();resize();save();render();
  state.busy=true;const sendBtn=$("#send");sendBtn.disabled=false;sendBtn.classList.add("loading");sendBtn.classList.remove("stop");sendBtn.textContent="…";sendBtn.title="停止回复";updateTyping();
  const controller=new AbortController();state._abort=controller;
  const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);
  let completed=false;
  try{
-  const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);const hasImage=sentAttachments.some(a=>a.kind==="image");const useVision=hasImage&&state.settings.visionEnabled&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;const activeBase=useVision?state.settings.visionBase:state.settings.apiBase;const activeKey=useVision?state.settings.visionKey:state.settings.apiKey;const activeModel=useVision?state.settings.visionModel:state.settings.model;
-  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);if(useVision)systemParts.push("本轮包含用户上传的图片。你正在使用已配置的视觉模型，请直接理解图片内容并结合用户文字回答；不要声称自己看不到图片。只能描述图片中实际可见或可合理读取的信息。");
+  const ms=[];const systemParts=[];
+  const nestActionTarget=nestChatWriteTarget(text);
+  const hasImage=attachments.some(a=>a.kind==="image");
+  const useVision=hasImage&&state.settings.visionBase&&state.settings.visionKey&&state.settings.visionModel;
+  const activeBase=useVision?state.settings.visionBase:state.settings.apiBase;
+  const activeKey=useVision?state.settings.visionKey:state.settings.apiKey;
+  const activeModel=useVision?state.settings.visionModel:state.settings.model;
+  if(hasImage&&!useVision)throw new Error("已选择图片，但视觉模型还没有完整配置。请到「设置 → 视觉与图像」填写 Base URL、API Key 和视觉模型。");
+  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
+  if(useVision)systemParts.push("本轮包含用户上传的图片。请直接理解图片内容，并结合用户文字回答。只能描述图片中实际可见或合理读取的信息。");
   systemParts.push(conversationStyleContext());
   systemParts.push(chatInterfaceContext(c));
   const mc=memoryContext();if(mc)systemParts.push(mc);
@@ -429,18 +443,21 @@ async function send(){
   if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});
   ms.push(...buildConversationContext(c));
   let tools=[];
-  if(state.settings.mcpNestEnabled!==false && (nestActionTarget || state.settings.mcpEnabled===true)) tools.push(...nestTools());
-  if(state.settings.mcpEnabled===true && state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}
+  if(!useVision&&state.settings.mcpNestEnabled!==false&&(nestActionTarget||state.settings.mcpEnabled===true))tools.push(...nestTools());
+  if(!useVision&&state.settings.mcpEnabled===true&&state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}
+  if(!useVision&&state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){const gtool=nestTools().find(x=>x.function?.name==="generate_image");if(gtool)tools.push(gtool)}
   tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);
-  if(useVision)tools=null;
-  if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel)tools.push(nestTools().find(x=>x.function?.name==="generate_image"));tools=tools.filter(Boolean);if(!tools.length)tools=null;
-  let fullAnswer="",pending="",displayQueue=Promise.resolve();
-  const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();const baseDelay=Math.max(80,Math.min(1200,Number(state.settings.replyDelay??360)));const naturalDelay=Math.min(1500,Math.max(80,baseDelay+Math.min(90,v.length)*7));await sleep(naturalDelay);});};
+  if(!tools.length)tools=null;
+  let pendingDisplay="",displayQueue=Promise.resolve();
+  const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();const baseDelay=Math.max(80,Math.min(1200,Number(state.settings.replyDelay??360)));const naturalDelay=Math.min(1500,Math.max(80,baseDelay+Math.min(90,v.length)*7));await sleep(naturalDelay);})};
   const usageTotal={prompt:0,completion:0,total:0,requests:0};
-  let rounds=0;
+  let rounds=0,fullAnswer="";
   while(rounds++<4){
    let answer="",pendingRound="";
-   const result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
+   const onText=(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound};
+   const result=useVision
+    ?await window.GChatAPI.visionChatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal},onText)
+    :await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},onText);
    addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){
     const assistantToolMsg={role:"assistant",content:result.answer||null,tool_calls:result.toolCalls};ms.push(assistantToolMsg);
@@ -449,8 +466,8 @@ async function send(){
      let out;
      try{
       const callName=call.function?.name||'';
-      if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName)) out=executeNestTool(callName,args);
-      else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c);}
+      if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName))out=executeNestTool(callName,args);
+      else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c)}
       else out=await mcpCallTool(callName,args);
      }catch(e){out={success:false,error:e?.message||String(e)}}
      ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)});
@@ -460,7 +477,7 @@ async function send(){
    if(pendingRound.trim())pushSentence(pendingRound);
    await displayQueue;fullAnswer=result.answer||answer;break;
   }
-  const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};ts.prompt+=usageTotal.prompt;ts.completion+=usageTotal.completion;ts.total+=usageTotal.total;ts.requests+=usageTotal.requests;state.settings.tokenStats=ts;save();renderTokenStats();save();completed=true;
+  const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};ts.prompt+=usageTotal.prompt;ts.completion+=usageTotal.completion;ts.total+=usageTotal.total;ts.requests+=usageTotal.requests;state.settings.tokenStats=ts;save();renderTokenStats();completed=true;
   if(shouldAutoSummarize(c))autoSummarizeChat(c);
  }catch(e){
   if(e?.name==="AbortError")showErr(state.stopRequested?"已停止这次回复。\n你的消息已经保留在聊天记录里。":"请求等待超过 60 秒。\n请求地址："+apiHint());else showErr(e.message||String(e));
