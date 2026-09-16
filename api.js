@@ -1,4 +1,4 @@
-/* Iris v4.79 — clean OpenAI-compatible vision transport. */
+/* Iris v4.82 — OpenAI-compatible vision transport for the PWA image flow. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   let visionLock=Promise.resolve();

@@ -62,7 +62,7 @@ if("serviceWorker"in navigator){
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>Iris</b><small>Version 4.80 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>Iris</b><small>Version 4.82 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -87,7 +87,7 @@ if("serviceWorker"in navigator){
       <div class="subIntro"><b>视觉与图像</b><small>为聊天单独配置视觉模型和图像生成模型。</small></div>
       <div class="settingsSectionTitle">视觉模型</div>
       <div class="settingsGroup settingsFormGroup">
-        <label class="settingsSwitch"><span><b>启用视觉模型</b><small>发送照片时优先使用这里配置的模型。</small></span><input id="visionEnabled" type="checkbox"><i></i></label>
+        <label class="settingsSwitch"><span><b>启用视觉模型</b><small>发送照片时使用这里配置的视觉模型。</small></span><input id="visionEnabled" type="checkbox"><i></i></label>
         <label class="settingsField"><span>Vision Base URL</span><input id="visionBase" placeholder="https://api.openai.com/v1"></label>
         <label class="settingsField"><span>Vision API Key</span><div class="passwordField"><input id="visionKey" type="password" placeholder="sk-…"><button type="button" id="toggleVisionKey">显示</button></div></label>
         <label class="settingsField"><span>视觉模型</span><input id="visionModel" placeholder="例如 gpt-4o-mini"></label>
