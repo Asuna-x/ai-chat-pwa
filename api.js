@@ -45,44 +45,15 @@
 
   async function visionChat(options){
     const url=requestUrl(options.baseUrl);
-    const model=String(options.model||"").trim();
-    const body={model,messages:options.messages,stream:true};
-    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"text/event-stream, application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
-    const rawType=(r.headers.get("content-type")||"").toLowerCase();
-    if(!r.ok)throw new Error(`HTTP ${r.status} · ${url}\n${(await r.text()).slice(0,1600)}`);
-    if(rawType.includes("application/json")){
-      const o=await r.json();
-      let ans=o.choices?.[0]?.message?.content;
-      if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
-      if(typeof ans!=="string"||!ans.trim())throw new Error("视觉模型没有返回文字内容。请确认模型支持图片输入。\n"+JSON.stringify(o).slice(0,700));
-      return {answer:ans,url,usage:o.usage||null,data:o};
-    }
-    if(!r.body)throw new Error("视觉接口没有返回可读取的流。请检查 Vision Base URL 和模型。");
-    const reader=r.body.getReader(),decoder=new TextDecoder("utf-8");
-    let buffer="",answer="",usage=null;
-    const push=part=>{if(typeof part!=="string"||!part)return;answer+=part};
-    const consume=raw=>{
-      const t=raw.trim();if(!t||t.startsWith(":"))return;
-      const line=t.startsWith("data:")?t.slice(5).trim():t;
-      if(!line||line==="[DONE]")return;
-      let o;try{o=JSON.parse(line)}catch{return}
-      if(o.usage)usage=o.usage;
-      const d=o.choices?.[0]?.delta?.content;
-      if(typeof d==="string")push(d);
-      else if(Array.isArray(d))push(d.map(x=>typeof x==="string"?x:(x?.text||"")).join(""));
-      const full=o.choices?.[0]?.message?.content;
-      if(!answer&&typeof full==="string")push(full);
-    };
-    while(true){
-      const {value,done}=await reader.read();
-      if(done)break;
-      buffer+=decoder.decode(value,{stream:true});
-      const lines=buffer.split(/\r?\n/);buffer=lines.pop()||"";
-      for(const line of lines)consume(line);
-    }
-    buffer+=decoder.decode();if(buffer.trim())consume(buffer);
-    if(!answer.trim())throw new Error("视觉模型没有返回文字内容。请确认模型支持图片输入。");
-    return {answer:answer.trim(),url,usage,data:null};
+    const body={model:String(options.model||""),messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false};if(options.max_tokens!=null)body.max_tokens=Number(options.max_tokens);
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
+    const raw=await r.text();
+    if(!r.ok)throw new Error(`HTTP ${r.status} · ${url}\n${raw.slice(0,1600)}`);
+    let o;try{o=JSON.parse(raw)}catch{throw new Error("视觉接口返回的不是 JSON。请检查 Vision Base URL 是否正确。")}
+    let ans=o.choices?.[0]?.message?.content;
+    if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
+    if(typeof ans!=="string"||!ans.trim())throw new Error("视觉模型没有返回文字内容。请确认模型支持图片输入。\n"+JSON.stringify(o).slice(0,700));
+    return {answer:ans,url,usage:o.usage||null,data:o};
   }
 
   // Kept as an alias for compatibility with older app code.
