@@ -1,4 +1,4 @@
-/* Iris v4.64 — G Chat API with robust optional tool calling. */
+/* Iris v4.56 — G Chat API with optional OpenAI-compatible tool calling. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
@@ -8,18 +8,10 @@
 
   async function chatStream(options,onText){
     const url=requestUrl(options.baseUrl);
-    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true};
-    if(options.includeUsage!==false)body.stream_options={include_usage:true};
+    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:true,stream_options:{include_usage:true}};
     if(Array.isArray(options.tools)&&options.tools.length)body.tools=options.tools;if(options.tool_choice)body.tool_choice=options.tool_choice;
-    let r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
-    if(!r.ok){
-      const errText=(await r.text()).slice(0,600);
-      if(options.includeUsage!==false && (r.status===400||r.status===404||r.status===422)){
-        const retryBody={...body};delete retryBody.stream_options;
-        r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(retryBody),signal:options.signal});
-        if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
-      }else throw new Error(`HTTP ${r.status}: ${errText}`);
-    }
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
+    if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
     if(!r.body)throw new Error("当前浏览器不支持 API 流式响应。");
     const reader=r.body.getReader(),decoder=new TextDecoder("utf-8");
     let buffer="",answer="",usage=null,toolCalls=[];
