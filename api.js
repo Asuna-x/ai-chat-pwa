@@ -1,4 +1,4 @@
-/* Iris v4.74 — G Chat API; text streaming + non-stream vision for compatibility. */
+/* Iris v4.75 — robust vision send + visible diagnostics. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
@@ -46,6 +46,9 @@
   async function visionChatStream(options,onText){
     const url=requestUrl(options.baseUrl);
     const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false};
+    // Some OpenAI-compatible gateways require an explicit image detail field.
+    // Add it only to image_url parts so ordinary text requests remain untouched.
+    for(const m of (body.messages||[])){if(Array.isArray(m.content))for(const part of m.content){if(part?.type==="image_url"&&part.image_url&&typeof part.image_url==="object"&&!part.image_url.detail)part.image_url.detail="auto"}}
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
     if(!r.ok){const detail=(await r.text()).slice(0,1200);throw new Error(`Vision HTTP ${r.status} · ${url}\n${detail}`)}
     let o;try{o=await r.json()}catch{throw new Error("视觉接口返回的不是 JSON。请检查 Vision Base URL 是否为 OpenAI-compatible 的 /v1 地址。")}

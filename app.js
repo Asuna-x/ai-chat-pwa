@@ -1,4 +1,4 @@
-/* Iris v4.74 — fixed cache/versioning and unified text + vision send pipeline. */
+/* Iris v4.75 — robust vision send, fallback config and visible diagnostics. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -408,9 +408,12 @@ async function send(){
  const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
  if(!text&&!attachments.length)return;
  const hasImage=attachments.some(a=>a.kind==="image");
- const visionReady=state.settings.visionEnabled===true&&String(state.settings.visionBase||"").trim()&&String(state.settings.visionKey||"").trim()&&String(state.settings.visionModel||"").trim();
- const normalReady=String(state.settings.apiBase||"").trim()&&String(state.settings.apiKey||"").trim()&&String(state.settings.model||"").trim();
- if(hasImage&&!visionReady){settings();settingsOpenPage("visionPage");showErr("图片消息需要先启用视觉模型，并填写 Vision Base URL、Vision API Key 和视觉模型。");return}
+ const visionBase=String(state.settings.visionBase||"").trim()||String(state.settings.apiBase||"").trim();
+ const visionKey=String(state.settings.visionKey||"").trim()||String(state.settings.apiKey||"").trim();
+ const visionModel=String(state.settings.visionModel||"").trim()||String(state.settings.model||"").trim();
+ const visionReady=hasImage&&Boolean(visionBase&&visionKey&&visionModel);
+ const normalReady=Boolean(String(state.settings.apiBase||"").trim()&&String(state.settings.apiKey||"").trim()&&String(state.settings.model||"").trim());
+ if(hasImage&&!visionReady){settings();settingsOpenPage("visionPage");showErr("图片消息缺少 API 配置。可以直接使用普通 AI 的 Base URL、Key 和模型；如果该模型不支持图片，请在「视觉与图像」填写视觉模型。");return}
  if(!hasImage&&!normalReady){settings();settingsOpenPage("aiPage");showErr("请先完成 AI Base URL、API Key 和模型设置。");return}
  ensure();const c=chat();
  if(/^(记住|记得|请记住)[:：\s]/i.test(text))addMemory(text);
@@ -432,9 +435,9 @@ async function send(){
   const ms=[];const systemParts=[];
   const nestActionTarget=nestChatWriteTarget(text);
   const useVision=hasImage&&visionReady;
-  const activeBase=useVision?state.settings.visionBase:state.settings.apiBase;
-  const activeKey=useVision?state.settings.visionKey:state.settings.apiKey;
-  const activeModel=useVision?state.settings.visionModel:state.settings.model;
+  const activeBase=useVision?visionBase:state.settings.apiBase;
+  const activeKey=useVision?visionKey:state.settings.apiKey;
+  const activeModel=useVision?visionModel:state.settings.model;
   if(hasImage&&!useVision)throw new Error("已选择图片，但视觉模型还没有完整配置。请到「设置 → 视觉与图像」填写 Base URL、API Key 和视觉模型。");
   if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);
   if(useVision)systemParts.push("本轮包含用户上传的图片。请直接理解图片内容，并结合用户文字回答。只能描述图片中实际可见或合理读取的信息。");
@@ -483,7 +486,13 @@ async function send(){
   const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};ts.prompt+=usageTotal.prompt;ts.completion+=usageTotal.completion;ts.total+=usageTotal.total;ts.requests+=usageTotal.requests;state.settings.tokenStats=ts;save();renderTokenStats();completed=true;
   if(shouldAutoSummarize(c))autoSummarizeChat(c);
  }catch(e){
-  if(e?.name==="AbortError")showErr(state.stopRequested?"已停止这次回复。\n你的消息已经保留在聊天记录里。":"请求等待超过 60 秒。\n请求地址："+apiHint());else showErr(e.message||String(e));
+  const detail=e?.name==="AbortError"?(state.stopRequested?"已停止这次回复。":"请求超时（60 秒）。"):(e?.message||String(e));
+  console.error("Iris send failed",{vision:hasImage,base:activeBase,model:activeModel,error:e});
+  showErr((hasImage?"图片消息发送失败：":"发送失败：")+detail);
+  // Keep a visible diagnostic bubble so failures are not lost on iOS/PWA.
+  const et=Date.now();
+  c.messages.push({role:"assistant",content:"发送失败："+detail,timestamp:et});
+  save();render();
  }finally{
   clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy();
   if(completed)autoUpdateLongTermMemory(c);
