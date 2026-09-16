@@ -1,4 +1,4 @@
-/* Iris v4.78 — clean OpenAI-compatible vision transport. */
+/* Iris v4.79 — clean OpenAI-compatible vision transport. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){
@@ -45,7 +45,7 @@
 
   async function visionChat(options){
     const url=requestUrl(options.baseUrl);
-    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false};
+    const body={model:options.model,messages:options.messages,temperature:Number(options.temperature ?? .7),stream:false,max_tokens:Number(options.max_tokens||1024)};
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
     const raw=await r.text();
     if(!r.ok)throw new Error(`HTTP ${r.status} · ${url}\n${raw.slice(0,1600)}`);
