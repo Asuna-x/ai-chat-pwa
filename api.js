@@ -1,4 +1,4 @@
-/* Iris v4.82 — OpenAI-compatible vision transport for the PWA image flow. */
+/* Iris v4.83 — vision transport with clear Zhipu rate-limit errors. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   let visionLock=Promise.resolve();
@@ -52,7 +52,13 @@
       if(options.max_tokens!=null)body.max_tokens=Number(options.max_tokens);
       const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
       const raw=await r.text();
-      if(!r.ok)throw new Error(`HTTP ${r.status} · ${url}\n${raw.slice(0,1600)}`);
+      if(!r.ok){
+        let detail=raw.slice(0,1600),code="";
+        try{const e=JSON.parse(raw)?.error||{};code=String(e.code||"");detail=String(e.message||detail)}catch{}
+        const err=new Error(`HTTP ${r.status}${code?` · code ${code}`:""} · ${detail}`);
+        err.status=r.status;err.code=code;err.retryAfter=r.headers.get("Retry-After")||"";
+        throw err;
+      }
       let o;try{o=JSON.parse(raw)}catch{throw new Error("视觉接口返回的不是 JSON。请检查 Vision Base URL 是否正确。")}
       let ans=o.choices?.[0]?.message?.content;
       if(Array.isArray(ans))ans=ans.map(x=>typeof x==="string"?x:(x?.text||"")).join("");
