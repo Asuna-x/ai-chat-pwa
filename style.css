@@ -719,3 +719,29 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .memoryEpisodeBody b{display:block;font-size:13px;color:#735766;margin-bottom:5px}
 .memoryEpisodeBody div{font-size:12px;line-height:1.65;color:#806d76}
 .nestMoodIcon{font-style:normal}
+
+
+/* Iris v4.88 — unify both mood cards, remove legacy slider visuals, improve memory contrast. */
+.nestQuickMoodRow{grid-template-columns:1fr 1fr!important;align-items:stretch!important}
+.nestQuickMood{min-height:92px!important;padding:16px 52px 16px 16px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;text-align:left!important}
+.nestQuickMood.ai{padding-right:52px!important}
+.nestQuickMood .nestMoodIcon{right:15px!important}
+#nestAiMoodNoteShow{display:none!important}
+.nestMoodRange,.nestMoodSliderCard{display:none!important}
+.nestMoodPickerCard{background:rgba(255,252,253,.88)!important;border-color:rgba(145,103,123,.20)!important;box-shadow:0 12px 30px rgba(105,73,91,.07)!important}
+.nestMoodOption{background:rgba(255,255,255,.72)!important;border-color:rgba(145,103,123,.18)!important;color:#5f4854!important}
+.nestMoodOption span{color:#8b6276!important}
+.nestMoodOption b{color:#5f4854!important}
+.nestMoodOption.selected{background:rgba(221,191,205,.42)!important;border-color:rgba(137,91,113,.42)!important}
+.memorySummaryCard{background:rgba(255,252,253,.92)!important;border-color:rgba(132,91,111,.20)!important;box-shadow:0 12px 28px rgba(80,57,69,.08)!important}
+.memorySummaryCard b{font-size:13px!important;color:#5b3f4d!important;font-weight:700!important}
+.memorySummaryCard div{font-size:14px!important;line-height:1.75!important;color:#4d3d44!important;font-weight:450!important}
+.memorySubTitle{font-size:12px!important;color:#684d5b!important;font-weight:700!important;letter-spacing:1px!important}
+.memoryItem{background:rgba(255,252,253,.82)!important;border-color:rgba(132,91,111,.16)!important}
+.memoryText{font-size:13px!important;line-height:1.65!important;color:#514148!important}
+.memoryMeta{color:#8b707c!important}
+.memoryEpisodeCard{background:rgba(255,252,253,.88)!important;border-color:rgba(132,91,111,.18)!important}
+.memoryEpisodeDate{color:#806270!important;font-weight:600!important}
+.memoryEpisodeBody b{color:#604654!important;font-size:14px!important}
+.memoryEpisodeBody div{color:#5c4a52!important;font-size:13px!important;line-height:1.7!important}
+@media(max-width:390px){.nestQuickMood{min-height:88px!important;padding-left:13px!important;padding-right:46px!important}.nestQuickMood strong{font-size:14px!important}}
