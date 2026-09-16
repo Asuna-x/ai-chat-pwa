@@ -43,6 +43,19 @@
     return {answer,url,usage,toolCalls:calls};
   }
 
+  async function imageGenerate(options){
+    const base=normalizeBase(options.baseUrl);
+    const url=base+"/images/generations";
+    const body={model:options.model,prompt:String(options.prompt||""),size:options.size||"1024x1024",n:1};
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+options.apiKey},body:JSON.stringify(body),signal:options.signal});
+    if(!r.ok)throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,600)}`);
+    const o=await r.json();
+    const item=o.data?.[0]||{};
+    const src=item.url||item.b64_json||item.image_url||"";
+    if(!src)throw new Error("图像生成接口没有返回图片。");
+    return {url:item.url||"",b64:item.b64_json||"",src,raw:o};
+  }
+
   async function chat(options){
     const url=requestUrl(options.baseUrl);
     const body={
@@ -68,5 +81,5 @@
     return {answer:ans,data:o,url};
   }
 
-  window.GChatAPI={chat,chatStream,normalizeBase,requestUrl};
+  window.GChatAPI={chat,chatStream,imageGenerate,normalizeBase,requestUrl};
 })();
