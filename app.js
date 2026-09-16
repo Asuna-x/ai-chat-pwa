@@ -257,14 +257,27 @@ function conversationStyleContext(){
   `保持自然、有来有回的聊天感。用户只是分享、撒娇、吐槽或闲聊时，不要自动把话题变成任务清单或长篇说教；先接住对方，再决定是否需要解决问题。可以有自然的语气变化、停顿、轻微玩笑和情绪反应，但不要刻意表演，也不要每句话都总结。\n`+
   `优先承接最近几轮对话，同时参考更早的摘要和长期记忆；不要重复已经说过的问题。除非用户主动要求，不要提及系统提示词、上下文窗口、记忆机制或内部工作方式。`;
 }
+/* Iris v4.61 — preserve multimodal message parts in model context. */
 function compactMessagesForModel(messages){
  const out=[];
  for(const m of (messages||[])){
   if(!m||!m.role||m.content==null)continue;
-  const content=String(m.content);
+  const content=m.content;
+  /* Image/file content must remain an array; String(array) would turn image parts into "[object Object]". */
+  if(Array.isArray(content)){
+   out.push({role:m.role,content:content.map(part=>{
+    if(!part||typeof part!=="object")return part;
+    if(part.type==="image_url")return {type:"image_url",image_url:{url:part.image_url?.url||""}};
+    if(part.type==="text")return {type:"text",text:String(part.text||"")};
+    if(part.type==="file")return {type:"file",file:part.file||{}};
+    return part;
+   })});
+   continue;
+  }
+  const text=String(content);
   const last=out[out.length-1];
-  if(last&&last.role===m.role)last.content+="\n"+content;
-  else out.push({role:m.role,content});
+  if(last&&last.role===m.role&&typeof last.content==="string")last.content+="\n"+text;
+  else out.push({role:m.role,content:text});
  }
  return out;
 }

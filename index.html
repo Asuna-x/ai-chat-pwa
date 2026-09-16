@@ -10,7 +10,7 @@ if("serviceWorker"in navigator){
     window.location.reload();
   });
   window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("./sw.js?v=4.59",{updateViaCache:"none"})
+    navigator.serviceWorker.register("./sw.js?v=4.61",{updateViaCache:"none"})
       .then(reg=>reg.update())
       .catch(err=>console.warn("PWA update",err));
   });
@@ -296,4 +296,4 @@ if("serviceWorker"in navigator){
   </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.57"></script><script src="./app.js?v=4.57"></script></body></html>
+<script src="./api.js?v=4.61"></script><script src="./app.js?v=4.61"></script></body></html>

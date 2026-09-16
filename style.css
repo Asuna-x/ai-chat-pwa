@@ -661,3 +661,26 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .attachChip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:135px;font-size:10px}
 .attachChip button{flex:0 0 auto;background:rgba(255,255,255,.7);border:1px solid var(--line);color:var(--muted)}
 @media(max-width:380px){.nestCoupleHeader{gap:15px}.nestPersonAvatar{width:52px;height:52px}.nestPerson{min-width:68px}.nestCoupleHeart{font-size:17px}}
+
+/* Iris v4.61 — nest glass clock, larger couple avatars, cleaner attachments. */
+.nestClockCard{
+  background:rgba(255,250,244,.30)!important;
+  border:1px solid rgba(255,255,255,.58)!important;
+  box-shadow:0 14px 38px rgba(70,50,60,.10),inset 0 1px 0 rgba(255,255,255,.62)!important;
+  backdrop-filter:blur(22px) saturate(1.12)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(1.12)!important;
+}
+.nestClockCard strong{color:#5e4853!important;text-shadow:0 2px 14px rgba(255,255,255,.72)}
+.nestClockCard div,.nestClockCard .nestTimeKicker{color:#6f5b64!important;text-shadow:0 1px 5px rgba(255,255,255,.55)}
+.nestCoupleHeader{gap:28px!important;margin:20px auto 5px!important}
+.nestPerson{gap:8px!important}
+.nestPersonAvatar{width:72px!important;height:72px!important;border-radius:23px!important;background:rgba(255,255,255,.34)!important;border:1px solid rgba(255,255,255,.72)!important;box-shadow:0 12px 28px rgba(70,50,60,.12),inset 0 1px 0 rgba(255,255,255,.72)!important}
+.nestPerson strong{font-size:12px!important;color:#604d58!important;text-shadow:0 1px 5px rgba(255,255,255,.55)}
+.nestCoupleHeart{font-size:21px!important;transform:translateY(-9px)!important}
+.attachmentPreview{max-width:780px!important;padding:4px 6px 7px!important;gap:8px!important;align-items:center!important}
+.attachChip{min-height:46px!important;max-width:240px!important;padding:5px 7px!important;border-radius:16px!important;background:rgba(255,255,255,.78)!important;border-color:rgba(255,255,255,.9)!important;box-shadow:0 8px 22px rgba(60,45,55,.09)!important}
+.attachChip img{width:38px!important;height:38px!important;border-radius:11px!important}
+@media(max-width:380px){
+ .nestCoupleHeader{gap:18px!important}
+ .nestPersonAvatar{width:64px!important;height:64px!important}
+}
