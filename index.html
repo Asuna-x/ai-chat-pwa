@@ -40,6 +40,7 @@ if("serviceWorker"in navigator){
       <div class="settingsGroup">
         <button class="settingsRow" data-settings-page="aiPage"><span class="rowIcon">◉</span><span><b>AI 设置</b><small>API、模型与回复方式</small></span><em>›</em></button>
         <button class="settingsRow" data-settings-page="personaPage"><span class="rowIcon">✦</span><span><b>他的设定</b><small>名字、简介与系统提示词</small></span><em>›</em></button>
+        <button class="settingsRow" data-settings-page="mcpPage"><span class="rowIcon">⌘</span><span><b>AI 工具 / MCP</b><small>让他调用小窝与外部工具</small></span><strong id="mcpSummary">关闭</strong><em>›</em></button>
       </div>
 
       <div class="settingsSectionTitle">个性化</div>
@@ -60,7 +61,7 @@ if("serviceWorker"in navigator){
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>Iris</b><small>Version 4.45 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>Iris</b><small>Version 4.57 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -79,6 +80,32 @@ if("serviceWorker"in navigator){
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>Temperature</span><input id="temperature" type="number" min="0" max="2" step=".1"></label>
       </div>
+    </section>
+
+    <section class="settingsPage subSettingsPage hidden" id="mcpPage">
+      <div class="subIntro"><b>AI 工具 / MCP</b><small>让 AI 在聊天时调用真实工具。小窝工具会直接操作这台装置上的小窝数据；外部 MCP Server 可提供更多工具。</small></div>
+      <div class="settingsSectionTitle">小窝工具</div>
+      <div class="settingsGroup settingsFormGroup">
+        <label class="settingsSwitch"><span><b>允许他调用小窝</b><small>允许 AI 在你明确要求时进入小窝、读取内容、写今日心情。</small></span><input id="mcpNestEnabled" type="checkbox"><i></i></label>
+        <div class="mcpToolList">
+          <div><b>enter_nest</b><small>进入并读取共同小窝</small></div>
+          <div><b>write_nest_mood</b><small>写入他的今日心情</small></div>
+          <div><b>write_nest_note</b><small>写入今日小记</small></div>
+          <div><b>write_nest_to_user</b><small>写下想对你说的话</small></div>
+          <div><b>read_nest</b><small>读取小窝当前内容</small></div>
+        </div>
+      </div>
+      <div class="settingsSectionTitle">MCP 连接</div>
+      <div class="settingsGroup settingsFormGroup"><label class="settingsSwitch"><span><b>启用外部 MCP</b><small>连接你自己的 MCP Server，并把它提供的工具交给 AI 调用。</small></span><input id="mcpEnabled" type="checkbox"><i></i></label></div>
+      <div class="settingsSectionTitle">外部 MCP Server</div>
+      <div class="settingsGroup settingsFormGroup">
+        <label class="settingsField"><span>Server URL</span><input id="mcpServerUrl" placeholder="https://你的-mcp-server.example.com/mcp"></label>
+        <label class="settingsField"><span>Bearer Token（可选）</span><div class="passwordField"><input id="mcpServerToken" type="password" placeholder="可选"><button type="button" id="toggleMcpToken">显示</button></div></label>
+        <div class="inlineActions"><button class="smallAction" id="mcpTest">连接测试</button><button class="smallAction" id="mcpRefresh">刷新工具</button></div>
+        <div class="mcpStatus" id="mcpStatus">尚未连接</div>
+        <div class="mcpToolList" id="mcpExternalTools"><div><b>暂无外部工具</b><small>填写 Server URL 后点击“刷新工具”。</small></div></div>
+      </div>
+      <p class="settingsNote">MCP 是工具连接协议。外部 Server 必须支持浏览器跨域请求（CORS）并提供 Streamable HTTP MCP 接口。AI 只有在模型/API 支持工具调用时，才能实际发起这些工具调用。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="memoryPage">
@@ -250,4 +277,4 @@ if("serviceWorker"in navigator){
   </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="copyBubble">复制</button></div>
-<script src="./api.js?v=4.56"></script><script src="./app.js?v=4.56"></script></body></html>
+<script src="./api.js?v=4.57"></script><script src="./app.js?v=4.57"></script></body></html>
