@@ -1,4 +1,4 @@
-/* Iris v4.82 — clean OpenAI-compatible vision transport + optional backend proxy. */
+/* Iris v4.83 — clean OpenAI-compatible vision transport + optional backend proxy. */
 /* G Chat API — intentionally kept identical to the known-working direct fetch style. */
 (function(){
   function normalizeBase(value){

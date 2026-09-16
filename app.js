@@ -1,4 +1,4 @@
-/* Iris v4.82 — Vision proxy backend support; messages can be edited/deleted. */
+/* Iris v4.83 — Vision proxy backend support; messages can be edited/deleted. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
