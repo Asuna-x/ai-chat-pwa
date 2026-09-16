@@ -401,6 +401,7 @@ function executeNestTool(name,args){
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
+/* Iris v4.68 — vision requests use a clean no-tools/no-stream-options path; stable text path unchanged. */
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
@@ -438,7 +439,7 @@ async function send(){
   let rounds=0;
   while(rounds++<4){
    let answer="",pendingRound="";
-   const result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
+   const result=await window.GChatAPI.chatStream({baseUrl:activeBase,apiKey:activeKey,model:activeModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools:hasImage?null:tools,tool_choice:hasImage?undefined:(tools?"auto":undefined),includeUsage:!hasImage},(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound);const count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound;});
    addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){
     const assistantToolMsg={role:"assistant",content:result.answer||null,tool_calls:result.toolCalls};ms.push(assistantToolMsg);
