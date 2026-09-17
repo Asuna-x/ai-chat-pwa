@@ -2231,3 +2231,9 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .attachmentPreview{background:transparent!important;min-height:0!important;}
 .attachChip.imageChip{overflow:hidden;background:rgba(255,255,255,.82)!important;}
 .attachChip.imageChip img{background:#fff;object-fit:cover;}
+
+/* Iris v4.127 — image messages: preserve original image and remove black letterbox. */
+.sentImageGrid{background:transparent!important;border:0!important;overflow:visible!important;align-items:start!important;}
+.sentImageGrid img{display:block!important;width:auto!important;height:auto!important;max-width:min(68vw,360px)!important;max-height:58vh!important;object-fit:contain!important;background:#fff!important;border-radius:14px!important;}
+.message.user .sentImageGrid img{margin-left:auto!important;}
+.attachChip.imageChip{background:rgba(255,255,255,.9)!important;}
