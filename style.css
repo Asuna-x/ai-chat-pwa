@@ -2075,3 +2075,14 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   .nestNotebookSheet.nestBookPage{padding:25px 20px 25px 35px!important;}
   .nestNotebookSheet.nestBookPage p{line-height:28px!important;background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,rgba(205,178,191,.18) 27px,rgba(205,178,191,.18) 28px)!important;background-position:0 1px!important;}
 }
+
+
+/* Iris v4.119 — move the home clock card down and remove the visible seam between sub-page save glass and bottom options. */
+#nestHome .nestClockCard{margin-top:20px!important;}
+#nest .nestPage:not(#nestHome) .nestSubFooter{
+  bottom:0!important;
+  padding-bottom:calc(9px + env(safe-area-inset-bottom))!important;
+}
+@media(max-width:390px){
+  #nest .nestPage:not(#nestHome) .nestSubFooter{bottom:0!important;}
+}
