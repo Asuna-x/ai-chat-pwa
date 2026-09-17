@@ -1984,3 +1984,71 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   .nestNotebookSheet p{line-height:27px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 25px,rgba(205,178,191,.20) 26px,transparent 27px)!important}
   .nestNotebookWrite textarea{line-height:28px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 26px,rgba(205,178,191,.20) 27px,transparent 28px)!important}
 }
+
+
+/* Iris v4.117 — fix the save/nav seam, move the clock card down slightly, strengthen drawer text, and keep notebook rules below the text. */
+#nest .nestPage:not(#nestHome) .nestSubFooter{
+  bottom:calc(62px + env(safe-area-inset-bottom))!important;
+}
+@media(max-width:390px){
+  #nest .nestPage:not(#nestHome) .nestSubFooter{
+    bottom:calc(60px + env(safe-area-inset-bottom))!important;
+  }
+}
+
+/* The clock card starts a little lower; the return button/header stay untouched. */
+#nestHome .nestClockCard{
+  margin-top:10px!important;
+}
+
+/* Chat drawer: keep the same soft dark treatment from top to bottom, with clearer text. */
+.drawer .drawer-top{
+  background:linear-gradient(180deg,rgba(34,40,45,.20),rgba(34,40,45,.04))!important;
+}
+.drawer .drawer-top .brand b{color:#eee5ea!important}
+.drawer .drawer-top .brand small{color:#d2c0ca!important}
+.drawer .drawer-top .brand-mark{
+  border:1px solid rgba(255,255,255,.12)!important;
+  background:rgba(255,247,251,.10)!important;
+}
+.drawer .new{
+  background:linear-gradient(135deg,rgba(255,247,251,.12),rgba(255,255,255,.07))!important;
+  border-color:rgba(255,255,255,.12)!important;
+  color:#eee4e9!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 20px rgba(0,0,0,.07)!important;
+}
+.drawer .section{color:#d8c8cf!important}
+.drawer .item{color:#e4d9de!important}
+.drawer .item.active{
+  background:rgba(255,239,247,.12)!important;
+  color:#f0e5ea!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+.drawer .itemMore{color:#c9bac2!important}
+
+/* Notebook rules sit below the glyphs instead of crossing their lower edges. */
+.nestNotebookSheet p{
+  line-height:30px!important;
+  min-height:30px!important;
+  padding-bottom:0!important;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,rgba(205,178,191,.18) 29px,rgba(205,178,191,.18) 30px)!important;
+  background-position:0 1px!important;
+}
+.nestNotebookWrite textarea{
+  line-height:30px!important;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,rgba(205,178,191,.18) 29px,rgba(205,178,191,.18) 30px)!important;
+  background-position:0 1px!important;
+}
+@media(max-width:390px){
+  .nestNotebookSheet p{
+    line-height:28px!important;
+    min-height:28px!important;
+    background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,rgba(205,178,191,.18) 27px,rgba(205,178,191,.18) 28px)!important;
+    background-position:0 1px!important;
+  }
+  .nestNotebookWrite textarea{
+    line-height:28px!important;
+    background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,rgba(205,178,191,.18) 27px,rgba(205,178,191,.18) 28px)!important;
+    background-position:0 1px!important;
+  }
+}
