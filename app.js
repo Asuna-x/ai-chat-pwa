@@ -1,4 +1,4 @@
-/* Iris v4.109 — full couple illustration + fixed story text sizing. */
+/* Iris v4.110 — full couple illustration + fixed story text sizing. */
 /* Iris v4.98 — user-message edit mode: edit, truncate from this message, and regenerate the reply. */
 /* Iris v4.95 — AI mood quick-pick uses the same nest layout and adds a dedicated mood-selection tool. */
 /* Iris v4.92 — deterministic nest tool flow: explicit nest requests force enter_nest then the requested write tool. */

@@ -1542,3 +1542,31 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
     top:5px!important;
   }
 }
+
+/* Iris v4.110 — 时间卡人物再放大：完整显示、靠下、底边与卡片齐平。 */
+#nestHome .nestClockCard{
+  min-height:174px!important;
+}
+#nestHome .nestClockCoupleArt{
+  top:auto!important;
+  right:0!important;
+  bottom:0!important;
+  height:100%!important;
+  width:auto!important;
+  max-width:56%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  object-position:right bottom!important;
+}
+@media(max-width:390px){
+  #nestHome .nestClockCard{min-height:166px!important}
+  #nestHome .nestClockCoupleArt{
+    right:0!important;
+    bottom:0!important;
+    height:100%!important;
+    width:auto!important;
+    max-width:58%!important;
+    max-height:100%!important;
+    object-position:right bottom!important;
+  }
+}
