@@ -250,6 +250,7 @@ if("serviceWorker"in navigator){
         <div class="nestQuickMoodRow"><button class="nestQuickMood" id="nestMoodEdit" type="button"><span>我的心情</span><strong id="nestMoodShow">今天感觉怎么样？</strong><i id="nestMoodIcon" class="nestMoodIcon">○</i></button><button class="nestQuickMood" id="nestAiMoodEdit" type="button"><span>他的心情</span><strong id="nestAiMoodShow">他今天还没有留下心情。</strong><i id="nestAiMoodIcon" class="nestMoodIcon">♡</i></button></div>
         <div class="nestCard nestToGCard" id="nestToGCard" role="button" tabindex="0" aria-label="打开今天想对他说"><div class="nestCardHead"><span>今天想对他说</span><span class="nestCardArrow">›</span></div><div class="nestTextPreview" id="nestToGShow">写点什么留在这里。</div></div>
         <div class="nestCard nestNoteCard" id="nestNoteCard" role="button" tabindex="0" aria-label="打开今日小记"><div class="nestCardHead"><span>今日小记</span><span class="nestCardArrow">›</span></div><div class="nestTextPreview" id="nestNoteShow">今天有什么想留下来？</div></div>
+        <div class="nestCard nestStoryCard" id="nestStoryCard" role="button" tabindex="0" aria-label="打开我们的故事"><div class="nestCardHead"><span>我们的故事</span><span class="nestCardArrow">›</span></div><div class="nestTextPreview">把重要的共同经历，慢慢留在这里。</div></div>
         <div class="nestAnniversaryCard"><div><span>纪念日</span><strong id="nestCountdown">还没有设置纪念日</strong></div><button id="nestAnniversaryOpen">›</button></div>
       </div>
       </section>
@@ -275,6 +276,11 @@ if("serviceWorker"in navigator){
       <div class="nestSubFooter"><button class="nestSaveBtn" id="nestNoteSave">保存这一天</button></div>
     </section>
 
+    <section class="nestPage hidden" id="nestStoryPage">
+      <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>我们的故事</h2><span></span></div>
+      <div class="nestSubBody"><div class="nestStoryIntro">那些值得以后再提起的事，会慢慢留在这里。</div><div id="nestStoryList" class="nestStoryList"></div></div>
+    </section>
+
     <section class="nestPage hidden" id="nestAnniversaryPage">
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>纪念日</h2><span></span></div>
       <div class="nestSubBody">
@@ -296,4 +302,4 @@ if("serviceWorker"in navigator){
   </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
-<script src="./api.js?v=4.85"></script><script src="./app.js?v=4.87"></script></body></html>
+<script src="./api.js?v=4.85"></script><script src="./app.js?v=4.90"></script></body></html>

@@ -745,3 +745,29 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .memoryEpisodeBody b{color:#604654!important;font-size:14px!important}
 .memoryEpisodeBody div{color:#5c4a52!important;font-size:13px!important;line-height:1.7!important}
 @media(max-width:390px){.nestQuickMood{min-height:88px!important;padding-left:13px!important;padding-right:46px!important}.nestQuickMood strong{font-size:14px!important}}
+
+
+/* Iris v4.90 — small visual refinement based on v4.88: glass memory cards and nest story. */
+.memorySummaryCard,.memoryItem,.memoryEpisodeCard{
+  background:linear-gradient(145deg,rgba(255,255,255,.48),rgba(255,248,252,.22))!important;
+  border:1px solid rgba(255,255,255,.62)!important;
+  box-shadow:0 14px 32px rgba(82,60,72,.09),inset 0 1px 0 rgba(255,255,255,.72)!important;
+  backdrop-filter:blur(22px) saturate(135%)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(135%)!important;
+}
+.memorySummaryCard{padding:18px 18px!important;border-radius:20px!important}
+.memorySummaryCard b{font-size:14px!important;color:#5a3e4c!important;letter-spacing:.2px}
+.memorySummaryCard div{font-size:14px!important;line-height:1.8!important;color:#46373f!important}
+.memoryItem{padding:14px!important;border-radius:18px!important}
+.memoryText{font-size:13.5px!important;line-height:1.75!important;color:#46373f!important}
+.memoryEpisodeCard{border-radius:20px!important}
+.nestStoryCard{cursor:pointer}
+.nestStoryList{display:flex;flex-direction:column;gap:12px;padding-bottom:20px}
+.nestStoryIntro{margin:2px 2px 16px;color:var(--muted);font-size:13px;line-height:1.7}
+.nestStoryItem{display:grid;grid-template-columns:82px 1fr;gap:14px;padding:17px 16px;border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.46),rgba(255,248,252,.20));border:1px solid rgba(255,255,255,.62);box-shadow:0 14px 32px rgba(82,60,72,.09),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(22px) saturate(135%);-webkit-backdrop-filter:blur(22px) saturate(135%)}
+.nestStoryDate{font-size:11px;color:#806270;line-height:1.5;padding-top:2px}
+.nestStoryContent b{display:block;font-size:15px;color:#513b47;margin-bottom:7px}
+.nestStoryContent p{margin:0;font-size:13px;line-height:1.75;color:#5b4851}
+.nestStoryEmpty{padding:34px 20px;text-align:center;border-radius:22px;background:rgba(255,255,255,.34);border:1px solid rgba(255,255,255,.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.nestStoryEmpty span{display:block;font-size:26px;color:#9a7182;margin-bottom:10px}.nestStoryEmpty b{display:block;color:#5a424d;font-size:14px}.nestStoryEmpty small{display:block;margin-top:6px;color:#927d86;line-height:1.6}
+@media(max-width:390px){.nestStoryItem{grid-template-columns:68px 1fr;padding:15px 13px;gap:11px}}
