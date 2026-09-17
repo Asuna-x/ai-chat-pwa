@@ -2237,3 +2237,15 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .sentImageGrid img{display:block!important;width:auto!important;height:auto!important;max-width:min(68vw,360px)!important;max-height:58vh!important;object-fit:contain!important;background:#fff!important;border-radius:14px!important;}
 .message.user .sentImageGrid img{margin-left:auto!important;}
 .attachChip.imageChip{background:rgba(255,255,255,.9)!important;}
+
+
+/* Iris v4.132 — restore chat to vertical-only scrolling. */
+html,body,#app,.app,.main{max-width:100%;min-width:0;overflow-x:hidden;}
+.main{overflow:hidden;}
+.messages{min-width:0;width:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;}
+.message{width:100%;min-width:0;max-width:760px;}
+.message .bubble{min-width:0;overflow-wrap:anywhere;word-break:break-word;}
+.generatedImageMessage{width:100%;max-width:760px;min-width:0;overflow:hidden;}
+.generatedImageMessage img{max-width:min(82vw,520px);width:auto;height:auto;}
+.sentImageGrid{max-width:100%;min-width:0;overflow:hidden;}
+.sentImageGrid img{min-width:0;}
