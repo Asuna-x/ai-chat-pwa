@@ -2182,3 +2182,47 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestStoryEditorActions .nestSaveBtn{flex:1}
 .nestStoryEditorActions .nestClearBg{margin-top:0;flex:0 0 84px}
 @media(max-width:390px){.nestStoryActions button{padding:5px 8px;font-size:8px}.nestStoryEditor{padding:15px}.nestStoryEditorActions .nestClearBg{flex-basis:76px}}
+
+
+/* Iris v4.122 — fine-tune home clock card and right-side couple sticker position. */
+#nestHome .nestClockCard{
+  margin-top:42px!important;
+}
+#nestHome .nestClockCoupleArt{
+  bottom:12px!important;
+}
+@media(max-width:390px){
+  #nestHome .nestClockCard{margin-top:38px!important;}
+  #nestHome .nestClockCoupleArt{bottom:10px!important;}
+}
+
+/* Iris v4.123 — compact memory dedupe + notebook ruled-paper alignment + gentle page motion. */
+.nestBookViewport{
+  height:min(600px,calc(100dvh - 215px))!important;
+  padding-bottom:6px!important;
+}
+.nestNotebookSheet.nestBookPage{
+  padding-bottom:30px!important;
+}
+.nestNotebookSheet.nestBookPage p,
+.nestNotebookWrite textarea{
+  line-height:31px!important;
+  background:repeating-linear-gradient(to bottom,
+    transparent 0,
+    transparent 30px,
+    rgba(205,178,191,.18) 30px,
+    rgba(205,178,191,.18) 31px,
+    transparent 31px,
+    transparent 32px
+  )!important;
+  background-position:0 4px!important;
+}
+.nestBookPage.page-enter-next{animation:nestPageSoftNext .14s ease-out both;}
+.nestBookPage.page-enter-prev{animation:nestPageSoftPrev .14s ease-out both;}
+@keyframes nestPageSoftNext{from{opacity:.72;transform:translateX(5px)}to{opacity:1;transform:translateX(0)}}
+@keyframes nestPageSoftPrev{from{opacity:.72;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:390px){
+  .nestBookViewport{height:min(560px,calc(100dvh - 215px))!important;}
+  .nestNotebookSheet.nestBookPage p,
+  .nestNotebookWrite textarea{line-height:29px!important;background-position:0 4px!important;background:repeating-linear-gradient(to bottom,transparent 0,transparent 28px,rgba(205,178,191,.18) 28px,rgba(205,178,191,.18) 29px,transparent 29px,transparent 30px)!important;}
+}
