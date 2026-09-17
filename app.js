@@ -1,3 +1,4 @@
+/* Iris v4.94 — nest tool calls stay invisible; after a successful write, the model gives the user the natural completion reply. */
 /* Iris v4.92 — deterministic nest tool flow: explicit nest requests force enter_nest then the requested write tool. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
@@ -415,7 +416,7 @@ async function refreshMcpUI(showMessage=false){
 function executeNestTool(name,args){
  nestData=loadNest();normalizeNestData();syncTodayToDaily();
  const key=nestDateKey(),e=dailyEntry(key);
- function debugToast(msg){try{const c=chat();if(c){const ts=Date.now();const dbg={role:'assistant',content:'[🔧 工具调试] '+msg,timestamp:ts,_debug:true};c.messages.push(dbg);save();render();}}catch{}}
+ function debugToast(msg){/* v4.94: internal tool diagnostics are no longer inserted into the chat. */}
  if(name==='enter_nest'||name==='read_nest'){
   const selected=selectedAnniversary();
   const out={success:true,action:name,space:'小窝',today:key,userMood:e.userMood||'',userMoodNote:e.userMoodNote||'',aiMood:e.aiMood||'',aiMoodNote:e.aiMoodNote||'',toG:e.toG||'',note:e.note||'',anniversary:selected?{name:selected.name||'纪念日',date:selected.date||''}:null};
@@ -522,7 +523,7 @@ async function send(){
  const controller=new AbortController();state._abort=controller;const timeout=setTimeout(()=>{try{controller.abort()}catch{}},60000);let completed=false;
  try{
   const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);
-  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);systemParts.push(conversationStyleContext());systemParts.push(chatInterfaceContext(c));const mc=memoryContext();if(mc)systemParts.push(mc);const nc=nestContext();if(nc)systemParts.push(nc);if(nestActionTarget)systemParts.push(nestToolSystem()+` 本轮用户明确要求执行“${nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':'今天想对他说'}”写入动作。请先进入小窝，再调用对应写入工具。`);if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});ms.push(...buildConversationContext(c));
+  if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);systemParts.push(conversationStyleContext());systemParts.push(chatInterfaceContext(c));const mc=memoryContext();if(mc)systemParts.push(mc);const nc=nestContext();if(nc)systemParts.push(nc);if(nestActionTarget)systemParts.push(nestToolSystem()+` 本轮用户明确要求执行“${nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':'今天想对他说'}”写入动作。请先进入小窝，再调用对应写入工具；工具执行成功后，再用自然聊天语气告诉用户已经写好了，不要复述工具调用过程。`);if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});ms.push(...buildConversationContext(c));
   let tools=[];if(state.settings.mcpNestEnabled!==false)tools.push(...nestTools());if(state.settings.mcpEnabled===true&&state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){const gtool=nestTools().find(x=>x.function?.name==="generate_image");if(gtool)tools.push(gtool)}tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);if(!tools.length)tools=null;
   let displayQueue=Promise.resolve();const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();await sleep(Math.min(1500,Math.max(80,Number(state.settings.replyDelay??360)+Math.min(90,v.length)*7)))})};const usageTotal={prompt:0,completion:0,total:0,requests:0};let rounds=0,fullAnswer="";
   let forcedNestStep=nestActionTarget?'enter_nest':null;
@@ -533,6 +534,7 @@ async function send(){
    if(result.toolCalls?.length){ms.push({role:"assistant",content:result.answer||null,tool_calls:result.toolCalls});
     for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;const callName=call.function?.name||'';try{if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName))out=executeNestTool(callName,args);else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c)}else out=await mcpCallTool(callName,args)}catch(e){out={success:false,error:e?.message||String(e)}}ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)});
      if(nestActionTarget&&callName==='enter_nest'&&out?.success){forcedNestStep=nestActionTarget==='mood'?'write_nest_mood':nestActionTarget==='note'?'write_nest_note':'write_nest_to_user';}
+     if(nestActionTarget&&['write_nest_mood','write_nest_note','write_nest_to_user'].includes(callName)&&out?.success){forcedNestStep=null;}
     }
     continue
    }
