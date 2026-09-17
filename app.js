@@ -37,7 +37,7 @@ function nestDaysText(){const d=nestDays();if(d===null)return"还没有设置纪
 function nestTodayText(){const d=new Date();return d.toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"long"})}
 function updateNestClock(){const n=$("#nestNow"),big=$("#nestClockBig");const d=new Date();if(n)n.textContent=nestTodayText();if(big)big.textContent=d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false});const c=$("#nestCountdown"),cb=$("#nestCountdownBig");if(c)c.textContent=nestDaysText();if(cb){const days=nestDays();cb.textContent=days===null?"—":String(days)}const item=selectedAnniversary(),lab=$("#nestAnniversaryLabel");if(lab)lab.textContent=item?.name||item?.date||"还没有设置纪念日"}
 function applyNestBackground(){const app=$("#nestApp"),preview=$("#nestBackgroundPreview");if(!app)return;app.style.setProperty("--nest-bg-image",nestData.background?`url(${nestData.background})`:"none");if(preview)preview.style.backgroundImage=nestData.background?`url(${nestData.background})`:"linear-gradient(135deg,#f5e9dc,#fffaf3)";const page=$("#nestAnniversaryPage"),item=selectedAnniversary();if(page){const bg=item?.background?`url(${item.background})`:"none";page.style.setProperty("--anniversary-bg-image",bg);page.style.backgroundImage=bg}const ap=$("#nestAnniversaryPreview");if(ap)ap.style.backgroundImage=item?.background?`url(${item.background})`:"linear-gradient(135deg,#f5e9dc,#fffaf3)"}
-function renderNestHome(){nestData=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(),mood=$("#nestMoodShow"),aiMood=$("#nestAiMoodShow"),toG=$("#nestToGShow"),note=$("#nestNoteShow");if(mood)mood.textContent=e.userMood||"今天感觉怎么样？";const moodIcon=$("#nestMoodIcon");if(moodIcon){const mi=nestMoodOptions.indexOf(e.userMood);moodIcon.textContent=mi>=0?nestMoodIcons[mi]:"○"}if(aiMood)aiMood.textContent=e.aiMoodNote||e.aiMood||"他今天还没有留下心情。";const aiNoteShow=$("#nestAiMoodNoteShow");if(aiNoteShow){aiNoteShow.textContent=e.aiMoodNote||"";aiNoteShow.classList.remove("hidden")}if(toG)toG.textContent=e.toG||"写点什么留在这里。";if(note)note.textContent=e.note||"今天有什么想留下来？";const ua=$("#nestUserAvatar"),aa=$("#nestAiAvatar"),un=$("#nestUserName"),an=$("#nestAiName");if(ua)ua.innerHTML=avatarHTML("user");if(aa)aa.innerHTML=avatarHTML("ai");if(un)un.textContent=state.settings.myName||"你";if(an)an.textContent=state.settings.gName||"他";updateNestClock();applyNestBackground()}
+function renderNestHome(){nestData=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(),mood=$("#nestMoodShow"),aiMood=$("#nestAiMoodShow"),toG=$("#nestToGShow"),note=$("#nestNoteShow");if(mood)mood.textContent=e.userMood||"今天感觉怎么样？";const moodIcon=$("#nestMoodIcon");if(moodIcon){const mi=nestMoodOptions.indexOf(e.userMood);moodIcon.textContent=mi>=0?nestMoodIcons[mi]:"○"}if(aiMood)aiMood.textContent=e.aiMood||"还没有选择";const aiMoodIcon=$("#nestAiMoodIcon");if(aiMoodIcon){const mi=nestMoodOptions.indexOf(e.aiMood);aiMoodIcon.textContent=mi>=0?nestMoodIcons[mi]:"○"}const aiNoteShow=$("#nestAiMoodNoteShow");if(aiNoteShow){aiNoteShow.textContent=e.aiMoodNote||"他今天还没有留下文字。";aiNoteShow.classList.toggle("empty",!e.aiMoodNote)}if(toG)toG.textContent=e.toG||"写点什么留在这里。";if(note)note.textContent=e.note||"今天有什么想留下来？";const ua=$("#nestUserAvatar"),aa=$("#nestAiAvatar"),un=$("#nestUserName"),an=$("#nestAiName");if(ua)ua.innerHTML=avatarHTML("user");if(aa)aa.innerHTML=avatarHTML("ai");if(un)un.textContent=state.settings.myName||"你";if(an)an.textContent=state.settings.gName||"他";updateNestClock();applyNestBackground()}
 const nestMoodOptions=["开心","难过","平静","期待","疲惫","烦躁","想念","甜甜的"];
 const nestMoodIcons=['☀','♡','☁','◌','✦','⌁','◒','☾','◇','≋','!','♡'];
 
@@ -356,7 +356,7 @@ function nestChatWriteTarget(text){
 function nestTools(){
  return [
   {type:'function',function:{name:'enter_nest',description:'进入你们共同的小窝，并读取当前小窝内容。只有用户在聊天中明确邀请你进入小窝时才使用。',parameters:{type:'object',properties:{reason:{type:'string',description:'进入小窝的简短原因'}},required:[]}}},
-  {type:'function',function:{name:'write_nest_mood',description:'把你此刻想留下的今日心情文字写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的心情正文，第一人称，自然简短'}},required:['content']}}},
+  {type:'function',function:{name:'write_nest_mood',description:'把你此刻想留下的“今日心情”真正写进你们的小窝。调用这个工具时必须同时选择一个快捷心情和一段心情文字；这是设置里的真实小窝写入工具，不要只在聊天里说会写。',parameters:{type:'object',properties:{mood:{type:'string',enum:nestMoodOptions,description:'你今天的快捷心情，只能从这些选项中选择一个'},content:{type:'string',description:'要保存的心情正文，第一人称，自然简短，像你自己写下的一句话'}},required:['mood','content']}}},
   {type:'function',function:{name:'write_nest_note',description:'把一条自然的今日小记写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的小记正文'}},required:['content']}}},
   {type:'function',function:{name:'write_nest_to_user',description:'把一句想留给用户的话写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的文字，第一人称'}},required:['content']}}},
   {type:'function',function:{name:'read_nest',description:'读取当前小窝的结构和今天已有内容。',parameters:{type:'object',properties:{},required:[]}}},
@@ -416,12 +416,17 @@ function executeNestTool(name,args){
  }
  const content=String(args?.content||'').trim();
  if(!content)return {success:false,error:'没有收到要保存的正文。'};
- const field=name==='write_nest_mood'?'aiMoodNote':name==='write_nest_note'?'note':name==='write_nest_to_user'?'toG':null;
+ if(name==='write_nest_mood'){
+  const mood=String(args?.mood||'').trim();
+  if(!nestMoodOptions.includes(mood))return {success:false,error:'请同时选择一个有效的快捷心情。可选：'+nestMoodOptions.join('、')};
+  saveDailyField(key,'aiMood',mood);saveDailyField(key,'aiMoodNote',content);nestData.moods.ai=mood;nestData.aiMood=mood;nestData.aiMoodNote=content;nestData.moods.aiNote=content;saveNestData();renderNestHome();return {success:true,action:name,space:'小窝',date:key,field:'aiMood+aiMoodNote',mood,content};
+ }
+ const field=name==='write_nest_note'?'note':name==='write_nest_to_user'?'toG':null;
  if(!field)return {success:false,error:'未知的小窝工具。'};
- saveDailyField(key,field,content);if(field==="aiMoodNote"){nestData.aiMoodNote=content;nestData.moods.aiNote=content}saveNestData();renderNestHome();
+ saveDailyField(key,field,content);saveNestData();renderNestHome();
  return {success:true,action:name,space:'小窝',date:key,field,content};
 }
-function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
+function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入“他的今日心情”时，必须调用 write_nest_mood，并同时提供 mood 和 content；不要只说“我会去写”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
 /* Iris v4.85 — vision bridge: GLM-4.6V-Flash -> GLM-4V-Flash -> GLM-4.1V-Thinking-Flash on overload. */
