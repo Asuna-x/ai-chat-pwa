@@ -1,4 +1,4 @@
-/* Iris v4.89 — nest tools always injected; fix AI unable to call nest tools without keyword match. */
+/* Iris v4.89-debug — nest tools always injected; debug toast on executeNestTool. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -415,16 +415,27 @@ async function refreshMcpUI(showMessage=false){
 function executeNestTool(name,args){
  nestData=loadNest();normalizeNestData();syncTodayToDaily();
  const key=nestDateKey(),e=dailyEntry(key);
+ function debugToast(msg){try{const c=chat();if(c){const ts=Date.now();const dbg={role:'assistant',content:'[🔧 工具调试] '+msg,timestamp:ts,_debug:true};c.messages.push(dbg);save();render();}}catch{}}
  if(name==='enter_nest'||name==='read_nest'){
   const selected=selectedAnniversary();
-  return {success:true,action:name,space:'小窝',today:key,userMood:e.userMood||'',userMoodNote:e.userMoodNote||'',aiMood:e.aiMood||'',aiMoodNote:e.aiMoodNote||'',toG:e.toG||'',note:e.note||'',anniversary:selected?{name:selected.name||'纪念日',date:selected.date||''}:null};
+  const out={success:true,action:name,space:'小窝',today:key,userMood:e.userMood||'',userMoodNote:e.userMoodNote||'',aiMood:e.aiMood||'',aiMoodNote:e.aiMoodNote||'',toG:e.toG||'',note:e.note||'',anniversary:selected?{name:selected.name||'纪念日',date:selected.date||''}:null};
+  debugToast(`${name} 调用成功`);
+  return out;
  }
  const content=String(args?.content||'').trim();
- if(name==='write_nest_mood'){const mood=String(args?.mood||'').trim();if(!nestMoodOptions.includes(mood))return {success:false,error:'他的今日心情需要从预设心情中选择。'};if(!content)return {success:false,error:'没有收到要保存的心情正文。'};saveDailyField(key,'aiMood',mood);saveDailyField(key,'aiMoodNote',content);nestData.moods.ai=mood;nestData.aiMoodNote=content;nestData.moods.aiNote=content;saveNestData();renderNestHome();return {success:true,action:name,space:'小窝',date:key,field:'aiMood+aiMoodNote',mood,content}}
- if(!content)return {success:false,error:'没有收到要保存的正文。'};
+ if(name==='write_nest_mood'){
+  const mood=String(args?.mood||'').trim();
+  if(!nestMoodOptions.includes(mood)){debugToast(`write_nest_mood 失败：mood="${mood}" 不在预设列表`);return {success:false,error:'他的今日心情需要从预设心情中选择。'};}
+  if(!content){debugToast('write_nest_mood 失败：content 为空');return {success:false,error:'没有收到要保存的心情正文。'};}
+  saveDailyField(key,'aiMood',mood);saveDailyField(key,'aiMoodNote',content);nestData.moods.ai=mood;nestData.aiMoodNote=content;nestData.moods.aiNote=content;saveNestData();renderNestHome();
+  debugToast(`write_nest_mood 成功：mood="${mood}" content="${content.slice(0,20)}…"`);
+  return {success:true,action:name,space:'小窝',date:key,field:'aiMood+aiMoodNote',mood,content};
+ }
+ if(!content){debugToast(`${name} 失败：content 为空`);return {success:false,error:'没有收到要保存的正文。'};}
  const field=name==='write_nest_note'?'note':name==='write_nest_to_user'?'toG':null;
- if(!field)return {success:false,error:'未知的小窝工具。'};
+ if(!field){debugToast(`未知工具：${name}`);return {success:false,error:'未知的小窝工具。'};}
  saveDailyField(key,field,content);if(field==="aiMoodNote"){nestData.aiMoodNote=content;nestData.moods.aiNote=content}saveNestData();renderNestHome();
+ debugToast(`${name} 成功：field="${field}" content="${content.slice(0,20)}…"`);
  return {success:true,action:name,space:'小窝',date:key,field,content};
 }
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
