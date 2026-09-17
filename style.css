@@ -1597,3 +1597,26 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
     max-width:255px!important;
   }
 }
+
+
+/* Iris v4.112 — 使用最新情侣透明贴纸素材；时间卡右侧完整显示并贴底。 */
+#nestHome .nestClockCoupleArt{
+  width:62%!important;
+  max-width:340px!important;
+  height:auto!important;
+  max-height:none!important;
+  right:0!important;
+  bottom:0!important;
+  top:auto!important;
+  object-fit:contain!important;
+  object-position:right bottom!important;
+  mix-blend-mode:normal!important;
+}
+@media(max-width:390px){
+  #nestHome .nestClockCoupleArt{
+    width:64%!important;
+    max-width:245px!important;
+    right:0!important;
+    bottom:0!important;
+  }
+}
