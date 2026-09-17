@@ -1,4 +1,4 @@
-/* Iris v4.89-debug — nest tools always injected; debug toast on executeNestTool. */
+/* Iris v4.92 — deterministic nest tool flow: explicit nest requests force enter_nest then the requested write tool. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
 /* Iris v4.43 — unified mood page, multi-anniversary viewing and terminology polish. */
 /* Iris v4.40 — AI can write into the shared nest from normal chat; nest typography/layout and anniversary background fixed. */
@@ -357,12 +357,11 @@ function nestChatWriteTarget(text){
  return 'mood';
 }
 
-/* Iris v4.91 — nest mood content is always writable; shortcut mood is optional. */
 /* Iris v4.58 — real AI tool calling for the shared nest. The model can request tools; the client executes them. */
 function nestTools(){
  return [
   {type:'function',function:{name:'enter_nest',description:'进入你们共同的小窝，并读取当前小窝内容。只有用户在聊天中明确邀请你进入小窝时才使用。',parameters:{type:'object',properties:{reason:{type:'string',description:'进入小窝的简短原因'}},required:[]}}},
-  {type:'function',function:{name:'write_nest_mood',description:'把你今天想留下的心情文字写进共同小窝。content 是必须保存的正文；如果能判断出预设快捷心情，可以同时提供 mood，但 mood 不是必需的。',parameters:{type:'object',properties:{mood:{type:'string',enum:nestMoodOptions,description:'可选：从预设心情中选择一个最符合你此刻状态的心情；没有合适的就不要提供'},content:{type:'string',description:'要保存的心情正文，第一人称，自然简短'}},required:['content']}}},
+  {type:'function',function:{name:'write_nest_mood',description:'把你今天想留下的心情写进共同小窝。必须同时选择一个快捷心情，并写下一小段属于你的心情文字。',parameters:{type:'object',properties:{mood:{type:'string',enum:nestMoodOptions,description:'从预设心情中选择一个最符合你此刻状态的心情'},content:{type:'string',description:'要保存的心情正文，第一人称，自然简短'}},required:['mood','content']}}},
   {type:'function',function:{name:'write_nest_note',description:'把一条自然的今日小记写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的小记正文'}},required:['content']}}},
   {type:'function',function:{name:'write_nest_to_user',description:'把一句想留给用户的话写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的文字，第一人称'}},required:['content']}}},
   {type:'function',function:{name:'read_nest',description:'读取当前小窝的结构和今天已有内容。',parameters:{type:'object',properties:{},required:[]}}},
@@ -426,16 +425,11 @@ function executeNestTool(name,args){
  const content=String(args?.content||'').trim();
  if(name==='write_nest_mood'){
   const mood=String(args?.mood||'').trim();
+  if(!nestMoodOptions.includes(mood)){debugToast(`write_nest_mood 失败：mood="${mood}" 不在预设列表`);return {success:false,error:'他的今日心情需要从预设心情中选择。'};}
   if(!content){debugToast('write_nest_mood 失败：content 为空');return {success:false,error:'没有收到要保存的心情正文。'};}
-  // 心情正文是核心写入内容；快捷 mood 只是可选项，不能因为模型没选 mood 而阻止保存。
-  saveDailyField(key,'aiMoodNote',content);
-  if(nestMoodOptions.includes(mood)){
-   saveDailyField(key,'aiMood',mood);
-   nestData.moods.ai=mood;
-  }
-  nestData.aiMoodNote=content;nestData.moods.aiNote=content;saveNestData();renderNestHome();
-  debugToast(`write_nest_mood 成功：${mood?`mood="${mood}" `:''}content="${content.slice(0,20)}…"`);
-  return {success:true,action:name,space:'小窝',date:key,field:mood&&nestMoodOptions.includes(mood)?'aiMood+aiMoodNote':'aiMoodNote',mood:mood&&nestMoodOptions.includes(mood)?mood:'',content};
+  saveDailyField(key,'aiMood',mood);saveDailyField(key,'aiMoodNote',content);nestData.moods.ai=mood;nestData.aiMoodNote=content;nestData.moods.aiNote=content;saveNestData();renderNestHome();
+  debugToast(`write_nest_mood 成功：mood="${mood}" content="${content.slice(0,20)}…"`);
+  return {success:true,action:name,space:'小窝',date:key,field:'aiMood+aiMoodNote',mood,content};
  }
  if(!content){debugToast(`${name} 失败：content 为空`);return {success:false,error:'没有收到要保存的正文。'};}
  const field=name==='write_nest_note'?'note':name==='write_nest_to_user'?'toG':null;
@@ -530,7 +524,22 @@ async function send(){
   if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);systemParts.push(conversationStyleContext());systemParts.push(chatInterfaceContext(c));const mc=memoryContext();if(mc)systemParts.push(mc);const nc=nestContext();if(nc)systemParts.push(nc);if(nestActionTarget)systemParts.push(nestToolSystem()+` 本轮用户明确要求执行“${nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':'今天想对他说'}”写入动作。请先进入小窝，再调用对应写入工具。`);if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});ms.push(...buildConversationContext(c));
   let tools=[];if(state.settings.mcpNestEnabled!==false)tools.push(...nestTools());if(state.settings.mcpEnabled===true&&state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){const gtool=nestTools().find(x=>x.function?.name==="generate_image");if(gtool)tools.push(gtool)}tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);if(!tools.length)tools=null;
   let displayQueue=Promise.resolve();const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();await sleep(Math.min(1500,Math.max(80,Number(state.settings.replyDelay??360)+Math.min(90,v.length)*7)))})};const usageTotal={prompt:0,completion:0,total:0,requests:0};let rounds=0,fullAnswer="";
-  while(rounds++<4){let answer="",pendingRound="";const onText=(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound),count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound};const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:tools?"auto":undefined},onText);addUsageTotals(usageTotal,result.usage);if(result.toolCalls?.length){ms.push({role:"assistant",content:result.answer||null,tool_calls:result.toolCalls});for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;try{const callName=call.function?.name||'';if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName))out=executeNestTool(callName,args);else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c)}else out=await mcpCallTool(callName,args)}catch(e){out={success:false,error:e?.message||String(e)}}ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)})}continue}if(pendingRound.trim())pushSentence(pendingRound);await displayQueue;fullAnswer=result.answer||answer;break}
+  let forcedNestStep=nestActionTarget?'enter_nest':null;
+  while(rounds++<4){let answer="",pendingRound="";const onText=(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound),count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound};
+   let toolChoice=tools?"auto":undefined;
+   if(forcedNestStep&&tools)toolChoice={type:"function",function:{name:forcedNestStep}};
+   const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:toolChoice},onText);addUsageTotals(usageTotal,result.usage);
+   if(result.toolCalls?.length){ms.push({role:"assistant",content:result.answer||null,tool_calls:result.toolCalls});
+    for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;try{const callName=call.function?.name||'';if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName))out=executeNestTool(callName,args);else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c)}else out=await mcpCallTool(callName,args)}catch(e){out={success:false,error:e?.message||String(e)}}ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)});
+     if(nestActionTarget&&callName==='enter_nest'&&out?.success){forcedNestStep=nestActionTarget==='mood'?'write_nest_mood':nestActionTarget==='note'?'write_nest_note':'write_nest_to_user';}
+    }
+    continue
+   }
+   if(forcedNestStep&&nestActionTarget){
+    // 某些兼容接口会忽略 tool_choice；如果模型没有产生工具调用，不让它直接“口头答应”，下一轮继续强制调用。
+    if(rounds<4)continue;
+   }
+   if(pendingRound.trim())pushSentence(pendingRound);await displayQueue;fullAnswer=result.answer||answer;break}
   const ts=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};addUsageTotals(ts,usageTotal);state.settings.tokenStats=ts;save();renderTokenStats();completed=true;
   if(shouldAutoSummarize(c))autoSummarizeChat(c);
  }catch(e){const detail=e?.name==="AbortError"?(state.stopRequested?"已停止这次回复。":"请求超时（60 秒）。"):(e?.message||String(e));console.error("Iris send failed",e);showErr("发送失败："+detail);c.messages.push({role:"assistant",content:"发送失败："+detail,timestamp:Date.now()});save();render()}finally{clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy();if(completed)autoUpdateLongTermMemory(c)}
