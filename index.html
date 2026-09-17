@@ -88,9 +88,9 @@ if("serviceWorker"in navigator){
       <div class="settingsSectionTitle">视觉模型</div>
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsSwitch"><span><b>启用视觉模型</b><small>发送照片时优先使用这里配置的模型。</small></span><input id="visionEnabled" type="checkbox"><i></i></label>
-        <label class="settingsField"><span>Vision Base URL</span><input id="visionBase" placeholder="https://api.openai.com/v1"></label>
+        <label class="settingsField"><span>Vision Base URL</span><input id="visionBase" placeholder="https://open.bigmodel.cn/api/paas/v4/"></label>
         <label class="settingsField"><span>Vision API Key</span><div class="passwordField"><input id="visionKey" type="password" placeholder="sk-…"><button type="button" id="toggleVisionKey">显示</button></div></label>
-        <label class="settingsField"><span>视觉模型</span><input id="visionModel" placeholder="例如 glm-4.6v-flash"><small style="display:block;padding:7px 2px 0;color:var(--muted);line-height:1.5">使用智谱官方接口时，GLM-4.6V-Flash 遇到 429/1305 会自动切换备用视觉模型，不会重复猛发同一个请求。</small></label>
+        <label class="settingsField"><span>视觉模型</span><input id="visionModel" placeholder="GLM-4.6V-Flash"><small style="display:block;padding:7px 2px 0;color:var(--muted);line-height:1.5">当前已按智谱官方 GLM-4.6V-Flash 配置；API Key 留空时会沿用主聊天 API Key。</small></label>
       </div>
       <div class="settingsSectionTitle">图像生成</div>
       <div class="settingsGroup settingsFormGroup">
@@ -308,4 +308,4 @@ if("serviceWorker"in navigator){
   </div>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
-<script src="./api.js?v=4.85"></script><script src="./app.js?v=4.119"></script></body></html>
+<script src="./api.js?v=4.125"></script><script src="./app.js?v=4.125"></script></body></html>
