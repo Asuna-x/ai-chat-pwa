@@ -2142,3 +2142,43 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   }
   .nestNotebookSheet.nestBookPage{padding:25px 20px 25px 35px!important;}
 }
+
+/* Iris v4.121 — final nest home/subpage alignment and story edit/delete UI. */
+#nestHome .nestClockCard{
+  margin-top:30px!important;
+}
+#nestHome .nestClockCard:after{
+  display:none!important;
+  content:none!important;
+}
+#nestHome .nestClockInfo{
+  position:relative!important;
+  z-index:2!important;
+}
+
+/* Keep the save glass above the bottom option navigation, with no gap. */
+#nest .nestPage:not(#nestHome) .nestSubFooter{
+  bottom:62px!important;
+  padding-top:9px!important;
+  padding-bottom:9px!important;
+  border-radius:0!important;
+}
+#nest .nestPage:not(#nestHome) .nestSubBody{
+  padding-bottom:118px!important;
+}
+@media(max-width:390px){
+  #nest .nestPage:not(#nestHome) .nestSubFooter{bottom:60px!important;}
+  #nest .nestPage:not(#nestHome) .nestSubBody{padding-bottom:114px!important;}
+}
+
+.nestStoryActions{display:flex;gap:7px;margin-top:9px;opacity:.82}
+.nestStoryActions button{border:1px solid rgba(190,146,164,.20);border-radius:10px;padding:5px 9px;background:rgba(255,255,255,.58);color:#927481;font-size:9px;line-height:1}
+.nestStoryActions button[data-story-action="delete"]{color:#a56f7d}
+.nestStoryEditor{margin:8px 3px 28px;padding:17px;border-radius:22px;background:linear-gradient(145deg,rgba(255,249,252,.72),rgba(255,255,255,.42));border:1px solid rgba(255,255,255,.72);box-shadow:0 12px 28px rgba(105,73,91,.06),inset 0 1px 0 rgba(255,255,255,.86)}
+.nestStoryEditorTitle{font-size:13px;font-weight:700;color:#624957;margin-bottom:2px}
+.nestStoryEditor .nestField{margin-top:12px}
+.nestStoryEditor textarea{min-height:130px;resize:vertical}
+.nestStoryEditorActions{display:flex;gap:8px;margin-top:14px}
+.nestStoryEditorActions .nestSaveBtn{flex:1}
+.nestStoryEditorActions .nestClearBg{margin-top:0;flex:0 0 84px}
+@media(max-width:390px){.nestStoryActions button{padding:5px 8px;font-size:8px}.nestStoryEditor{padding:15px}.nestStoryEditorActions .nestClearBg{flex-basis:76px}}
