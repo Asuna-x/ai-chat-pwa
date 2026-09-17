@@ -1499,3 +1499,46 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
     top:7px!important;
   }
 }
+
+
+/* Iris v4.109 — 使用用户提供的完整情侣插图；锁定小窝字体尺寸，避免 iOS 滑动后的文字膨胀。 */
+#nestHome, #nestHome *{
+  -webkit-text-size-adjust:100%!important;
+  text-size-adjust:100%!important;
+}
+#nestHome .nestClockCoupleArt{
+  width:48%!important;
+  max-width:300px!important;
+  max-height:calc(100% - 12px)!important;
+  height:auto!important;
+  right:5px!important;
+  top:6px!important;
+  bottom:auto!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  mix-blend-mode:normal!important;
+}
+#nestHome .nestStoryCard{
+  min-height:0!important;
+}
+#nestHome .nestStorySubline{
+  font-size:10px!important;
+}
+#nestHome .nestStoryMini b{
+  font-size:10px!important;
+}
+#nestHome .nestStoryMini p{
+  font-size:8px!important;
+}
+.nestStoryPage, .nestStoryPage *{
+  -webkit-text-size-adjust:100%!important;
+  text-size-adjust:100%!important;
+}
+@media(max-width:390px){
+  #nestHome .nestClockCoupleArt{
+    width:49%!important;
+    max-height:calc(100% - 10px)!important;
+    right:3px!important;
+    top:5px!important;
+  }
+}
