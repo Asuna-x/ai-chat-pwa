@@ -1,4 +1,11 @@
-const CACHE_NAME = "iris-shell-v20260917-990";
-self.addEventListener("install", event => { self.skipWaiting(); });
-self.addEventListener("activate", event => { event.waitUntil((async () => { const keys = await caches.keys(); await Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))); await self.clients.claim(); })()); });
-self.addEventListener("fetch", event => { const req=event.request; if(req.method!=="GET")return; const url=new URL(req.url); if(url.origin!==self.location.origin)return; event.respondWith((async()=>{ try{const fresh=await fetch(req,{cache:"no-store"}); const cache=await caches.open(CACHE_NAME); cache.put(req,fresh.clone()).catch(()=>{}); return fresh;}catch(err){const cached=await caches.match(req); if(cached)return cached; throw err;} })()); });
+/* Iris v4.130 — non-blocking PWA service worker. */
+const CACHE_NAME="iris-shell-v4.130";
+self.addEventListener("install",e=>e.waitUntil(self.skipWaiting()));
+self.addEventListener("activate",e=>e.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim()})()));
+self.addEventListener("fetch",e=>{
+ const r=e.request;if(r.method!=="GET")return;
+ const u=new URL(r.url);if(u.origin!==self.location.origin)return;
+ const root=new URL("./",self.location.href).pathname;
+ if(u.pathname!==root&&!/\.(html|js|css|webmanifest)$/i.test(u.pathname))return;
+ e.respondWith(fetch(r,{cache:"no-store"}).catch(()=>caches.match(r)));
+});
