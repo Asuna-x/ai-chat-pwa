@@ -361,7 +361,7 @@ function nestChatWriteTarget(text){
 function nestTools(){
  return [
   {type:'function',function:{name:'enter_nest',description:'进入你们共同的小窝，并读取当前小窝内容。只有用户在聊天中明确邀请你进入小窝时才使用。',parameters:{type:'object',properties:{reason:{type:'string',description:'进入小窝的简短原因'}},required:[]}}},
-  {type:'function',function:{name:'write_nest_mood',description:'把你今天想留下的心情写进共同小窝。必须同时选择一个快捷心情，并写下一小段属于你的心情文字。',parameters:{type:'object',properties:{mood:{type:'string',enum:nestMoodOptions,description:'从预设心情中选择一个最符合你此刻状态的心情'},content:{type:'string',description:'要保存的心情正文，第一人称，自然简短'}},required:['mood','content']}}},
+  {type:'function',function:{name:'write_nest_mood',description:'把你今天想留下的心情写进共同小窝。写下一小段属于你的心情文字；如果合适也可以选择一个快捷心情。',parameters:{type:'object',properties:{mood:{type:'string',enum:nestMoodOptions,description:'从预设心情中选择一个最符合你此刻状态的心情'},content:{type:'string',description:'要保存的心情正文，第一人称，自然简短'}},required:['content']}}},
   {type:'function',function:{name:'write_nest_note',description:'把一条自然的今日小记写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的小记正文'}},required:['content']}}},
   {type:'function',function:{name:'write_nest_to_user',description:'把一句想留给用户的话写进小窝。',parameters:{type:'object',properties:{content:{type:'string',description:'要保存的文字，第一人称'}},required:['content']}}},
   {type:'function',function:{name:'read_nest',description:'读取当前小窝的结构和今天已有内容。',parameters:{type:'object',properties:{},required:[]}}},
@@ -425,11 +425,12 @@ function executeNestTool(name,args){
  const content=String(args?.content||'').trim();
  if(name==='write_nest_mood'){
   const mood=String(args?.mood||'').trim();
-  if(!nestMoodOptions.includes(mood)){debugToast(`write_nest_mood 失败：mood="${mood}" 不在预设列表`);return {success:false,error:'他的今日心情需要从预设心情中选择。'};}
+  if(mood && !nestMoodOptions.includes(mood)){debugToast(`write_nest_mood：忽略不在预设列表的 mood="${mood}"`);}
   if(!content){debugToast('write_nest_mood 失败：content 为空');return {success:false,error:'没有收到要保存的心情正文。'};}
-  saveDailyField(key,'aiMood',mood);saveDailyField(key,'aiMoodNote',content);nestData.moods.ai=mood;nestData.aiMoodNote=content;nestData.moods.aiNote=content;saveNestData();renderNestHome();
-  debugToast(`write_nest_mood 成功：mood="${mood}" content="${content.slice(0,20)}…"`);
-  return {success:true,action:name,space:'小窝',date:key,field:'aiMood+aiMoodNote',mood,content};
+  if(mood && nestMoodOptions.includes(mood)){saveDailyField(key,'aiMood',mood);nestData.moods.ai=mood;}
+  saveDailyField(key,'aiMoodNote',content);nestData.aiMoodNote=content;nestData.moods.aiNote=content;saveNestData();renderNestHome();
+  debugToast(`write_nest_mood 成功：${mood?`mood="${mood}" `:''}content="${content.slice(0,20)}…"`);
+  return {success:true,action:name,space:'小窝',date:key,field:mood&&nestMoodOptions.includes(mood)?'aiMood+aiMoodNote':'aiMoodNote',mood:mood&&nestMoodOptions.includes(mood)?mood:'',content};
  }
  if(!content){debugToast(`${name} 失败：content 为空`);return {success:false,error:'没有收到要保存的正文。'};}
  const field=name==='write_nest_note'?'note':name==='write_nest_to_user'?'toG':null;
@@ -530,7 +531,7 @@ async function send(){
    if(forcedNestStep&&tools)toolChoice={type:"function",function:{name:forcedNestStep}};
    const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:toolChoice},onText);addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){ms.push({role:"assistant",content:result.answer||null,tool_calls:result.toolCalls});
-    for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;try{const callName=call.function?.name||'';if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName))out=executeNestTool(callName,args);else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c)}else out=await mcpCallTool(callName,args)}catch(e){out={success:false,error:e?.message||String(e)}}ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)});
+    for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;const callName=call.function?.name||'';try{if(['enter_nest','write_nest_mood','write_nest_note','write_nest_to_user','read_nest'].includes(callName))out=executeNestTool(callName,args);else if(callName==='generate_image'){const g=await window.GChatAPI.imageGenerate({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,b64:g.b64};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src)appendGeneratedImage(src,c)}else out=await mcpCallTool(callName,args)}catch(e){out={success:false,error:e?.message||String(e)}}ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)});
      if(nestActionTarget&&callName==='enter_nest'&&out?.success){forcedNestStep=nestActionTarget==='mood'?'write_nest_mood':nestActionTarget==='note'?'write_nest_note':'write_nest_to_user';}
     }
     continue
