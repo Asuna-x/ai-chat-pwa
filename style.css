@@ -1570,3 +1570,30 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
     object-position:right bottom!important;
   }
 }
+
+
+/* Iris v4.111 — 把用户提供的情侣人物作为透明贴纸贴进时间卡：完整显示、放大、底边对齐。 */
+#nestHome .nestClockCard{overflow:hidden!important;position:relative!important;}
+#nestHome .nestClockCoupleArt{
+  position:absolute!important;
+  z-index:1!important;
+  right:-1px!important;
+  bottom:0!important;
+  top:auto!important;
+  width:62%!important;
+  height:auto!important;
+  max-width:360px!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:right bottom!important;
+  display:block!important;
+}
+#nestHome .nestClockInfo{position:relative!important;z-index:2!important;}
+@media(max-width:390px){
+  #nestHome .nestClockCoupleArt{
+    width:63%!important;
+    right:-1px!important;
+    bottom:0!important;
+    max-width:255px!important;
+  }
+}
