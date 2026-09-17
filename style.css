@@ -1166,3 +1166,91 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   #nestHome .nestQuickMood strong{font-size:15px!important}
   #nestHome .nestStoryCard{min-height:210px!important}
 }
+
+/* Iris v4.105 — 小窝首页细调：头像更大更靠拢、时间卡改为纯图案装饰、心情图标完整、故事卡不再空撑。 */
+#nestHome .nestCoupleHeader{
+  top:16px!important;
+  right:12px!important;
+  gap:0!important;
+  height:78px!important;
+  align-items:flex-start!important;
+  padding:0!important;
+}
+#nestHome .nestPersonAvatar{
+  width:58px!important;
+  height:58px!important;
+  flex:0 0 58px!important;
+  border-width:2px!important;
+  box-shadow:0 10px 25px rgba(105,73,91,.12),inset 0 1px 0 rgba(255,255,255,.9)!important;
+}
+#nestHome .nestPerson strong{
+  display:block!important;
+  margin-top:3px!important;
+  font-size:9px!important;
+  text-align:center!important;
+}
+#nestHome .nestCoupleHeart{
+  width:18px!important;
+  height:58px!important;
+  flex:0 0 18px!important;
+  display:grid!important;
+  place-items:center!important;
+  align-self:flex-start!important;
+  font-size:15px!important;
+  margin:0!important;
+}
+
+/* 时间卡右侧只保留轻巧的爱心/星星图案，不再显示那段文字。 */
+#nestHome .nestClockCard:after{
+  content:"♡   ✦   ♡"!important;
+  right:18px!important;
+  top:28px!important;
+  width:auto!important;
+  text-align:center!important;
+  font-size:20px!important;
+  line-height:1!important;
+  letter-spacing:3px!important;
+  color:rgba(190,118,145,.58)!important;
+  transform:rotate(-6deg)!important;
+}
+
+/* 心情卡右上角图案放大，并用伪元素确保不会被字体/容器裁掉。 */
+#nestHome .nestMoodIcon{
+  right:12px!important;
+  top:11px!important;
+  transform:none!important;
+  width:40px!important;
+  height:40px!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  font-size:0!important;
+  line-height:1!important;
+  background:rgba(255,255,255,.46)!important;
+  border:1px solid rgba(255,255,255,.66)!important;
+  box-shadow:0 5px 14px rgba(105,73,91,.07)!important;
+  overflow:visible!important;
+}
+#nestHome #nestMoodIcon:before{content:"♡";font-family:Georgia,serif;font-size:24px;line-height:1;color:#d18da5;display:block}
+#nestHome #nestAiMoodIcon:before{content:"☾";font-family:Georgia,serif;font-size:23px;line-height:1;color:#b57f94;display:block}
+
+/* 故事没有内容时只显示一张正常高度的小卡；有内容时再按内容自然增长。 */
+#nestHome .nestStoryCard{
+  min-height:0!important;
+  height:auto!important;
+  box-sizing:border-box!important;
+  padding-bottom:12px!important;
+}
+#nestHome .nestStoryPreview{min-height:0!important}
+#nestHome .nestStoryMiniEmpty{padding:8px 6px 2px!important;line-height:1.5!important}
+
+@media(max-width:390px){
+  #nestHome .nestCoupleHeader{top:17px!important;right:8px!important;gap:0!important}
+  #nestHome .nestPersonAvatar{width:54px!important;height:54px!important;flex-basis:54px!important}
+  #nestHome .nestCoupleHeart{width:15px!important;flex-basis:15px!important;height:54px!important;font-size:13px!important}
+  #nestHome .nestPerson strong{font-size:8px!important}
+  #nestHome .nestMoodIcon{width:38px!important;height:38px!important}
+  #nestHome #nestMoodIcon:before{font-size:22px}
+  #nestHome #nestAiMoodIcon:before{font-size:21px}
+  #nestHome .nestClockCard:after{right:12px!important;top:26px!important;font-size:18px!important}
+}
