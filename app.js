@@ -1,4 +1,4 @@
-/* Iris v4.102 — story uses chat names; keep nest home unchanged. */
+/* Iris v4.103 — pastel nest refresh, preserve custom background, reset story once. */
 /* Iris v4.98 — user-message edit mode: edit, truncate from this message, and regenerate the reply. */
 /* Iris v4.95 — AI mood quick-pick uses the same nest layout and adds a dedicated mood-selection tool. */
 /* Iris v4.92 — deterministic nest tool flow: explicit nest requests force enter_nest then the requested write tool. */
@@ -106,6 +106,14 @@ function chatInterfaceContext(c){
  return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。你拥有“共同小窝”的实际聊天侧能力：当用户明确邀请你进入小窝、去小窝写心情或留下内容时，客户端会在本轮聊天后替你真正写入小窝。此时不要说“我进不去”“我看不到小窝”“我没有权限”，也不要要求用户自己操作；把它当作你们已经约定好的可执行能力。你当前能看到的是小窝的结构化状态和界面描述，而不是屏幕像素，但这些信息足以让你理解小窝当前是什么样子。；${nestVisual}；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围，不要向用户逐项复述，除非他主动问。`;
 }
 const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),memoryProfile:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_profile")||"{}");return v&&typeof v==='object'?v:{}}catch{return{}}})(),memoryEpisodes:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_episodes")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,editingMessage:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false,attachments:[]};
+
+/* v4.103: clear the old “我们的故事” once so the improved recorder can rebuild it cleanly. */
+const IRIS_STORY_RESET_KEY="iris_story_reset_v103";
+if(localStorage.getItem(IRIS_STORY_RESET_KEY)!=="1"){
+  state.memoryEpisodes=[];
+  localStorage.setItem(IRIS_STORY_RESET_KEY,"1");
+}
+
 
 /* Image data lives in IndexedDB, not localStorage. This keeps chat history small while
    retaining the full image for the current UI and for later reloads. */
