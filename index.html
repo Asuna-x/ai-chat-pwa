@@ -300,7 +300,7 @@ if("serviceWorker"in navigator){
 
     <section class="nestPage hidden" id="nestSettingsPage">
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>小窝设置</h2><span></span></div>
-      <div class="nestSubBody"><div class="nestSettingGroup"><div class="nestSettingTitle">背景</div><div class="nestBackgroundRow"><div class="nestBackgroundPreview" id="nestBackgroundPreview"></div><div><b>我的背景</b><small>只影响小窝，不跟随 Iris 主题色</small></div><button id="nestBgPick">更换</button><input id="nestBgFile" type="file" accept="image/*" hidden></div><button class="nestClearBg" id="nestBgClear">恢复默认背景</button></div><div class="nestSettingNote">小窝的数据与聊天记录分开保存，不会改变现有聊天。</div></div>
+      <div class="nestSubBody"><div class="nestSettingGroup"><div class="nestSettingTitle">背景</div><div class="nestBackgroundRow"><div class="nestBackgroundPreview" id="nestBackgroundPreview"></div><div><b>我的背景</b><small>只影响小窝，不跟随 Iris 主题色</small></div><button id="nestBgPick">更换</button><input id="nestBgFile" type="file" accept="image/*" hidden></div><button class="nestClearBg" id="nestBgClear">恢复默认背景</button></div><div class="nestSettingGroup nestNotebookOpacityGroup"><div class="nestSettingTitle">本子透明度</div><div class="nestRangeHead"><span>调整本子纸张的透明程度</span><strong id="nestNotebookOpacityValue">90%</strong></div><input id="nestNotebookOpacity" type="range" min="45" max="100" step="1" value="90" aria-label="本子透明度"></div><div class="nestSettingNote">小窝的数据与聊天记录分开保存，不会改变现有聊天。</div></div>
       <div class="nestSubFooter"><button class="nestSaveBtn" id="nestSettingsSave">保存</button></div>
     </section>
 

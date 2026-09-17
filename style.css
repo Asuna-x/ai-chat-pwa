@@ -2086,3 +2086,59 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 @media(max-width:390px){
   #nest .nestPage:not(#nestHome) .nestSubFooter{bottom:0!important;}
 }
+
+/* Iris v4.120 — notebook page refinement, smooth paging, opacity control, and unified home back button. */
+#nestHome .nestIconBtn#nestCloseHome,
+#nestHome .nestIconBtn#nestCloseHome:focus,
+#nestHome .nestIconBtn#nestCloseHome:focus-visible{
+  outline:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+  box-shadow:0 7px 20px rgba(110,74,92,.06)!important;
+  border:1px solid rgba(255,255,255,.60)!important;
+}
+
+/* The book should occupy most of the visible page while keeping a small breathing room below. */
+.nestBookViewport{
+  height:min(580px,calc(100dvh - 245px))!important;
+  min-height:420px!important;
+  padding:4px 3px 10px!important;
+}
+.nestNotebookSheet.nestBookPage{
+  height:100%!important;
+  min-height:0!important;
+}
+
+/* No 3D animation: changing pages should feel immediate and smooth on mobile. */
+.nestBookPage.turn-next,
+.nestBookPage.turn-prev{animation:none!important;transform:none!important;opacity:1!important;}
+
+/* Notebook transparency is controlled by --nest-notebook-opacity. */
+.nestNotebookSheet.nestBookPage{
+  background:
+    linear-gradient(90deg,rgba(247,229,237,calc(var(--nest-notebook-opacity,.9)*.30)),transparent 12%),
+    repeating-linear-gradient(to bottom,
+      rgba(255,254,251,var(--nest-notebook-opacity,.9)) 0,
+      rgba(255,254,251,var(--nest-notebook-opacity,.9)) 31px,
+      rgba(205,178,191,calc(var(--nest-notebook-opacity,.9)*.18)) 32px,
+      rgba(255,254,251,var(--nest-notebook-opacity,.9)) 33px
+    )!important;
+}
+.nestNotebookWrite{
+  background:linear-gradient(145deg,
+    rgba(255,249,252,calc(var(--nest-notebook-opacity,.9)*.70)),
+    rgba(255,255,255,calc(var(--nest-notebook-opacity,.9)*.40))
+  )!important;
+}
+.nestNotebookOpacityGroup{margin-top:2px!important;}
+.nestRangeHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-2px 1px 10px;font-size:10px;color:#9c8792;}
+.nestRangeHead strong{font-size:11px;color:#765966;font-weight:700;}
+.nestNotebookOpacityGroup input[type="range"]{width:100%;margin:0;accent-color:#c892a8;height:22px;}
+
+@media(max-width:390px){
+  .nestBookViewport{
+    height:min(540px,calc(100dvh - 245px))!important;
+    min-height:400px!important;
+    padding-left:2px!important;padding-right:2px!important;
+  }
+  .nestNotebookSheet.nestBookPage{padding:25px 20px 25px 35px!important;}
+}
