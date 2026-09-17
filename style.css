@@ -1350,3 +1350,69 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   #nestHome .nestClockCard strong{font-size:52px!important}
   #nestHome .nestClockCoupleArt{width:56%!important;right:0!important;bottom:2px!important}
 }
+
+
+/* Iris v4.107 — 按确认稿继续细调：返回键保持原位，其余首页内容下移；头像更大更靠拢；时间卡人物完整显示。 */
+#nestHome .nestTop{
+  margin-bottom:20px!important;
+}
+#nestHome .nestTop h1{
+  transform:translateY(11px)!important;
+}
+#nestHome .nestCoupleHeader{
+  top:44px!important;
+  right:4px!important;
+  gap:0!important;
+  height:88px!important;
+}
+#nestHome .nestPersonAvatar{
+  width:72px!important;
+  height:72px!important;
+  flex-basis:72px!important;
+  border-width:2px!important;
+}
+#nestHome .nestPerson strong{
+  margin-top:5px!important;
+  font-size:10px!important;
+  line-height:1.2!important;
+}
+#nestHome .nestCoupleHeart{
+  width:20px!important;
+  flex-basis:20px!important;
+  height:72px!important;
+  font-size:17px!important;
+}
+#nestHome .nestClockCard{
+  min-height:166px!important;
+  padding:20px 20px 18px!important;
+}
+#nestHome .nestClockInfo{
+  flex:0 0 44%!important;
+}
+#nestHome .nestClockCoupleArt{
+  width:58%!important;
+  max-width:none!important;
+  height:auto!important;
+  right:0!important;
+  bottom:6px!important;
+  object-fit:contain!important;
+  mix-blend-mode:multiply;
+}
+#nestHome .nestClockCard:after{
+  right:13px!important;
+  top:16px!important;
+  z-index:2!important;
+}
+
+@media(max-width:390px){
+  #nestHome .nestTop{margin-bottom:18px!important}
+  #nestHome .nestTop h1{transform:translateY(10px)!important}
+  #nestHome .nestCoupleHeader{top:41px!important;right:2px!important}
+  #nestHome .nestPersonAvatar{width:68px!important;height:68px!important;flex-basis:68px!important}
+  #nestHome .nestCoupleHeart{width:18px!important;flex-basis:18px!important;height:68px!important;font-size:16px!important}
+  #nestHome .nestPerson strong{font-size:9px!important;margin-top:4px!important}
+  #nestHome .nestClockCard{min-height:158px!important;padding:18px 17px 16px!important}
+  #nestHome .nestClockInfo{flex-basis:44%!important}
+  #nestHome .nestClockCard strong{font-size:52px!important}
+  #nestHome .nestClockCoupleArt{width:58%!important;right:-1px!important;bottom:5px!important}
+}

@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-Hant"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f6f2ec"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Iris">
-<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>Iris</title><link rel="stylesheet" href="./style.css?v=4.97"><script>/* Iris PWA: update the installed Home Screen app automatically when GitHub Pages publishes a new version. */
+<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"><title>Iris</title><link rel="stylesheet" href="./style.css?v=4.107"><script>/* Iris PWA: update the installed Home Screen app automatically when GitHub Pages publishes a new version. */
 if("serviceWorker"in navigator){
   let reloadedForUpdate=false;
   navigator.serviceWorker.addEventListener("controllerchange",()=>{
@@ -10,7 +10,7 @@ if("serviceWorker"in navigator){
     window.location.reload();
   });
   window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("./sw.js?v=4.97",{updateViaCache:"none"})
+    navigator.serviceWorker.register("./sw.js?v=4.107",{updateViaCache:"none"})
       .then(reg=>reg.update())
       .catch(err=>console.warn("PWA update",err));
   });

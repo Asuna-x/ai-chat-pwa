@@ -1,4 +1,4 @@
-/* Iris v4.105 — closer to the pastel couple-diary reference; preserve custom background. */
+/* Iris v4.107 — nest home spacing, larger paired avatars, and fully visible couple art. */
 /* Iris v4.98 — user-message edit mode: edit, truncate from this message, and regenerate the reply. */
 /* Iris v4.95 — AI mood quick-pick uses the same nest layout and adds a dedicated mood-selection tool. */
 /* Iris v4.92 — deterministic nest tool flow: explicit nest requests force enter_nest then the requested write tool. */
