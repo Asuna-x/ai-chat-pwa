@@ -1,3 +1,4 @@
+/* Iris v4.129 — PWA cache/version sync; preserve existing local data. */
 /* Iris v4.125 — GLM-4.6V-Flash vision defaults for Zhipu official API. */
 /* Iris v4.124 — notebook ruled-paper alignment and lower nest clock card edge. */
 /* Iris v4.98 — user-message edit mode: edit, truncate from this message, and regenerate the reply. */
