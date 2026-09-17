@@ -771,3 +771,5 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .nestStoryEmpty{padding:34px 20px;text-align:center;border-radius:22px;background:rgba(255,255,255,.34);border:1px solid rgba(255,255,255,.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .nestStoryEmpty span{display:block;font-size:26px;color:#9a7182;margin-bottom:10px}.nestStoryEmpty b{display:block;color:#5a424d;font-size:14px}.nestStoryEmpty small{display:block;margin-top:6px;color:#927d86;line-height:1.6}
 @media(max-width:390px){.nestStoryItem{grid-template-columns:68px 1fr;padding:15px 13px;gap:11px}}
+.editModeHint{max-width:760px;margin:0 auto 7px;padding:7px 12px;border:1px solid var(--line);border-radius:13px;background:color-mix(in srgb,var(--card) 92%,transparent);color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.editModeHint button{border:0;background:transparent;color:var(--accent);font-size:12px;font-weight:600;padding:4px 6px}

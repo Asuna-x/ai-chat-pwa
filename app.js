@@ -1,3 +1,4 @@
+/* Iris v4.98 — user-message edit mode: edit, truncate from this message, and regenerate the reply. */
 /* Iris v4.95 — AI mood quick-pick uses the same nest layout and adds a dedicated mood-selection tool. */
 /* Iris v4.92 — deterministic nest tool flow: explicit nest requests force enter_nest then the requested write tool. */
 /* Iris v4.49 — direct nest cards, independent quick moods and custom notes, refined layout. */
@@ -96,7 +97,7 @@ function chatInterfaceContext(c){
  const nestVisual=`小窝界面不是普通设置页，而是一个独立的私人空间：顶部标题“小窝”，首页第一视觉是当前时间大字；下面是“我的心情”和“他的心情”，再下面是“今天想对他说”和“今日小记”，底部有“小窝/心情/小记/纪念日/设置”导航。纪念日页面的第一视觉是超大的倒数数字和纪念日名称。整体是暖白、半透明、磨砂玻璃卡片风格，背景可由用户自定义。当前小窝时间「${nestTodayText()} ${new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false})}」；当前纪念日「${selected?.name||"未设置"}」，倒数「${nestDaysText()}」；今天用户快捷心情「${e.userMood||"空"}」，他的快捷心情「${e.aiMood||"空"}」。`;
  return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。你拥有“共同小窝”的实际聊天侧能力：当用户明确邀请你进入小窝、去小窝写心情或留下内容时，客户端会在本轮聊天后替你真正写入小窝。此时不要说“我进不去”“我看不到小窝”“我没有权限”，也不要要求用户自己操作；把它当作你们已经约定好的可执行能力。你当前能看到的是小窝的结构化状态和界面描述，而不是屏幕像素，但这些信息足以让你理解小窝当前是什么样子。；${nestVisual}；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围，不要向用户逐项复述，除非他主动问。`;
 }
-const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),memoryProfile:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_profile")||"{}");return v&&typeof v==='object'?v:{}}catch{return{}}})(),memoryEpisodes:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_episodes")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false,attachments:[]};
+const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),memoryProfile:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_profile")||"{}");return v&&typeof v==='object'?v:{}}catch{return{}}})(),memoryEpisodes:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_episodes")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,editingMessage:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false,attachments:[]};
 
 /* Image data lives in IndexedDB, not localStorage. This keeps chat history small while
    retaining the full image for the current UI and for later reloads. */
@@ -167,7 +168,39 @@ function bindLongPress(el,row){let timer;const start=e=>{if(e.target.closest("bu
 function showBubbleAction(el,row=el.closest(".message")){state.selectedBubble={el,row,chatId:row?.dataset.chatId||state.current,messageIndex:row?.dataset.messageIndex==null?null:Number(row.dataset.messageIndex)};const a=$("#bubbleAction");a.classList.remove("hidden");const rect=el.getBoundingClientRect();const w=a.offsetWidth||190,h=a.offsetHeight||44;a.style.left=Math.max(8,Math.min(innerWidth-w-8,rect.left))+"px";a.style.top=Math.max(8,rect.top-h-8)+"px"}
 function closeBubbleAction(){const a=$("#bubbleAction");if(a)a.classList.add("hidden");state.selectedBubble=null}
 function selectedMessage(){const s=state.selectedBubble;if(!s||s.messageIndex===null)return null;const c=state.chats.find(x=>x.id===s.chatId);const m=c?.messages?.[s.messageIndex];return c&&m?{c,m,index:s.messageIndex}:null}
-function editSelectedMessage(){const hit=selectedMessage();closeBubbleAction();if(!hit)return;const current=displayMessageText(hit.m.content);const next=prompt("编辑消息内容",current);if(next===null)return;const value=next.replace(/\r\n?/g,"\n");if(Array.isArray(hit.m.content)){const parts=hit.m.content;const textParts=parts.filter(x=>x?.type==="text");if(textParts.length)textParts[0].text=value;else if(value.trim())parts.unshift({type:"text",text:value});hit.m.content=parts}else hit.m.content=value;hit.m.editedAt=Date.now();save();render()}
+function editSelectedMessage(){
+ const hit=selectedMessage();closeBubbleAction();if(!hit)return;
+ const current=displayMessageText(hit.m.content);
+ if(hit.m.role!=="user"){
+  const next=prompt("编辑消息内容",current);if(next===null)return;
+  const value=next.replace(/\r\n?/g,"\n");
+  if(Array.isArray(hit.m.content)){const parts=hit.m.content;const textParts=parts.filter(x=>x?.type==="text");if(textParts.length)textParts[0].text=value;else if(value.trim())parts.unshift({type:"text",text:value});hit.m.content=parts}else hit.m.content=value;
+  hit.m.editedAt=Date.now();save();render();return;
+ }
+ state.editingMessage={chatId:hit.c.id,index:hit.index};
+ const input=$("#input");if(input){input.value=current;input.dataset.editing="1";input.placeholder="修改这条消息…";resize();input.focus();requestAnimationFrame(()=>{input.selectionStart=input.selectionEnd=input.value.length})}
+ showEditModeHint();
+}
+function showEditModeHint(){
+ let hint=$("#editModeHint");
+ if(!hint){hint=document.createElement("div");hint.id="editModeHint";hint.className="editModeHint";const footer=document.querySelector("footer");if(footer)footer.insertBefore(hint,footer.firstChild)}
+ hint.innerHTML='<span>正在修改这条消息</span><button type="button" id="cancelEditMode">取消</button>';
+ const cancel=$("#cancelEditMode");if(cancel)cancel.onclick=cancelEditMode;
+}
+function cancelEditMode(){state.editingMessage=null;const input=$("#input");if(input){input.value="";delete input.dataset.editing;input.placeholder="和 AI 说点什么…";resize();input.focus()}$("#editModeHint")?.remove()}
+function finishEditMode(){state.editingMessage=null;const input=$("#input");if(input){delete input.dataset.editing;input.placeholder="和 AI 说点什么…"}$("#editModeHint")?.remove()}
+function prepareEditedUserMessage(){
+ const em=state.editingMessage;if(!em)return false;
+ const c=state.chats.find(x=>x.id===em.chatId);const target=c?.messages?.[em.index];if(!c||!target||target.role!=="user"){cancelEditMode();return false}
+ const input=$("#input"),value=String(input?.value||"").replace(/\r\n?/g,"\n").trim();if(!value){showErr("修改后的消息不能为空。" );return true}
+ // 只保留编辑后的这一条，删除它下面的全部对话，再让正常发送流程重新生成回复。
+ c.messages.splice(em.index);
+ state.current=c.id;
+ finishEditMode();
+ if(input)input.value=value;
+ save();render();
+ return true;
+}
 function deleteSelectedMessage(){const hit=selectedMessage();closeBubbleAction();if(!hit)return;if(!confirm("确定删除这条消息吗？"))return;hit.c.messages.splice(hit.index,1);save();render()}
 function scroll(){requestAnimationFrame(()=>$("#messages").scrollTop=$("#messages").scrollHeight)}
 function openDrawer(){$("#drawer").classList.add("open");$("#shade").classList.remove("hidden")}function closeDrawer(){$("#drawer").classList.remove("open");$("#shade").classList.add("hidden")}
@@ -505,6 +538,7 @@ async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
  const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
+ if(state.editingMessage){if(attachments.length){showErr("编辑消息时请先移除附件。" );return}if(prepareEditedUserMessage()){return send()} }
  if(!text&&!attachments.length)return;
  const imageAttachments=attachments.filter(a=>a&&a.kind==="image");
  ensure();const c=chat();
