@@ -989,3 +989,180 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   #nestHome .nestQuickMood{min-height:82px!important;padding:13px!important}
   #nestHome .nestQuickMood strong{font-size:15px!important}
 }
+
+/* Iris v4.104 — 把小窝首页真正往参考图的“情侣手账”结构靠拢。只作用于小窝首页，不改主聊天页面。 */
+#nestHome .nestHomeInner{
+  padding-left:18px!important;
+  padding-right:18px!important;
+  padding-top:calc(10px + env(safe-area-inset-top))!important;
+}
+#nestHome .nestTop{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:34px 1fr 34px!important;
+  min-height:82px!important;
+  margin-bottom:7px!important;
+  align-items:start!important;
+}
+#nestHome .nestTop h1{
+  padding-top:2px!important;
+  font-size:30px!important;
+  letter-spacing:2px!important;
+  line-height:1.05!important;
+  color:#5f4652!important;
+}
+#nestHome .nestTop h1:after{
+  margin-top:10px!important;
+  font-size:11px!important;
+  letter-spacing:.7px!important;
+  color:#9e7e8c!important;
+  white-space:nowrap;
+}
+#nestHome #nestCloseHome,
+#nestHome #nestOpenSettings{
+  position:relative!important;
+  z-index:5!important;
+  width:32px!important;
+  height:32px!important;
+  border-radius:50%!important;
+  background:rgba(255,255,255,.38)!important;
+  border:1px solid rgba(255,255,255,.55)!important;
+}
+#nestHome .nestCoupleHeader{
+  position:absolute!important;
+  top:2px!important;
+  right:42px!important;
+  z-index:4!important;
+  margin:0!important;
+  padding:0!important;
+  gap:7px!important;
+  height:54px!important;
+}
+#nestHome .nestCoupleHeart{font-size:13px!important;margin:0 1px!important}
+#nestHome .nestPersonAvatar{
+  width:46px!important;
+  height:46px!important;
+  border-width:2px!important;
+}
+#nestHome .nestPerson strong{font-size:8px!important;margin-top:2px!important}
+
+#nestHome .nestClockCard{
+  min-height:166px!important;
+  margin:0 0 12px!important;
+  padding:20px 21px 19px!important;
+  border-radius:28px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.32),rgba(255,248,251,.13))!important;
+  border-color:rgba(255,255,255,.58)!important;
+  box-shadow:0 15px 35px rgba(106,72,91,.055),inset 0 1px 0 rgba(255,255,255,.72)!important;
+  backdrop-filter:blur(5px) saturate(108%)!important;
+  -webkit-backdrop-filter:blur(5px) saturate(108%)!important;
+}
+#nestHome .nestClockCard:after{
+  content:"♡   ✦   ♡\A有你在\A每天都是好日子"!important;
+  white-space:pre!important;
+  right:17px!important;
+  top:25px!important;
+  text-align:center!important;
+  font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif!important;
+  font-size:13px!important;
+  line-height:1.65!important;
+  letter-spacing:1px!important;
+  color:rgba(177,111,137,.62)!important;
+  transform:rotate(-4deg)!important;
+}
+#nestHome .nestTimeKicker{font-size:10px!important;letter-spacing:.8px!important;color:#a18591!important}
+#nestHome .nestClockCard strong{font-size:61px!important;letter-spacing:0!important;color:#704f5e!important}
+#nestHome .nestClockCard div{margin-top:11px!important;color:#927985!important;font-size:11px!important}
+
+#nestHome .nestQuickMoodLabel{display:none!important}
+#nestHome .nestQuickMoodRow{
+  margin:0 0 11px!important;
+  gap:10px!important;
+}
+#nestHome .nestQuickMood{
+  min-height:92px!important;
+  padding:13px 14px!important;
+  border-radius:21px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(255,247,250,.14))!important;
+  border-color:rgba(255,255,255,.58)!important;
+  box-shadow:0 12px 27px rgba(106,72,91,.045),inset 0 1px 0 rgba(255,255,255,.70)!important;
+  backdrop-filter:blur(5px) saturate(108%)!important;
+  -webkit-backdrop-filter:blur(5px) saturate(108%)!important;
+}
+#nestHome .nestQuickMood span{font-size:11px!important;color:#6f5661!important}
+#nestHome .nestQuickMood strong{font-size:17px!important;margin-top:8px!important;color:#684d59!important}
+#nestHome .nestMoodIcon{font-size:15px!important;right:12px!important;top:11px!important}
+
+#nestHome .nestCard{
+  min-height:78px!important;
+  margin:9px 0!important;
+  padding:14px 16px!important;
+  border-radius:21px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.29),rgba(255,247,250,.12))!important;
+  border-color:rgba(255,255,255,.54)!important;
+  box-shadow:0 11px 25px rgba(106,72,91,.04),inset 0 1px 0 rgba(255,255,255,.70)!important;
+  backdrop-filter:blur(5px) saturate(108%)!important;
+  -webkit-backdrop-filter:blur(5px) saturate(108%)!important;
+}
+#nestHome .nestCardHead{font-size:14px!important;color:#674d59!important}
+#nestHome .nestCardHead>span:first-child:before{font-size:15px!important;margin-right:8px!important}
+#nestHome .nestTextPreview{font-size:12px!important;color:#8d727d!important;margin-top:5px!important}
+#nestHome .nestToGCard:after,
+#nestHome .nestNoteCard:after{
+  position:absolute;right:24px;bottom:9px;font-family:"Songti SC","STSong",serif;font-size:20px;color:rgba(214,139,162,.43);font-style:italic;pointer-events:none;
+}
+#nestHome .nestToGCard:after{content:"I love you  ♡"}
+#nestHome .nestNoteCard:after{content:"♡  ✦  ♡"}
+
+#nestHome .nestStoryCard{
+  min-height:225px!important;
+  padding:16px 16px 13px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.31),rgba(255,247,250,.12))!important;
+}
+#nestHome .nestStorySubline{
+  margin:7px 2px 10px!important;
+  font-size:11px!important;
+  line-height:1.6!important;
+  color:#8e7480!important;
+}
+#nestHome .nestStoryPreview{display:flex;flex-direction:column;gap:7px;margin:0 2px}
+#nestHome .nestStoryMini{
+  display:grid;grid-template-columns:13px 1fr;gap:8px;align-items:start;
+  padding:7px 8px;border-radius:15px;
+  background:rgba(255,255,255,.22);
+  border:1px solid rgba(255,255,255,.38);
+}
+#nestHome .nestStoryMiniDot{
+  width:8px;height:8px;margin-top:5px;border-radius:50%;background:#e4a9bb;box-shadow:0 0 0 3px rgba(228,169,187,.13);
+}
+#nestHome .nestStoryMini small{display:block;font-size:8px;line-height:1.3;color:#a08490;margin-bottom:2px}
+#nestHome .nestStoryMini b{display:block;font-size:11px;line-height:1.45;color:#624957;font-weight:600}
+#nestHome .nestStoryMini p{margin:1px 0 0;font-size:9px;line-height:1.45;color:#8b737d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nestHome .nestStoryMiniEmpty{padding:20px 8px;text-align:center;font-size:10px;color:#a08892}
+
+#nestHome .nestAnniversaryCard{
+  margin:10px 0 4px!important;
+  min-height:70px!important;
+  border-radius:20px!important;
+  background:rgba(255,255,255,.22)!important;
+  border-color:rgba(255,255,255,.50)!important;
+}
+
+/* 背景只留轻微保护层；自定义背景本身始终作为最底层显示。 */
+.nestApp:before{background:rgba(255,248,250,.035)!important}
+.nestApp:after{background:transparent!important}
+
+@media(max-width:390px){
+  #nestHome .nestHomeInner{padding-left:14px!important;padding-right:14px!important}
+  #nestHome .nestTop{min-height:78px!important}
+  #nestHome .nestTop h1{font-size:27px!important}
+  #nestHome .nestTop h1:after{font-size:10px!important}
+  #nestHome .nestCoupleHeader{right:36px!important;gap:4px!important}
+  #nestHome .nestPersonAvatar{width:42px!important;height:42px!important}
+  #nestHome .nestClockCard{min-height:150px!important}
+  #nestHome .nestClockCard strong{font-size:54px!important}
+  #nestHome .nestClockCard:after{right:11px!important;font-size:11px!important}
+  #nestHome .nestQuickMood{min-height:86px!important;padding:12px!important}
+  #nestHome .nestQuickMood strong{font-size:15px!important}
+  #nestHome .nestStoryCard{min-height:210px!important}
+}

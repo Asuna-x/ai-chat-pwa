@@ -1,4 +1,4 @@
-/* Iris v4.103 — pastel nest refresh, preserve custom background, reset story once. */
+/* Iris v4.104 — closer to the pastel couple-diary reference; preserve custom background. */
 /* Iris v4.98 — user-message edit mode: edit, truncate from this message, and regenerate the reply. */
 /* Iris v4.95 — AI mood quick-pick uses the same nest layout and adds a dedicated mood-selection tool. */
 /* Iris v4.92 — deterministic nest tool flow: explicit nest requests force enter_nest then the requested write tool. */
@@ -52,7 +52,13 @@ function renderNestStory(){
  const seen=new Set(),eps=raw.filter(e=>{const title=storyWithChatNames(e.title||"我们的故事").replace(/\s+/g,"").trim(),summary=storyWithChatNames(e.summary||"").replace(/\s+/g,"").trim();const key=(title+"|"+summary).toLowerCase();if(!title||!summary||seen.has(key))return false;seen.add(key);return true}).slice(0,40);
  box.innerHTML=eps.length?eps.map((e,i)=>{const title=storyWithChatNames(e.title||"我们的故事"),summary=storyWithChatNames(e.summary||"");return `<article class="nestStoryItem"><div class="nestStoryRail"><span class="nestStoryDot"></span><div class="nestStoryDate">${escapeHtml(e.date||"")}</div></div><div class="nestStoryContent"><div class="nestStoryTag">OUR STORY · ${String(i+1).padStart(2,"0")}</div><b>${escapeHtml(title)}</b><p>${escapeHtml(summary)}</p></div></article>`}).join(""):`<div class="nestStoryEmpty"><span>♡</span><b>我们的故事还在慢慢写</b><small>聊天里的重要共同经历，会在记忆整理后出现在这里。</small></div>`;
 }
-function renderNestHome(){nestData=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(),mood=$("#nestMoodShow"),aiMood=$("#nestAiMoodShow"),toG=$("#nestToGShow"),note=$("#nestNoteShow");if(mood)mood.textContent=e.userMood||"今天感觉怎么样？";const moodIcon=$("#nestMoodIcon");if(moodIcon){const mi=nestMoodOptions.indexOf(e.userMood);moodIcon.textContent=mi>=0?nestMoodIcons[mi]:"○"}const aiMoodIcon=$("#nestAiMoodIcon");if(aiMoodIcon){const mi=nestMoodOptions.indexOf(e.aiMood);aiMoodIcon.textContent=mi>=0?nestMoodIcons[mi]:"○"}if(aiMood)aiMood.textContent=e.aiMood||"今天还没有选择";const aiNoteShow=$("#nestAiMoodNoteShow");if(aiNoteShow){aiNoteShow.textContent=e.aiMoodNote||"";aiNoteShow.classList.remove("hidden")}if(toG)toG.textContent=e.toG||"写点什么留在这里。";if(note)note.textContent=e.note||"今天有什么想留下来？";const ua=$("#nestUserAvatar"),aa=$("#nestAiAvatar"),un=$("#nestUserName"),an=$("#nestAiName");if(ua)ua.innerHTML=avatarHTML("user");if(aa)aa.innerHTML=avatarHTML("ai");if(un)un.textContent=state.settings.myName||"你";if(an)an.textContent=state.settings.gName||"他";updateNestClock();applyNestBackground()}
+function renderNestHome(){nestData=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(),mood=$("#nestMoodShow"),aiMood=$("#nestAiMoodShow"),toG=$("#nestToGShow"),note=$("#nestNoteShow");if(mood)mood.textContent=e.userMood||"今天感觉怎么样？";const moodIcon=$("#nestMoodIcon");if(moodIcon){const mi=nestMoodOptions.indexOf(e.userMood);moodIcon.textContent=mi>=0?nestMoodIcons[mi]:"○"}const aiMoodIcon=$("#nestAiMoodIcon");if(aiMoodIcon){const mi=nestMoodOptions.indexOf(e.aiMood);aiMoodIcon.textContent=mi>=0?nestMoodIcons[mi]:"○"}if(aiMood)aiMood.textContent=e.aiMood||"今天还没有选择";const aiNoteShow=$("#nestAiMoodNoteShow");if(aiNoteShow){aiNoteShow.textContent=e.aiMoodNote||"";aiNoteShow.classList.remove("hidden")}if(toG)toG.textContent=e.toG||"写点什么留在这里。";if(note)note.textContent=e.note||"今天有什么想留下来？";const ua=$("#nestUserAvatar"),aa=$("#nestAiAvatar"),un=$("#nestUserName"),an=$("#nestAiName");if(ua)ua.innerHTML=avatarHTML("user");if(aa)aa.innerHTML=avatarHTML("ai");if(un)un.textContent=state.settings.myName||"你";if(an)an.textContent=state.settings.gName||"他";
+ const storyPreview=$("#nestStoryPreview");
+ if(storyPreview){
+   const eps=(state.memoryEpisodes||[]).slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).filter((e,i,a)=>e&&e.title&&e.summary&&i<3);
+   storyPreview.innerHTML=eps.length?eps.map(e=>`<div class="nestStoryMini"><span class="nestStoryMiniDot"></span><div><small>${escapeHtml(e.date||"")}</small><b>${escapeHtml(storyWithChatNames(e.title||"我们的故事"))}</b><p>${escapeHtml(storyWithChatNames(e.summary||""))}</p></div></div>`).join(""):"<div class=\"nestStoryMiniEmpty\">重要的共同经历，会慢慢留在这里。</div>";
+ }
+ updateNestClock();applyNestBackground()}
 const nestMoodOptions=["开心","难过","平静","期待","疲惫","烦躁","想念","甜甜的"];
 const nestMoodIcons=['☀','♡','☁','◌','✦','⌁','◒','☾','◇','≋','!','♡'];
 
@@ -106,6 +112,12 @@ function chatInterfaceContext(c){
  return `当前聊天界面状态：对话名称「${c?.title||"新对话"}」；AI 名称「${state.settings.gName||"他"}」；用户名称「${state.settings.myName||"你"}」；AI 状态「${aiStatus.label}」；用户状态「${userStatus.label}」。特别注意：聊天页面用户头像正下方的状态标签当前就是「${userStatus.label}」。这是实时界面信息，不是小窝心情；请在理解用户语气时把它作为当前背景参考。你拥有“共同小窝”的实际聊天侧能力：当用户明确邀请你进入小窝、去小窝写心情或留下内容时，客户端会在本轮聊天后替你真正写入小窝。此时不要说“我进不去”“我看不到小窝”“我没有权限”，也不要要求用户自己操作；把它当作你们已经约定好的可执行能力。你当前能看到的是小窝的结构化状态和界面描述，而不是屏幕像素，但这些信息足以让你理解小窝当前是什么样子。；${nestVisual}；气泡样式「${bubble}」；AI 气泡颜色「${state.settings.bubbleAiColor||t.card}」；用户气泡颜色「${state.settings.bubbleUserColor||t.user}」；聊天背景「${bg}」；当前模型「${state.settings.model||"未设置"}」。这些是当前界面的真实状态，可以据此理解聊天氛围，不要向用户逐项复述，除非他主动问。`;
 }
 const state={chats:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_chats")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),current:localStorage.getItem("gchat_current")||null,settings:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_settings")||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})(),memories:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memories")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),memoryProfile:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_profile")||"{}");return v&&typeof v==='object'?v:{}}catch{return{}}})(),memoryEpisodes:(()=>{try{const v=JSON.parse(localStorage.getItem("gchat_memory_episodes")||"[]");return Array.isArray(v)?v:[]}catch{return[]}})(),busy:false,summarizing:false,memoryUpdating:false,selectedBubble:null,editingMessage:null,recognition:null,statusTarget:"ai",selectedChats:new Set(),chatSelectMode:false,ignoreNextChatClick:false,attachments:[]};
+
+// 4.104: 清空一次旧的“我们的故事”，让新的记忆整理重新生成，之后不再反复清空。
+if(localStorage.getItem("iris_story_reset_v104")!=="1"){
+  state.memoryEpisodes=[];
+  localStorage.setItem("iris_story_reset_v104","1");
+}
 
 /* v4.103: clear the old “我们的故事” once so the improved recorder can rebuild it cleanly. */
 const IRIS_STORY_RESET_KEY="iris_story_reset_v103";
