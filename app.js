@@ -1,4 +1,4 @@
-/* Iris v4.123 — lower nest clock card top edge and raise clock art. */
+/* Iris v4.124 — notebook ruled-paper alignment and lower nest clock card edge. */
 /* Iris v4.98 — user-message edit mode: edit, truncate from this message, and regenerate the reply. */
 /* Iris v4.95 — AI mood quick-pick uses the same nest layout and adds a dedicated mood-selection tool. */
 /* Iris v4.92 — deterministic nest tool flow: explicit nest requests force enter_nest then the requested write tool. */

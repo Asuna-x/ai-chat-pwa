@@ -2145,7 +2145,7 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 
 /* Iris v4.121 — final nest home/subpage alignment and story edit/delete UI. */
 #nestHome .nestClockCard{
-  margin-top:30px!important;
+  margin-top:42px!important;
 }
 #nestHome .nestClockCard:after{
   display:none!important;
@@ -2196,7 +2196,7 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   #nestHome .nestClockCoupleArt{bottom:10px!important;}
 }
 
-/* Iris v4.123 — compact memory dedupe + notebook ruled-paper alignment + gentle page motion. */
+/* Iris v4.124 — notebook ruled-paper alignment and lower nest clock card edge. */
 .nestBookViewport{
   height:min(600px,calc(100dvh - 215px))!important;
   padding-bottom:6px!important;
@@ -2209,13 +2209,13 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   line-height:31px!important;
   background:repeating-linear-gradient(to bottom,
     transparent 0,
-    transparent 30px,
-    rgba(205,178,191,.18) 30px,
-    rgba(205,178,191,.18) 31px,
-    transparent 31px,
-    transparent 32px
+    transparent 24px,
+    rgba(205,178,191,.20) 24px,
+    rgba(205,178,191,.20) 25px,
+    transparent 25px,
+    transparent 31px
   )!important;
-  background-position:0 4px!important;
+  background-position:0 0!important;
 }
 .nestBookPage.page-enter-next{animation:nestPageSoftNext .14s ease-out both;}
 .nestBookPage.page-enter-prev{animation:nestPageSoftPrev .14s ease-out both;}
@@ -2224,5 +2224,5 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 @media(max-width:390px){
   .nestBookViewport{height:min(560px,calc(100dvh - 215px))!important;}
   .nestNotebookSheet.nestBookPage p,
-  .nestNotebookWrite textarea{line-height:29px!important;background-position:0 4px!important;background:repeating-linear-gradient(to bottom,transparent 0,transparent 28px,rgba(205,178,191,.18) 28px,rgba(205,178,191,.18) 29px,transparent 29px,transparent 30px)!important;}
+  .nestNotebookWrite textarea{line-height:29px!important;background-position:0 0!important;background:repeating-linear-gradient(to bottom,transparent 0,transparent 22px,rgba(205,178,191,.20) 22px,rgba(205,178,191,.20) 23px,transparent 23px,transparent 29px)!important;}
 }
