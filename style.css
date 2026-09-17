@@ -1820,3 +1820,85 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   .nestNotebookSheet p{font-size:12px!important}
   .nestNotebookWrite{padding:16px 14px 15px!important}
 }
+
+
+/* Iris v4.115 — tighten sub-page save footer, even out the home clock spacing, and polish the chat drawer actions. */
+#nest .nestPage:not(#nestHome) .nestSubFooter{
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  bottom:calc(45px + env(safe-area-inset-bottom))!important;
+  z-index:5!important;
+  margin:0!important;
+  padding:9px max(18px,env(safe-area-inset-right)) 9px max(18px,env(safe-area-inset-left))!important;
+  border-top:1px solid rgba(255,255,255,.44)!important;
+  background:rgba(255,250,252,.58)!important;
+  backdrop-filter:blur(18px) saturate(120%)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(120%)!important;
+  box-shadow:0 -4px 18px rgba(105,73,91,.045)!important;
+}
+#nest .nestPage:not(#nestHome) .nestSubBody{padding-bottom:110px!important}
+#nest .nestSubFooter .nestSaveBtn{display:block!important;margin:0!important}
+
+#nestHome .nestClockInfo{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+  gap:9px!important;
+}
+#nestHome .nestClockInfo .nestTimeKicker,
+#nestHome .nestClockInfo strong,
+#nestHome .nestClockInfo #nestNow{margin:0!important}
+#nestHome .nestClockInfo .nestTimeKicker{line-height:1.35!important}
+#nestHome .nestClockInfo strong{line-height:.98!important}
+#nestHome .nestClockInfo #nestNow{line-height:1.35!important}
+
+.drawer .bottom{
+  padding:12px 13px calc(14px + env(safe-area-inset-bottom))!important;
+  border-top:1px solid rgba(190,146,164,.16)!important;
+  background:linear-gradient(180deg,rgba(255,249,252,.18),rgba(255,244,248,.46))!important;
+}
+.drawer .bottom button{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:11px!important;
+  min-height:48px!important;
+  margin:4px 0!important;
+  padding:9px 13px 9px 48px!important;
+  border:1px solid rgba(190,146,164,.13)!important;
+  border-radius:17px!important;
+  background:linear-gradient(135deg,rgba(255,253,254,.84),rgba(249,239,245,.62))!important;
+  box-shadow:0 8px 20px rgba(105,73,91,.055),inset 0 1px 0 rgba(255,255,255,.82)!important;
+  color:#6f5663!important;
+  font-size:13px!important;
+  font-weight:650!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
+}
+.drawer .bottom button:before{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  width:28px;height:28px;display:grid;place-items:center;border-radius:11px;
+  background:rgba(255,255,255,.72);border:1px solid rgba(190,146,164,.12);
+  color:#c08ca1;font-family:Georgia,serif;font-size:15px;line-height:1;
+  box-shadow:0 4px 10px rgba(105,73,91,.05);
+}
+.drawer .bottom button#openNest:before{content:"♡"}
+.drawer .bottom button#openSettings:before{content:"⚙";font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;font-size:14px}
+.drawer .bottom button:active{transform:scale(.985)!important;box-shadow:0 4px 12px rgba(105,73,91,.04)!important}
+.drawer .bottom small{padding:9px 8px 0!important;color:#ae97a2!important;font-size:9px!important;line-height:1.55!important;text-align:center!important}
+.drawer .drawer-top .brand-mark{border-radius:15px!important;box-shadow:0 8px 18px rgba(105,73,91,.08)!important}
+.drawer .drawer-top .brand b{color:#654c59!important}
+.drawer .drawer-top .brand small{color:#a18a95!important}
+.drawer .new{border-radius:17px!important;padding:13px 15px!important;background:linear-gradient(135deg,rgba(239,219,228,.72),rgba(255,250,253,.72))!important;border-color:rgba(190,146,164,.15)!important;color:#6f5361!important;box-shadow:0 8px 20px rgba(105,73,91,.06)!important}
+.drawer .section{color:#ae95a0!important;letter-spacing:.8px!important}
+.drawer .item{border-radius:14px!important;color:#765e6a!important}
+.drawer .item.active{background:rgba(239,219,228,.55)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.62)!important}
+.drawer .itemMore{color:#ad8d99!important}
+@media(max-width:390px){
+  #nest .nestPage:not(#nestHome) .nestSubFooter{bottom:calc(43px + env(safe-area-inset-bottom))!important;padding-left:13px!important;padding-right:13px!important}
+  #nest .nestPage:not(#nestHome) .nestSubBody{padding-bottom:105px!important}
+  #nestHome .nestClockInfo{gap:8px!important}
+  .drawer .bottom button{min-height:46px!important;padding-left:46px!important}
+}
