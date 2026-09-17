@@ -1620,3 +1620,30 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
     bottom:0!important;
   }
 }
+
+
+/* Iris v4.113 — shared notebook / paper feel. */
+#nestHome .nestNotebookCard{background:linear-gradient(145deg,rgba(255,250,253,.66),rgba(247,239,248,.30))!important}
+#nestHome .nestNotebookCard .nestCardHead>span:first-child:before{content:"▤"!important;font-size:15px!important}
+.nestNotebookBody{padding-top:18px!important}
+.nestNotebookIntro{margin:0 4px 14px;padding:13px 15px;border-radius:18px;background:rgba(255,251,253,.45);border:1px solid rgba(255,255,255,.58);color:#967d89;font-size:11px;line-height:1.7}
+.nestNotebookList{display:flex;flex-direction:column;gap:14px;padding:2px 2px 18px}
+.nestNotebookSheet{position:relative;overflow:hidden;min-height:145px;padding:23px 20px 24px 31px;border-radius:6px 18px 18px 6px;background:repeating-linear-gradient(to bottom,rgba(255,253,249,.94) 0,rgba(255,253,249,.94) 31px,rgba(221,188,201,.20) 32px,rgba(255,253,249,.94) 33px);border:1px solid rgba(197,164,176,.18);box-shadow:0 12px 28px rgba(105,73,91,.07);font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif}
+.nestNotebookSheet:before{content:"";position:absolute;left:17px;top:0;bottom:0;width:1px;background:rgba(224,157,180,.38)}
+.nestNotebookMargin{position:absolute;left:9px;top:18px;width:8px;height:8px;border-radius:50%;background:#e4a9bd;box-shadow:0 0 0 4px rgba(228,169,189,.13)}
+.nestNotebookDate{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC",sans-serif;font-size:9px;color:#ae929d;margin-bottom:7px}
+.nestNotebookSheet h3{margin:0 0 8px;font-size:15px;line-height:1.5;color:#624957;font-weight:650}
+.nestNotebookSheet p{margin:0;font-size:13px;line-height:2;color:#725d67;white-space:pre-wrap;word-break:break-word}
+.nestNotebookPageNo{position:absolute;right:13px;bottom:9px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:8px;color:#b69aa5}
+.nestNotebookWrite{margin:0 2px 24px;padding:16px;border-radius:20px;background:rgba(255,250,253,.52);border:1px solid rgba(255,255,255,.60);box-shadow:0 10px 25px rgba(105,73,91,.05)}
+.nestNotebookWrite input,.nestNotebookWrite textarea{box-sizing:border-box;width:100%;border:0;border-bottom:1px solid rgba(197,164,176,.25);background:transparent;color:#654d59;outline:none;font:inherit}
+.nestNotebookWrite input{padding:5px 3px 10px;font-family:"Songti SC","STSong","Noto Serif CJK TC",ui-serif,Georgia,serif;font-size:15px}
+.nestNotebookWrite textarea{min-height:110px;padding:12px 3px 10px;resize:none;line-height:1.9;font-size:13px}
+.nestNotebookWrite .nestSaveBtn{margin-top:10px}
+.nestNotebookEmpty{padding:42px 20px;text-align:center;border-radius:18px;background:rgba(255,251,253,.38);border:1px dashed rgba(190,146,164,.22);color:#987f8b}
+.nestNotebookEmptyIcon{font-family:Georgia,serif;font-size:28px;color:#d09aae;margin-bottom:8px}.nestNotebookEmpty b{display:block;font-size:14px;color:#6b515e}.nestNotebookEmpty small{display:block;margin-top:5px;font-size:10px}
+@media(max-width:390px){.nestNotebookSheet{padding-left:28px;min-height:135px}.nestNotebookSheet h3{font-size:14px}.nestNotebookSheet p{font-size:12px}.nestNotebookWrite{padding:14px}}
+
+/* The fixed bottom navigation owns the bottom edge; sub-page footers no longer leave a blank seam. */
+#nest .nestPage:not(#nestHome){padding-bottom:0!important}
+#nest .nestSubFooter{margin-bottom:0!important;padding-bottom:calc(10px + env(safe-area-inset-bottom))!important}
