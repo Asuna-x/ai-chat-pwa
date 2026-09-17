@@ -1647,3 +1647,176 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 /* The fixed bottom navigation owns the bottom edge; sub-page footers no longer leave a blank seam. */
 #nest .nestPage:not(#nestHome){padding-bottom:0!important}
 #nest .nestSubFooter{margin-bottom:0!important;padding-bottom:calc(10px + env(safe-area-inset-bottom))!important}
+
+
+/* Iris v4.114 — center the mood symbols and couple heart; polish the shared notebook. */
+#nestHome .nestMoodIcon{
+  right:14px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:40px!important;
+  height:40px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  margin:0!important;
+  line-height:1!important;
+  box-sizing:border-box!important;
+}
+#nestHome .nestMoodIcon:before{
+  position:static!important;
+  display:block!important;
+  margin:0!important;
+  line-height:1!important;
+  transform:none!important;
+}
+#nestHome .nestCoupleHeader{
+  align-items:flex-start!important;
+}
+#nestHome .nestCoupleHeart{
+  align-self:flex-start!important;
+  margin-top:0!important;
+  height:64px!important;
+  display:grid!important;
+  place-items:center!important;
+  transform:none!important;
+}
+
+/* notebook: more like a real soft hand-written journal */
+.nestNotebookBody{
+  padding-left:13px!important;
+  padding-right:13px!important;
+}
+.nestNotebookIntro{
+  position:relative!important;
+  margin:2px 2px 16px!important;
+  padding:15px 17px 15px 43px!important;
+  border-radius:20px!important;
+  background:linear-gradient(135deg,rgba(255,249,252,.78),rgba(255,255,255,.48))!important;
+  border:1px solid rgba(255,255,255,.78)!important;
+  box-shadow:0 10px 24px rgba(105,73,91,.055),inset 0 1px 0 rgba(255,255,255,.8)!important;
+  font-size:11px!important;
+  line-height:1.75!important;
+}
+.nestNotebookIntro:before{
+  content:"♡";
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  width:20px;
+  height:20px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  color:#d18fa6;
+  background:rgba(255,255,255,.72);
+  box-shadow:0 4px 10px rgba(105,73,91,.06);
+  font-family:Georgia,serif;
+  font-size:14px;
+}
+.nestNotebookList{gap:16px!important;padding:2px 3px 20px!important}
+.nestNotebookSheet{
+  min-height:154px!important;
+  padding:25px 22px 27px 34px!important;
+  border-radius:7px 20px 20px 7px!important;
+  background:
+    linear-gradient(90deg,rgba(247,229,237,.30),transparent 12%),
+    repeating-linear-gradient(to bottom,rgba(255,254,251,.97) 0,rgba(255,254,251,.97) 31px,rgba(205,178,191,.18) 32px,rgba(255,254,251,.97) 33px)!important;
+  box-shadow:0 14px 30px rgba(105,73,91,.075),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+.nestNotebookSheet:before{
+  left:19px!important;
+  background:rgba(224,157,180,.34)!important;
+}
+.nestNotebookSheet:after{
+  content:"";
+  position:absolute;
+  left:5px;
+  top:24px;
+  bottom:24px;
+  width:8px;
+  background:radial-gradient(circle,rgba(205,157,174,.55) 0 2px,transparent 2.6px) center top/8px 30px repeat-y;
+  opacity:.9;
+  pointer-events:none;
+}
+.nestNotebookMargin{
+  left:10px!important;
+  top:19px!important;
+  width:8px!important;
+  height:8px!important;
+  background:#e6a8bd!important;
+  box-shadow:0 0 0 4px rgba(228,169,189,.13),0 2px 5px rgba(105,73,91,.08)!important;
+}
+.nestNotebookDate{
+  font-size:9px!important;
+  letter-spacing:.25px!important;
+  color:#b095a0!important;
+}
+.nestNotebookSheet h3{
+  margin-bottom:9px!important;
+  font-size:16px!important;
+  line-height:1.45!important;
+  letter-spacing:.2px!important;
+}
+.nestNotebookSheet p{
+  font-size:13px!important;
+  line-height:2!important;
+  color:#765f6a!important;
+}
+.nestNotebookPageNo{
+  right:15px!important;
+  bottom:10px!important;
+  font-size:8px!important;
+  color:#c19daa!important;
+}
+.nestNotebookWrite{
+  position:relative!important;
+  margin:0 3px 28px!important;
+  padding:18px 17px 17px!important;
+  border-radius:22px!important;
+  background:linear-gradient(145deg,rgba(255,249,252,.70),rgba(255,255,255,.40))!important;
+  border:1px solid rgba(255,255,255,.72)!important;
+  box-shadow:0 12px 28px rgba(105,73,91,.06),inset 0 1px 0 rgba(255,255,255,.85)!important;
+}
+.nestNotebookWrite:before{
+  content:"WRITE A PAGE · 我们的小本子";
+  display:block;
+  margin:0 2px 11px;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;
+  font-size:8px;
+  letter-spacing:1.3px;
+  color:#b28f9d;
+}
+.nestNotebookWrite input{
+  padding:7px 4px 11px!important;
+  font-size:15px!important;
+  color:#624957!important;
+}
+.nestNotebookWrite textarea{
+  min-height:128px!important;
+  padding:12px 4px 10px!important;
+  line-height:2!important;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,rgba(205,178,191,.18) 30px,transparent 31px)!important;
+}
+.nestNotebookWrite .nestSaveBtn{
+  margin-top:13px!important;
+  border-radius:16px!important;
+  background:linear-gradient(90deg,#eac8d5,#dcaabd)!important;
+  box-shadow:0 9px 18px rgba(133,86,108,.13)!important;
+}
+.nestNotebookEmpty{
+  padding:52px 20px!important;
+  border-radius:22px!important;
+  background:rgba(255,251,253,.46)!important;
+}
+@media(max-width:390px){
+  #nestHome .nestMoodIcon{width:38px!important;height:38px!important;right:13px!important}
+  #nestHome .nestCoupleHeart{height:60px!important}
+  .nestNotebookBody{padding-left:10px!important;padding-right:10px!important}
+  .nestNotebookSheet{padding-left:31px!important;min-height:145px!important}
+  .nestNotebookSheet h3{font-size:14px!important}
+  .nestNotebookSheet p{font-size:12px!important}
+  .nestNotebookWrite{padding:16px 14px 15px!important}
+}
