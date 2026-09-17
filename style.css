@@ -1254,3 +1254,99 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   #nestHome #nestAiMoodIcon:before{font-size:21px}
   #nestHome .nestClockCard:after{right:12px!important;top:26px!important;font-size:18px!important}
 }
+
+/* Iris v4.106 — 小窝首页继续贴近参考图：整体下移、头像靠拢、时间卡加入原壁纸中的情侣插画。 */
+#nestHome .nestHomeInner{
+  padding-top:calc(18px + env(safe-area-inset-top))!important;
+}
+#nestHome .nestTop{
+  min-height:96px!important;
+  margin-bottom:8px!important;
+  align-items:start!important;
+}
+#nestHome .nestTop h1{
+  padding-top:8px!important;
+}
+#nestHome .nestTop h1:after{
+  margin-top:11px!important;
+}
+#nestHome .nestCoupleHeader{
+  top:30px!important;
+  right:8px!important;
+  gap:0!important;
+  height:76px!important;
+  transform:none!important;
+}
+#nestHome .nestPersonAvatar{
+  width:62px!important;
+  height:62px!important;
+  flex-basis:62px!important;
+}
+#nestHome .nestCoupleHeart{
+  width:18px!important;
+  flex-basis:18px!important;
+  height:62px!important;
+  font-size:16px!important;
+}
+#nestHome .nestPerson strong{font-size:9px!important;margin-top:4px!important}
+
+#nestHome .nestClockCard{
+  min-height:166px!important;
+  padding:20px 22px 18px!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  text-align:left!important;
+}
+#nestHome .nestClockInfo{
+  position:relative!important;
+  z-index:2!important;
+  flex:0 0 47%!important;
+  min-width:0!important;
+}
+#nestHome .nestClockCard:after{
+  content:"♡   ✦   ♡"!important;
+  right:15px!important;
+  top:19px!important;
+  font-size:17px!important;
+  letter-spacing:2px!important;
+  color:rgba(190,118,145,.48)!important;
+  transform:rotate(-6deg)!important;
+}
+#nestHome .nestClockCoupleArt{
+  display:block!important;
+  position:absolute!important;
+  right:4px!important;
+  bottom:4px!important;
+  width:53%!important;
+  max-width:300px!important;
+  height:auto!important;
+  object-fit:contain!important;
+  z-index:1!important;
+  pointer-events:none!important;
+  user-select:none!important;
+}
+#nestHome .nestClockCard strong{
+  font-size:58px!important;
+}
+#nestHome .nestClockCard div#nestNow{
+  margin-top:10px!important;
+}
+
+#nestHome .nestQuickMoodRow{margin-top:1px!important}
+#nestHome .nestQuickMoodIcon,#nestHome .nestMoodIcon{z-index:3!important}
+
+@media(max-width:390px){
+  #nestHome .nestHomeInner{padding-top:calc(16px + env(safe-area-inset-top))!important}
+  #nestHome .nestTop{min-height:92px!important}
+  #nestHome .nestTop h1{padding-top:7px!important}
+  #nestHome .nestCoupleHeader{top:27px!important;right:4px!important}
+  #nestHome .nestPersonAvatar{width:56px!important;height:56px!important;flex-basis:56px!important}
+  #nestHome .nestCoupleHeart{width:16px!important;flex-basis:16px!important;height:56px!important;font-size:14px!important}
+  #nestHome .nestClockCard{min-height:154px!important;padding:18px 18px 16px!important}
+  #nestHome .nestClockInfo{flex-basis:49%!important}
+  #nestHome .nestClockCard strong{font-size:52px!important}
+  #nestHome .nestClockCoupleArt{width:56%!important;right:0!important;bottom:2px!important}
+}
