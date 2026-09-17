@@ -102,7 +102,23 @@ function imageRefForData(data){if(!data||typeof data!=="string")return"";const i
 function persistableChats(){return (state.chats||[]).map(c=>({...c,messages:(c.messages||[]).map(m=>{if(!Array.isArray(m.content))return m;return {...m,content:m.content.map(part=>{if(part?.type==="image_url"&&part.image_url?.url){const id=part.image_id||imageRefForData(part.image_url.url);return {type:"image_ref",image_id:id}}return part})}})}))}
 const save=()=>{try{localStorage.setItem("gchat_chats",JSON.stringify(persistableChats()));localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]));localStorage.setItem("gchat_memory_profile",JSON.stringify(state.memoryProfile||{}));localStorage.setItem("gchat_memory_episodes",JSON.stringify(state.memoryEpisodes||[]))}catch(e){console.warn("Iris local save failed",e);try{localStorage.setItem("gchat_current",state.current||"");localStorage.setItem("gchat_settings",JSON.stringify(state.settings));localStorage.setItem("gchat_memories",JSON.stringify(state.memories||[]));localStorage.setItem("gchat_memory_profile",JSON.stringify(state.memoryProfile||{}));localStorage.setItem("gchat_memory_episodes",JSON.stringify(state.memoryEpisodes||[]))}catch{}}};
 const chat=()=>state.chats.find(x=>x.id===state.current);
-function ensure(){if(!chat()){const c={id:crypto.randomUUID(),title:"新对话",messages:[],summary:"",summaryUpdatedAt:0,summaryMessageCount:0,createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save()}}
+function ensure(){
+  // 启动时绝不因为 current 丢失就覆盖/重置已有聊天。
+  // 先从已有聊天中恢复一个有效的 current，只有确实没有任何聊天时才创建新对话。
+  if(chat()) return false;
+  const candidates = Array.isArray(state.chats) ? state.chats.filter(Boolean) : [];
+  if(candidates.length){
+    candidates.sort((a,b)=>Number(b.updatedAt||b.createdAt||0)-Number(a.updatedAt||a.createdAt||0));
+    state.current=candidates[0].id;
+    localStorage.setItem("gchat_current",state.current);
+    return true;
+  }
+  const c={id:crypto.randomUUID(),title:"新对话",messages:[],summary:"",summaryUpdatedAt:0,summaryMessageCount:0,createdAt:Date.now(),updatedAt:Date.now()};
+  state.chats.unshift(c);
+  state.current=c.id;
+  save();
+  return true;
+}
 function hexToRgba(hex,opacity){let h=String(hex||"").trim().replace("#","");if(h.length===3)h=h.split("").map(x=>x+x).join("");const n=parseInt(h,16);if(!Number.isFinite(n))return `rgba(255,255,255,${opacity/100})`;return `rgba(${n>>16&255},${n>>8&255},${n&255},${Math.max(0,Math.min(100,Number(opacity)||0))/100})`}
 function applyLook(){const t=themes[state.settings.theme]||themes.cream;const r=document.documentElement;Object.entries(t).forEach(([k,v])=>{if(k!=="name")r.style.setProperty("--"+({bg:"bg",card:"card",ink:"ink",muted:"muted",line:"line",soft:"soft",user:"user",accent:"accent",accent2:"accent2"}[k]||k),v)});r.style.setProperty("--bg-image-opacity",String((state.settings.bgOpacity??18)/100));r.style.setProperty("--bg-image",state.settings.bgCustom?`url(${state.settings.bgCustom})`:(backgrounds[state.settings.bg||"paper"]?.value||backgrounds.paper.value));const aiColor=state.settings.bubbleAiColor||t.card;const userColor=state.settings.bubbleUserColor||t.user;r.style.setProperty("--ai-bubble-bg",hexToRgba(aiColor,state.settings.bubbleAiOpacity??94));r.style.setProperty("--user-bubble-bg",hexToRgba(userColor,state.settings.bubbleUserOpacity??90));r.style.setProperty("--g-name-offset",String(state.settings.gNameOffset??0)+"px");r.style.setProperty("--user-name-offset",String(state.settings.userNameOffset??0)+"px");document.querySelector('meta[name="theme-color"]').setAttribute("content",t.bg);document.body.classList.remove("bubble-soft","bubble-glass","bubble-minimal","bubble-pill");document.body.classList.add("bubble-"+(state.settings.bubble||"soft"));document.body.classList.toggle("no-motion",state.settings.animations===false)}
 const statusOptions={
@@ -552,7 +568,21 @@ $("#mcpEnabled").onchange=()=>{state.settings.mcpEnabled=$("#mcpEnabled").checke
 $("#clearMemories").onclick=()=>{if(!(state.memories||[]).length)return;if(!confirm("确定清空全部记忆吗？"))return;state.memories=[];save();renderMemories()};
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="他";if(state.settings.gName==="G")state.settings.gName="他";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0};state.settings.replyDelay??=360;state.settings.mcpNestEnabled??=true;state.settings.mcpEnabled??=false;state.settings.mcpServerUrl??="";state.settings.mcpServerToken??="";state.settings.visionEnabled??=false;state.settings.visionBase??="";state.settings.visionKey??="";state.settings.visionModel??="";state.settings.imageGenEnabled??=false;state.settings.imageGenBase??="";state.settings.imageGenKey??="";state.settings.imageGenModel??="";state.memories??=[];state.memoryProfile??={};state.memoryEpisodes??=[];memoryNormalize();normalizeNestData();syncTodayToDaily();saveNestData();if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
+// 启动迁移：如果 current 指向不存在的聊天，只修正 current，不重写整个聊天库。
+if(state.current && !state.chats.some(c=>c&&c.id===state.current)){
+  const latest=state.chats.filter(Boolean).sort((a,b)=>Number(b.updatedAt||b.createdAt||0)-Number(a.updatedAt||a.createdAt||0))[0];
+  state.current=latest?.id||null;
+  if(state.current) localStorage.setItem("gchat_current",state.current);
+}
+state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="他";if(state.settings.gName==="G")state.settings.gName="他";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0};state.settings.replyDelay??=360;state.settings.mcpNestEnabled??=true;state.settings.mcpEnabled??=false;state.settings.mcpServerUrl??="";state.settings.mcpServerToken??="";state.settings.visionEnabled??=false;state.settings.visionBase??="";state.settings.visionKey??="";state.settings.visionModel??="";state.settings.imageGenEnabled??=false;state.settings.imageGenBase??="";state.settings.imageGenKey??="";state.settings.imageGenModel??="";state.memories??=[];state.memoryProfile??={};state.memoryEpisodes??=[];memoryNormalize();
+normalizeNestData();
+syncTodayToDaily();
+saveNestData();
+if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";
+if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";
+ensure();
+ensureDates();
+render();
 
 window.addEventListener("load",()=>render());
 window.addEventListener("pageshow",()=>render());
