@@ -1,3 +1,4 @@
+/* Iris v4.129 — PWA cache/version sync. */
 /* Iris v4.45 */
 /* Iris v4.42 */
 /* Iris v4.39 — AI mood writing, full chat UI context, anniversary name/background, layout polish. */
@@ -2237,3 +2238,14 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
 .sentImageGrid img{display:block!important;width:auto!important;height:auto!important;max-width:min(68vw,360px)!important;max-height:58vh!important;object-fit:contain!important;background:#fff!important;border-radius:14px!important;}
 .message.user .sentImageGrid img{margin-left:auto!important;}
 .attachChip.imageChip{background:rgba(255,255,255,.9)!important;}
+
+
+/* Iris v4.128 — keep chat strictly vertical; generated images stay inside assistant bubbles. */
+html,body,#app,.app,.main{max-width:100%;overflow-x:hidden!important;}
+.messages{min-width:0;max-width:100%;overflow-x:hidden!important;overscroll-behavior-x:none;touch-action:pan-y;}
+.message{min-width:0;max-width:760px;}
+.message .bubble{min-width:0;overflow:hidden;}
+.generatedImageMessage{display:flex!important;align-items:flex-end!important;}
+.generatedImageMessage .generatedImageBubble{padding:0!important;overflow:hidden!important;max-width:min(82vw,520px)!important;border-radius:18px 18px 18px 6px!important;}
+.generatedImageBubble img{display:block!important;width:auto!important;height:auto!important;max-width:100%!important;max-height:60vh!important;object-fit:contain!important;border-radius:inherit!important;box-shadow:none!important;}
+body.bubble-glass .generatedImageMessage .generatedImageBubble{padding:0!important;}
