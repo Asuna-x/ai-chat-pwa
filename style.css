@@ -2226,3 +2226,8 @@ body.bubble-pill .assistant .bubble,body.bubble-pill .user .bubble{padding-top:8
   .nestNotebookSheet.nestBookPage p,
   .nestNotebookWrite textarea{line-height:29px!important;background-position:0 0!important;background:repeating-linear-gradient(to bottom,transparent 0,transparent 22px,rgba(205,178,191,.20) 22px,rgba(205,178,191,.20) 23px,transparent 23px,transparent 29px)!important;}
 }
+
+/* Iris v4.126 — cleaner image attachment preview. */
+.attachmentPreview{background:transparent!important;min-height:0!important;}
+.attachChip.imageChip{overflow:hidden;background:rgba(255,255,255,.82)!important;}
+.attachChip.imageChip img{background:#fff;object-fit:cover;}

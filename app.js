@@ -609,7 +609,6 @@ async function sendVisionMessage(c,text,attachments){
    if(!model)continue;
    if(visionModelCooling(model)){if(idx<candidates.length-1)continue;}
    try{
-    if(idx>0)showErr(`视觉模型繁忙，正在切换备用模型 ${model}…`);
     vision=await window.GChatAPI.visionChat({baseUrl:visionBase,apiKey:visionKey,model,messages:[{role:'user',content}],temperature:.2,signal:controller.signal,max_tokens:1024});
     usedVisionModel=model;break;
    }catch(err){
@@ -626,9 +625,9 @@ async function sendVisionMessage(c,text,attachments){
   const visualAnswer=String(vision.answer||'').trim();if(!visualAnswer)throw new Error('视觉模型返回为空');
   const stat=state.settings.tokenStats||{prompt:0,completion:0,total:0,requests:0};addUsageTotals(stat,vision.usage);
   const normalBase=String(state.settings.apiBase||'').trim(),normalKey=String(state.settings.apiKey||'').trim(),normalModel=String(state.settings.model||'').trim();if(!normalBase||!normalKey||!normalModel)throw new Error('主聊天模型配置不完整。请检查 AI Base URL、API Key 和当前模型。');
-  showErr(usedVisionModel&&usedVisionModel.toLowerCase()!==visionModel.toLowerCase()?'备用视觉模型已识别，正在由聊天模型回复…':'图片已经看懂了，正在由聊天模型回复…');
+
   const ms=[],systemParts=[];if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);systemParts.push(conversationStyleContext());systemParts.push(chatInterfaceContext(c));const mc=memoryContext();if(mc)systemParts.push(mc);const nc=nestContext();if(nc)systemParts.push(nc);systemParts.push('本轮用户刚刚发送了图片。视觉模型已经完成图片观察，下面的内容是视觉参考，不是用户原话。请由你这个主聊天模型负责最终回复用户，保持你自己的聊天人格、上下文和自然语气。不要提到视觉模型、识图模型、API 或内部流程，也不要逐字复述视觉分析；只在与用户当前话题相关时使用这些信息。\n【图片视觉参考】\n'+visualAnswer);ms.push({role:'system',content:systemParts.join('\n\n')});ms.push(...buildConversationContext(c));
-  const result=await window.GChatAPI.chat({baseUrl:normalBase,apiKey:normalKey,model:normalModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal});const answer=String(result.answer||'').trim();if(!answer)throw new Error('主聊天模型返回为空');addUsageTotals(stat,result.usage);state.settings.tokenStats=stat;c.messages.push({role:'assistant',content:answer,timestamp:Date.now()});save();render();renderTokenStats();if(shouldAutoSummarize(c))autoSummarizeChat(c);return true;
+  let displayQueue=Promise.resolve(),pending='';const pushSentence=sentence=>{const v=String(sentence||'').trim();if(!v)return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble('assistant',v,true,ts,true);c.messages.push({role:'assistant',content:v,timestamp:ts});save();scroll();await sleep(Math.min(1500,Math.max(80,Number(state.settings.replyDelay??360)+Math.min(90,v.length)*7)))})};let lastAnswer='';const onText=(part,all)=>{lastAnswer=String(all||'');pending+=String(part||'');const parts=splitReply(pending),ready=/[。！？!?；;\n]\s*$/.test(pending),count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pending=count?parts.slice(count).join(''):pending};const result=await window.GChatAPI.chatStream({baseUrl:normalBase,apiKey:normalKey,model:normalModel,messages:ms,temperature:state.settings.temperature,signal:controller.signal},onText);if(pending.trim())pushSentence(pending);await displayQueue;const answer=String(result.answer||lastAnswer||'').trim();if(!answer)throw new Error('主聊天模型返回为空');addUsageTotals(stat,result.usage);state.settings.tokenStats=stat;save();renderTokenStats();if(shouldAutoSummarize(c))autoSummarizeChat(c);return true;
  }catch(e){const detail=e?.name==='AbortError'?'视觉/聊天请求超时（90 秒）。':(e?.message||String(e));fail(detail);return false}finally{clearTimeout(timeout);if(state._abort===controller)state._abort=null;finishBusy()}
 }
 async function send(){
@@ -641,7 +640,6 @@ async function send(){
  ensure();const c=chat();
  if(imageAttachments.length){
   try{
-   showErr("检测到图片，准备发送…");
    const userContent=[...(text?[{type:"text",text}]:[]),...imageAttachments.map(a=>({type:"image_url",image_id:a.imageId||imageRefForData(a.data),image_url:{url:a.data}}))];
    c.messages.push({role:"user",content:userContent,timestamp:Date.now()});
    if(c.messages.filter(m=>m.role==="user").length===1)c.title=text.slice(0,24)||"图片消息";
@@ -700,7 +698,7 @@ async function imageToData(file,max=1600,quality=.84){
   const im=await new Promise((res,rej)=>{const x=new Image();x.onload=()=>res(x);x.onerror=()=>rej(new Error("浏览器无法解码此图片"));x.src=original});
   const scale=Math.min(1,max/Math.max(im.naturalWidth||im.width,im.naturalHeight||im.height));
   const w=Math.max(1,Math.round((im.naturalWidth||im.width)*scale)),h=Math.max(1,Math.round((im.naturalHeight||im.height)*scale));
-  const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d");if(!ctx)return original;ctx.drawImage(im,0,0,w,h);return c.toDataURL("image/jpeg",quality);
+  const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d");if(!ctx)return original;ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);ctx.drawImage(im,0,0,w,h);return c.toDataURL("image/jpeg",quality);
  }catch{return original}
 }
 async function uploadImage(input,target,max,quality){const f=input.files?.[0];if(!f)return;try{state.settings[target]=await imageToData(f,max,quality);save();applyLook();renderAvatarPreviews();render()}catch{showErr("图片处理失败，请换一张图片。")}}
