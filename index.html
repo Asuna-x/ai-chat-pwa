@@ -344,6 +344,8 @@ if("serviceWorker"in navigator){
     <button type="button" id="momentBgCropReset" class="momentCropReset">重新框选</button>
   </div>
 </dialog>
+<dialog id="momentCommentDialog" class="momentActionDialog"><form method="dialog" class="momentActionPanel"><div class="momentActionTop"><button type="button" id="momentCommentCancel">取消</button><b id="momentCommentTitle">评论</b><button type="button" id="momentCommentSend">发表</button></div><div class="momentActionHint" id="momentCommentHint"></div><textarea id="momentCommentText" maxlength="300" placeholder="写下你的想法…"></textarea></form></dialog>
+<dialog id="momentSignatureDialog" class="momentActionDialog"><form method="dialog" class="momentActionPanel momentSignaturePanel"><div class="momentActionTop"><button type="button" id="momentSignatureCancel">取消</button><b>个性签名</b><button type="button" id="momentSignatureSave">保存</button></div><div class="momentActionHint">写一句介绍自己、最近的心情，或者只属于你的话。</div><textarea id="momentSignatureText" maxlength="80" placeholder="写一句话…"></textarea><div class="momentCharCount"><span id="momentSignatureCount">0</span>/80</div></form></dialog>
 <dialog id="momentEditDialog" class="momentEditDialog">
   <form method="dialog" class="momentEditPanel">
     <div class="momentEditTop"><button type="button" id="momentEditCancel">取消</button><b>编辑动态</b><button type="button" id="momentEditSave">保存</button></div>
