@@ -2311,3 +2311,13 @@ body.bubble-cat .message.user .bubble:before{box-shadow:none;}
 /* 猫耳主题的小预览按钮 */
 #bubbleGrid [data-bubble="cat"]{position:relative;}
 #bubbleGrid [data-bubble="cat"]::before{content:"⌁";display:block;font-size:12px;line-height:10px;transform:rotate(-18deg);margin-bottom:2px;}
+
+/* v4.137: generated images use the exact same message/identity layout as normal assistant messages. */
+.generatedImageMessage{display:flex!important;align-items:flex-end!important;width:100%;max-width:none;min-width:0;overflow:visible!important;}
+.generatedImageMessage .msgIdentity{order:0;flex:0 0 42px;align-self:flex-end;}
+.generatedImageMessage .generatedImageBubble{order:1;flex:0 1 auto;min-width:0;max-width:min(74vw,680px);padding:0!important;background:var(--ai-bubble-bg)!important;border-radius:18px 18px 18px 6px!important;overflow:hidden!important;box-shadow:0 5px 18px color-mix(in srgb,var(--shadow) 65%,transparent)!important;}
+.generatedImageMessage .readStatus{order:2;align-self:flex-end;}
+.generatedImageMessage .generatedImageGrid{background:transparent!important;border:0!important;padding:0!important;margin:0!important;display:block!important;overflow:hidden!important;}
+.generatedImageMessage .generatedImageGrid img{display:block!important;width:auto!important;height:auto!important;max-width:min(74vw,680px)!important;max-height:60vh!important;object-fit:contain!important;background:#fff!important;border-radius:inherit!important;box-shadow:none!important;}
+body.bubble-cat .generatedImageMessage .generatedImageBubble{margin-left:0!important;}
+@media(max-width:799px){.generatedImageMessage .generatedImageBubble{max-width:calc(100vw - 72px)!important}.generatedImageMessage .generatedImageGrid img{max-width:calc(100vw - 72px)!important;max-height:58vh!important}}
