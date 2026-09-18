@@ -62,7 +62,7 @@ if("serviceWorker"in navigator){
         <button class="settingsRow" data-settings-page="chatPage"><span class="rowIcon">▤</span><span><b>聊天与数据</b><small>当前对话、导出、备份与恢复</small></span><em>›</em></button>
       </div>
 
-      <div class="settingsAbout"><b>Iris</b><small>Version 4.159 · 数据保存在当前装置</small></div>
+      <div class="settingsAbout"><b>Iris</b><small>Version 4.160 · 数据保存在当前装置</small></div>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="aiPage">
@@ -80,7 +80,7 @@ if("serviceWorker"in navigator){
       <div class="settingsSectionTitle">回复</div>
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>Temperature</span><input id="temperature" type="number" min="0" max="2" step=".1"></label>
-        <label class="settingsField"><span>主动联系间隔</span><select id="proactiveInterval"><option value="0">关闭</option><option value="4">4 小时</option><option value="8">8 小时</option><option value="12">12 小时</option><option value="24">24 小时</option><option value="48">48 小时</option></select><small style="display:block;padding:7px 2px 0;color:var(--muted);line-height:1.5">你一段时间没回来时，他可以主动来找你一次。这里只控制最短间隔，不会保证每次都会发。</small></label>
+        <label class="settingsField"><span>主动联系间隔</span><select id="proactiveInterval"><option value="0">关闭</option><option value="5">5 分钟</option><option value="10">10 分钟</option><option value="30">30 分钟</option><option value="60">1 小时</option><option value="120">2 小时</option><option value="180">3 小时</option></select><small style="display:block;padding:7px 2px 0;color:var(--muted);line-height:1.5">你一段时间没回来时，他可以主动来找你一次。这里只控制最短间隔，不会保证每次都会发。</small></label>
       </div>
     </section>
 
@@ -356,4 +356,4 @@ if("serviceWorker"in navigator){
   </form>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
-<script src="./api.js?v=4.151"></script><script src="./app.js?v=4.159"></script></body></html>
+<script src="./api.js?v=4.151"></script><script src="./app.js?v=4.160"></script></body></html>
