@@ -1,3 +1,4 @@
+/* Iris v4.157 — living presence, shared moments, and gentle proactive contact. */
 /* Iris v4.156 — explicit tool requests + threaded moment replies. */
 /* Iris v4.151 — moments feed with editable cover, likes, favorites, and AI posting tool. */
 /* Iris v4.134 — generated images stay inside AI bubbles; add multi-select image cleanup tool. */
@@ -28,10 +29,42 @@ function normalizeNestData(){
   if(nestData.anniversaries.length&&!nestData.selectedAnniversaryId)nestData.selectedAnniversaryId=nestData.anniversaries[0].id;
   if(nestData.selectedAnniversaryId&&!nestData.anniversaries.some(x=>x.id===nestData.selectedAnniversaryId))nestData.selectedAnniversaryId=nestData.anniversaries[0]?.id||"";
   nestData.notebook=Array.isArray(nestData.notebook)?nestData.notebook:[];
+  nestData.sharedEvents=Array.isArray(nestData.sharedEvents)?nestData.sharedEvents:[];
   const op=Number(nestData.notebookOpacity);
   nestData.notebookOpacity=Number.isFinite(op)?Math.max(0.45,Math.min(1,op)):0.90;
 }
 normalizeNestData();
+
+/* v4.157 — a lightweight shared-life layer. It stays local and never changes existing chat/nest records. */
+const irisLifeKey="iris_life_state";
+let irisLifeState=(()=>{try{const v=JSON.parse(localStorage.getItem(irisLifeKey)||"{}");return v&&typeof v==="object"?v:{}}catch{return{}}})();
+function saveIrisLife(){try{localStorage.setItem(irisLifeKey,JSON.stringify(irisLifeState))}catch{}}
+function setAiPresence(label,ttl=90000){irisLifeState.presence=String(label||"");irisLifeState.presenceUntil=Date.now()+Math.max(1000,Number(ttl)||90000);irisLifeState.lastPresenceAt=Date.now();saveIrisLife();renderAiPresence()}
+function currentAiPresence(){if(irisLifeState.presence&&Number(irisLifeState.presenceUntil||0)>Date.now())return irisLifeState.presence;return "在等你"}
+function renderAiPresence(){const el=$("#aiPresence");if(el)el.textContent=currentAiPresence();const mini=$("#profilePresenceText");if(mini)mini.textContent=currentAiPresence()}
+function recordSharedEvent(type,detail=""){
+  nestData.sharedEvents=Array.isArray(nestData.sharedEvents)?nestData.sharedEvents:[];
+  nestData.sharedEvents.unshift({id:crypto.randomUUID(),type:String(type||"moment"),detail:String(detail||"").slice(0,240),createdAt:Date.now()});
+  nestData.sharedEvents=nestData.sharedEvents.slice(0,80);nestData.updatedAt=Date.now();saveNestData();
+}
+function recentSharedEvents(){normalizeNestData();return (nestData.sharedEvents||[]).slice(0,12).map(e=>`${momentsRelativeTime(e.createdAt)} · ${e.detail||e.type}`).join("\n")}
+function maybeProactiveContact(){
+  const base=String(state.settings.apiBase||"").trim(),key=String(state.settings.apiKey||"").trim(),model=String(state.settings.model||"").trim();
+  if(!base||!key||!model||state.busy)return;
+  const now=Date.now(),last=Number(irisLifeState.lastUserSeen||0),lastProactive=Number(irisLifeState.lastProactiveAt||0);
+  if(!last||now-last<8*3600000||now-lastProactive<20*3600000)return;
+  const c=chat();if(!c)return;
+  irisLifeState.lastProactiveAt=now;saveIrisLife();setAiPresence("刚刚想到你",180000);
+  const name=String(state.settings.myName||"你"),gName=String(state.settings.gName||"他");
+  const recent=(c.messages||[]).slice(-12).map(m=>`${m.role==="user"?name:gName}：${typeof m.content==="string"?m.content:"[图片]"}`).join("\n");
+  const memories=memoryContext();const events=recentSharedEvents();
+  window.GChatAPI.chatStream({baseUrl:base,apiKey:key,model,messages:[{role:"system",content:`你是${gName}。这是一个私人聊天空间。用户已经一段时间没有回来，现在只是轻轻主动找她一下。只写一句到两句自然的话，像你真的突然想到她一样，不要提“系统、主动消息、很久没聊、触发、模型”等机制，不要制造严重事件，不要过度黏人。可以自然接上最近聊天、共同记录或记忆。${memories?`\n可参考的记忆：${memories}`:""}${events?`\n最近共同记录：${events}`:""}`},{role:"user",content:`最近聊天：\n${recent||"暂无"}\n\n请现在写一句想对${name}说的话。`}],temperature:state.settings.temperature},()=>{}).then(result=>{
+    const answer=String(result?.answer||"").trim().replace(/^['“”"\s]+|['“”"]+$/g,"").slice(0,500);
+    if(!answer)return;
+    c.messages.push({role:"assistant",content:answer,timestamp:Date.now(),proactive:true});save();recordSharedEvent("proactive",`${gName}主动来找${name}：${answer}`);render();
+  }).catch(e=>console.warn("Iris proactive contact failed",e)).finally(()=>{setAiPresence("在等你",90000)});
+}
+
 let nestViewDateKey=nestDateKey();
 function nestDateKey(date=new Date()){const d=new Date(date);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function nestDateLabel(key){const d=new Date(`${key}T12:00:00`);return Number.isNaN(d.getTime())?key:d.toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"long"})}
@@ -126,7 +159,7 @@ function saveNotebookPage(){
  nestData.notebook=nestData.notebook.slice(-80); saveNestData(); renderNestNotebook(); renderNestHome(); resetNotebookEditor();
 }
 function showNestView(view="home"){document.querySelectorAll("#nest .nestPage").forEach(x=>x.classList.add("hidden"));const id=view==="home"?"nestHome":view==="mood"?"nestMoodPage":view==="toG"?"nestToGPage":view==="note"?"nestNotePage":view==="notebook"?"nestNotebookPage":view==="anniversary"?"nestAnniversaryPage":view==="story"?"nestStoryPage":"nestSettingsPage";$("#"+id)?.classList.remove("hidden");document.querySelectorAll("#nest .nestBottomNav button").forEach(b=>b.classList.toggle("active",b.dataset.nestView===view));if(view==="mood")renderMoodPage();if(view==="toG"){loadDailyPages();applyNestBackground()}if(view==="note"){loadDailyPages()}if(view==="notebook"){renderNestNotebook();applyNestBackground()}if(view==="anniversary"){renderAnniversaries();loadSelectedAnniversaryForm();applyNestBackground();updateNestClock()}if(view==="story"){renderNestStory();applyNestBackground()}if(view==="settings")applyNestBackground()}
-function openNest(){nestData=loadNest();normalizeNestData();saveNestData();renderNestHome();renderNestNotebook();showNestView("home");clearInterval(nestClockTimer);nestClockTimer=setInterval(updateNestClock,30000);$("#nest").showModal()}
+function openNest(){nestData=loadNest();normalizeNestData();saveNestData();renderNestHome();renderNestNotebook();showNestView("home");clearInterval(nestClockTimer);nestClockTimer=setInterval(updateNestClock,30000);recordSharedEvent("nest_open","一起回到小窝");setAiPresence("在小窝里",120000);$("#nest").showModal()}
 function closeNest(){clearInterval(nestClockTimer);nestClockTimer=null;const d=$("#nest");if(d?.open)d.close()}
 function saveNest(){normalizeNestData();syncTodayToDaily();nestData.updatedAt=Date.now();saveNestData();renderNestHome()}
 function ensureNestControls(){normalizeNestData();applyNestBackground();renderAnniversaries()}
@@ -527,14 +560,14 @@ function renderMoments(){
     </article>`;
   }).join(""): `<div class="momentsEmpty"><div>○</div><b>还没有动态</b><small>点击右上角，分享这一刻。</small></div>`;
 }
-function openMoments(){normalizeMoments();renderMoments();$("#moments")?.showModal()}
+function openMoments(){normalizeMoments();renderMoments();recordSharedEvent("moments_open","一起看了朋友圈");setAiPresence("刚看过朋友圈",120000);$("#moments")?.showModal()}
 function editMomentsSignature(){const d=$("#momentSignatureDialog");if(!d)return;const t=$("#momentSignatureText");t.value=momentsData.signature||"";$("#momentSignatureCount").textContent=String(t.value.length);d.showModal();setTimeout(()=>{t.focus();t.setSelectionRange(t.value.length,t.value.length)},40)}
 function openMomentCommentDialog(postId,commentId="",replyTo=""){const d=$("#momentCommentDialog"),t=$("#momentCommentText");if(!d||!t)return;d.dataset.postId=postId;d.dataset.commentId=commentId;$("#momentCommentTitle").textContent=commentId?"回复评论":"评论";$("#momentCommentHint").textContent=replyTo?`回复 ${replyTo}`:"";t.value="";d.showModal();setTimeout(()=>t.focus(),40)}
 function closeMoments(){const d=$("#moments");if(d?.open)d.close()}
 function toggleMomentReaction(id,kind){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);if(!p)return;if(kind==="like"){p.liked=!p.liked;p.likes=Math.max(0,p.likes+(p.liked?1:-1))}else if(kind==="favorite"){p.favorited=!p.favorited;p.favorites=Math.max(0,p.favorites+(p.favorited?1:-1))}saveMoments();renderMoments()}
-function aiLikeMoment(id){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);if(!p||p.aiLiked)return false;p.aiLiked=true;p.likes=Math.max(0,Number(p.likes||0)+1);saveMoments();addMomentNotification("like",id,"");renderMoments();return true}
-function addMomentComment(id,role,content){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);const text=String(content||"").trim().slice(0,300);if(!p||!text)return false;p.comments=Array.isArray(p.comments)?p.comments:[];const comment={id:crypto.randomUUID(),role:role==="user"?"user":"ai",content:text,createdAt:Date.now(),replies:[]};p.comments.push(comment);p.comments=p.comments.slice(-30);saveMoments();if(role==="ai")addMomentNotification("comment",id,text);renderMoments();return comment}
-function addMomentReply(id,commentId,role,content,replyTo=""){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);const text=String(content||"").trim().slice(0,300);if(!p||!text)return false;const c=(p.comments||[]).find(x=>x.id===commentId);if(!c)return false;c.replies=Array.isArray(c.replies)?c.replies:[];c.replies.push({id:crypto.randomUUID(),role:role==="user"?"user":"ai",content:text,createdAt:Date.now(),replyTo:String(replyTo||"").slice(0,120)});c.replies=c.replies.slice(-10);saveMoments();if(role==="ai")addMomentNotification("reply",id,text);renderMoments();return true}
+function aiLikeMoment(id){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);if(!p||p.aiLiked)return false;p.aiLiked=true;p.likes=Math.max(0,Number(p.likes||0)+1);saveMoments();addMomentNotification("like",id,"");recordSharedEvent("moment_like",`${state.settings.gName||"他"}给${momentsAuthor(p)}的动态点了赞`);setAiPresence("刚刚看了你的朋友圈",120000);renderMoments();return true}
+function addMomentComment(id,role,content){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);const text=String(content||"").trim().slice(0,300);if(!p||!text)return false;p.comments=Array.isArray(p.comments)?p.comments:[];const comment={id:crypto.randomUUID(),role:role==="user"?"user":"ai",content:text,createdAt:Date.now(),replies:[]};p.comments.push(comment);p.comments=p.comments.slice(-30);saveMoments();if(role==="ai")addMomentNotification("comment",id,text);if(role==="ai"){recordSharedEvent("moment_comment",`${state.settings.gName||"他"}在朋友圈留了一句：${text}`);setAiPresence("刚刚在朋友圈留言",120000)}renderMoments();return comment}
+function addMomentReply(id,commentId,role,content,replyTo=""){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);const text=String(content||"").trim().slice(0,300);if(!p||!text)return false;const c=(p.comments||[]).find(x=>x.id===commentId);if(!c)return false;c.replies=Array.isArray(c.replies)?c.replies:[];c.replies.push({id:crypto.randomUUID(),role:role==="user"?"user":"ai",content:text,createdAt:Date.now(),replyTo:String(replyTo||"").slice(0,120)});c.replies=c.replies.slice(-10);saveMoments();if(role==="ai"){addMomentNotification("reply",id,text);recordSharedEvent("moment_reply",`${state.settings.gName||"他"}回复了朋友圈评论：${text}`);setAiPresence("刚刚回复了你的评论",120000)}renderMoments();return true}
 async function autoAiReplyToUserComment(postId,commentId,userText){
   try{
     const base=String(state.settings.apiBase||"").trim(),key=String(state.settings.apiKey||"").trim(),model=String(state.settings.model||"").trim();
@@ -575,7 +608,7 @@ function deleteUserMoment(id){
 function createMoment(role,content,imageUrl=""){
   const text=String(content||"").trim().slice(0,500);const img=String(imageUrl||"").trim();if(!text&&!img)return null;
   const post={id:crypto.randomUUID(),role:role==="user"?"user":"ai",content:text,imageUrl:img,createdAt:Date.now(),likes:0,favorites:0,liked:false,favorited:false,aiLiked:false,comments:[]};
-  momentsData.posts.unshift(post);momentsData.posts=momentsData.posts.slice(0,100);saveMoments();renderMoments();return post;
+  momentsData.posts.unshift(post);momentsData.posts=momentsData.posts.slice(0,100);saveMoments();recordSharedEvent("moment_post",`${post.role==="user"?(state.settings.myName||"你"):(state.settings.gName||"他")}发了一条朋友圈${post.imageUrl?"，还带了一张图片":""}`);if(post.role==="ai")setAiPresence("刚刚发了朋友圈",120000);renderMoments();return post;
 }
 function executePostMoment(args={}){const content=String(args?.content||"").trim();let imageUrl=String(args?.image_url||args?.imageUrl||"").trim();if(!imageUrl&&args?.use_last_generated_image===true)imageUrl=lastGeneratedImageForMoment; if(!content&&!imageUrl)return{success:false,error:"朋友圈内容为空，也没有可用的图片。"};const post=createMoment("ai",content,imageUrl);return post?{success:true,tool:"post_moment",postId:post.id,author:momentsAuthor(post),createdAt:post.createdAt,hasImage:!!imageUrl}: {success:false,error:"朋友圈发布失败。"}}
 function executeLikeMoment(args={}){const id=String(args?.post_id||args?.postId||"").trim();return id&&aiLikeMoment(id)?{success:true,tool:"like_moment",postId:id}:{success:false,error:"找不到这条朋友圈，或已经点过赞。"}}
@@ -834,6 +867,7 @@ async function send(){
  const attachments=Array.isArray(state.attachments)?state.attachments.slice():[];
  if(state.editingMessage){if(attachments.length){showErr("编辑消息时请先移除附件。" );return}if(prepareEditedUserMessage()){return send()} }
  if(!text&&!attachments.length)return;
+ irisLifeState.lastUserSeen=Date.now();saveIrisLife();setAiPresence("正在和你聊天",120000);
  const imageAttachments=attachments.filter(a=>a&&a.kind==="image");
  ensure();const c=chat();
  if(imageAttachments.length){
@@ -961,7 +995,10 @@ $("#mcpEnabled").onchange=()=>{state.settings.mcpEnabled=$("#mcpEnabled").checke
 $("#clearMemories").onclick=()=>{if(!(state.memories||[]).length)return;if(!confirm("确定清空全部记忆吗？"))return;state.memories=[];save();renderMemories()};
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bgOpacity=Math.max(0,Math.min(100,Number(state.settings.bgOpacity)||0));state.settings.bgChromeTransparent??=false;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="他";if(state.settings.gName==="G")state.settings.gName="他";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0,byType:{chat:{prompt:0,completion:0,total:0,requests:0},vision:{prompt:0,completion:0,total:0,requests:0},memory:{prompt:0,completion:0,total:0,requests:0},summary:{prompt:0,completion:0,total:0,requests:0}}};state.settings.replyDelay??=360;state.settings.mcpNestEnabled??=true;state.settings.deleteChatBubbleEnabled??=true;state.settings.mcpEnabled??=false;state.settings.mcpServerUrl??="";state.settings.mcpServerToken??="";state.settings.visionEnabled??=true;state.settings.visionBase??="https://open.bigmodel.cn/api/paas/v4/";state.settings.visionKey??="";state.settings.visionModel??="GLM-4.6V-Flash";state.settings.imageGenEnabled??=true;state.settings.imageGenBase??="https://open.bigmodel.cn/api/paas/v4/";state.settings.imageGenKey??=state.settings.apiKey||"";state.settings.imageGenModel??="glm-image";state.memories??=[];state.memoryProfile??={};state.memoryEpisodes??=[];memoryNormalize();normalizeNestData();syncTodayToDaily();saveNestData();normalizeMoments();saveMoments();if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
+state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bgOpacity=Math.max(0,Math.min(100,Number(state.settings.bgOpacity)||0));state.settings.bgChromeTransparent??=false;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="他";if(state.settings.gName==="G")state.settings.gName="他";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0,byType:{chat:{prompt:0,completion:0,total:0,requests:0},vision:{prompt:0,completion:0,total:0,requests:0},memory:{prompt:0,completion:0,total:0,requests:0},summary:{prompt:0,completion:0,total:0,requests:0}}};state.settings.replyDelay??=360;state.settings.mcpNestEnabled??=true;state.settings.deleteChatBubbleEnabled??=true;state.settings.mcpEnabled??=false;state.settings.mcpServerUrl??="";state.settings.mcpServerToken??="";state.settings.visionEnabled??=true;state.settings.visionBase??="https://open.bigmodel.cn/api/paas/v4/";state.settings.visionKey??="";state.settings.visionModel??="GLM-4.6V-Flash";state.settings.imageGenEnabled??=true;state.settings.imageGenBase??="https://open.bigmodel.cn/api/paas/v4/";state.settings.imageGenKey??=state.settings.apiKey||"";state.settings.imageGenModel??="glm-image";irisLifeState.lastUserSeen??=Date.now();saveIrisLife();state.memories??=[];state.memoryProfile??={};state.memoryEpisodes??=[];memoryNormalize();normalizeNestData();syncTodayToDaily();saveNestData();normalizeMoments();saveMoments();if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
 
-window.addEventListener("load",()=>render());
-window.addEventListener("pageshow",()=>render());
+window.addEventListener("load",()=>{render();renderAiPresence();setTimeout(maybeProactiveContact,1400)});
+window.addEventListener("pageshow",()=>{render();renderAiPresence();setTimeout(maybeProactiveContact,900)});
+window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){irisLifeState.lastUserSeen=Date.now();saveIrisLife();setAiPresence("回来啦",90000);setTimeout(maybeProactiveContact,700)}});
+window.addEventListener("beforeunload",()=>{irisLifeState.lastUserSeen=Date.now();saveIrisLife()});
+setInterval(()=>renderAiPresence(),15000);

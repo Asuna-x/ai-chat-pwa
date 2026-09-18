@@ -3251,3 +3251,8 @@ dialog#moments.momentsDialog{overflow:hidden!important;}
 .momentComposerTop button:last-child,.momentEditTop button:last-child{color:var(--accent,#5877a5)!important}
 #momentsUserText,#momentEditText{background:color-mix(in srgb,var(--soft,#f4f4f4) 78%,transparent)!important;border-color:color-mix(in srgb,var(--line,#ddd) 65%,transparent)!important;color:var(--ink,#252932)!important}
 .momentComposerTools button{background:color-mix(in srgb,var(--card,#fff) 90%,transparent)!important;border-color:color-mix(in srgb,var(--line,#ddd) 65%,transparent)!important;color:var(--ink,#252932)!important}
+
+/* Iris v4.157 — living presence: subtle, never pushes the header layout around. */
+.aiPresence{display:inline-block;margin-left:6px;max-width:108px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:10px;font-weight:500;vertical-align:middle;opacity:.82;transition:opacity .25s ease}
+.aiPresence::before{content:"·";margin-right:3px;opacity:.55}
+@media(max-width:430px){.aiPresence{max-width:82px}}
