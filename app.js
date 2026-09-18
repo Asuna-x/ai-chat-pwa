@@ -483,6 +483,7 @@ let momentsData=loadMoments();
 function normalizeMoments(){
   momentsData= momentsData && typeof momentsData==="object" ? momentsData : {};
   momentsData.background=typeof momentsData.background==="string"?momentsData.background:"";
+  momentsData.signature=typeof momentsData.signature==="string"?momentsData.signature:"";
   momentsData.posts=Array.isArray(momentsData.posts)?momentsData.posts:[];
   momentsData.posts=momentsData.posts.filter(x=>x&&typeof x==="object").map(x=>({
     id:String(x.id||crypto.randomUUID()),role:x.role==="user"?"user":"ai",content:String(x.content||""),imageUrl:typeof x.imageUrl==="string"?x.imageUrl:"",
@@ -497,12 +498,13 @@ function momentsAvatar(post){return post?.role==="user"?avatarHTML("user"):avata
 function momentsRelativeTime(ts){const d=Number(ts||0);if(!d)return"刚刚";const diff=Math.max(0,Date.now()-d),m=Math.floor(diff/60000),h=Math.floor(m/60),day=Math.floor(h/24);if(m<1)return"刚刚";if(m<60)return m+"分钟前";if(h<24)return h+"小时前";if(day<7)return day+"天前";return new Date(d).toLocaleDateString("zh-TW",{month:"numeric",day:"numeric"})}
 function renderMoments(){
   normalizeMoments();
-  const appEl=$("#momentsApp"),cover=$("#momentsCover"),feed=$("#momentsFeed"),name=$("#momentsProfileName"),av=$("#momentsAvatar");
+  const appEl=$("#momentsApp"),cover=$("#momentsCover"),feed=$("#momentsFeed"),name=$("#momentsProfileName"),av=$("#momentsAvatar"),sig=$("#momentsProfileSignature");
   if(!appEl||!feed)return;
   appEl.style.setProperty("--moments-cover",momentsData.background?`url(${momentsData.background})`:"none");
   if(cover)cover.classList.toggle("hasCover",!!momentsData.background);
   if(name)name.textContent=state.settings.myName||"我";
   if(av)av.innerHTML=avatarHTML("user");
+  if(sig)sig.textContent=momentsData.signature||"添加个性签名";
   const posts=momentsData.posts.slice().sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0));
   feed.innerHTML=posts.length?posts.map(post=>{
     const likeCount=Math.max(0,Number(post.likes||0));
@@ -519,6 +521,7 @@ function renderMoments(){
   }).join(""): `<div class="momentsEmpty"><div>○</div><b>还没有动态</b><small>点击右上角，分享这一刻。</small></div>`;
 }
 function openMoments(){normalizeMoments();renderMoments();$("#moments")?.showModal()}
+function editMomentsSignature(){const current=momentsData.signature||"";const v=prompt("编辑朋友圈个性签名",current);if(v===null)return;momentsData.signature=String(v).trim().slice(0,80);saveMoments();renderMoments()}
 function closeMoments(){const d=$("#moments");if(d?.open)d.close()}
 function toggleMomentReaction(id,kind){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);if(!p)return;if(kind==="like"){p.liked=!p.liked;p.likes=Math.max(0,p.likes+(p.liked?1:-1))}else if(kind==="favorite"){p.favorited=!p.favorited;p.favorites=Math.max(0,p.favorites+(p.favorited?1:-1))}saveMoments();renderMoments()}
 function aiLikeMoment(id){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);if(!p||p.aiLiked)return false;p.aiLiked=true;p.likes=Math.max(0,Number(p.likes||0)+1);saveMoments();renderMoments();return true}
@@ -528,7 +531,7 @@ function momentContextForAI(){
   normalizeMoments();
   return momentsData.posts.slice().sort((a,b)=>b.createdAt-a.createdAt).slice(0,10).map(p=>{
     const comments=Array.isArray(p.comments)?p.comments.slice(-8).map(c=>{const replies=Array.isArray(c.replies)?c.replies.slice(-5).map(r=>`${momentsAuthor(r)}回复${momentsAuthor(c)}：${String(r.content||"").slice(0,100)}`).join(" / "):"";return `${momentsAuthor(c)}：${String(c.content||"").slice(0,100)}${replies?` | ${replies}`:""}`}).join(" / "):"";
-    return `id=${p.id} | ${momentsAuthor(p)} | ${String(p.content||"[图片]").slice(0,160)} | 图片=${p.imageUrl?"有":"无"} | 点赞${Number(p.likes||0)} | 收藏${Number(p.favorites||0)} | 你已赞=${p.aiLiked===true?"是":"否"} | 用户已赞=${p.liked===true?"是":"否"} | 用户已收藏=${p.favorited===true?"是":"否"} | 评论${Array.isArray(p.comments)?p.comments.length:0}${comments?` | 评论内容=${comments}`:""}`;
+    return `我的朋友圈签名：${momentsData.signature||"未设置"}\n动态：id=${p.id} | ${momentsAuthor(p)} | ${String(p.content||"[图片]").slice(0,160)} | 图片=${p.imageUrl?"有":"无"} | 点赞${Number(p.likes||0)} | 收藏${Number(p.favorites||0)} | 你已赞=${p.aiLiked===true?"是":"否"} | 用户已赞=${p.liked===true?"是":"否"} | 用户已收藏=${p.favorited===true?"是":"否"} | 评论${Array.isArray(p.comments)?p.comments.length:0}${comments?` | 评论内容=${comments}`:""}`;
   }).join(String.fromCharCode(10))
 }
 
@@ -866,7 +869,7 @@ function appendGeneratedImage(src,c,persist=true,messageIndex=null){const wrap=d
 function renderAttachments(){const box=$("#attachmentPreview");if(!box)return;const arr=state.attachments||[];box.classList.toggle("hidden",!arr.length);box.innerHTML=arr.map((a,i)=>a.kind==="image"?`<div class="attachChip imageChip"><img src="${a.data}"><span>${escapeHtml(a.name)}</span><button data-remove-attach="${i}">×</button></div>`:`<div class="attachChip"><span>文件 · ${escapeHtml(a.name)}</span><button data-remove-attach="${i}">×</button></div>`).join("");box.querySelectorAll("[data-remove-attach]").forEach(b=>b.onclick=()=>{state.attachments.splice(Number(b.dataset.removeAttach),1);renderAttachments()})}
 async function handleFiles(files){const list=Array.from(files||[]);for(const f of list){try{if(f.type.startsWith("image/")){const data=await imageToData(f,768,.6);if(!data)throw new Error("图片为空");const imageId=imageRefForData(data);state.attachments.push({kind:"image",name:f.name,data,imageId})}else if(/^(text\/|application\/(json|xml)|.*\/(javascript|css))/.test(f.type)||/\.(txt|md|json|csv|html|css|js|py|log|xml)$/i.test(f.name)){const text=await f.text();state.attachments.push({kind:"text",name:f.name,text:text.slice(0,30000)})}else{const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result||""));r.onerror=rej;r.readAsDataURL(f)});state.attachments.push({kind:"file",name:f.name,data})}}catch(e){console.error("Iris attachment read failed",e);showErr("读取图片失败："+f.name+"。如果是 HEIC/HEIF，请尝试在系统照片里选择兼容格式。")}}renderAttachments()}
 function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showErr("当前 Safari 不支持语音识别，请尝试系统听写或其他浏览器。");return}if(state.recognition){state.recognition.stop();state.recognition=null;$("#mic").classList.remove("active");return}const r=new SR();r.lang="zh-TW";r.continuous=false;r.interimResults=true;state.recognition=r;$("#mic").classList.add("active");r.onresult=e=>{$("#input").value=Array.from(e.results).map(x=>x[0].transcript).join("");resize()};r.onerror=e=>{showErr("语音识别失败："+(e.error||"未知错误"));$("#mic").classList.remove("active");state.recognition=null};r.onend=()=>{$("#mic").classList.remove("active");state.recognition=null}}
-$("#openMoments").onclick=openMoments;$("#momentsClose").onclick=closeMoments;$("#momentsComposeOpen").onclick=()=>{$("#momentsUserText").value="";$("#momentComposeImagePreview").innerHTML="";$("#momentComposeImageFile").value="";$("#momentComposerDialog")?.showModal()};$("#momentComposerClose").onclick=()=>$("#momentComposerDialog")?.close();$("#momentsCover").onclick=e=>{if(e.target.closest("#momentsAvatar,#momentsProfileName,#momentsBgFile"))return;$("#momentsBgFile").click()};
+$("#openMoments").onclick=openMoments;$("#momentsClose").onclick=closeMoments;$("#momentsComposeOpen").onclick=()=>{$("#momentsUserText").value="";$("#momentComposeImagePreview").innerHTML="";$("#momentComposeImageFile").value="";$("#momentComposerDialog")?.showModal()};$("#momentComposerClose").onclick=()=>$("#momentComposerDialog")?.close();$("#momentsCover").onclick=e=>{if(e.target.closest("#momentsAvatar,#momentsProfileName,#momentsProfileSignature,#momentsBgFile"))return;$("#momentsBgFile").click()};$("#momentsProfileSignature").onclick=e=>{e.stopPropagation();editMomentsSignature()};
 $("#momentsBgFile").onchange=async()=>{const f=$("#momentsBgFile").files?.[0];if(!f)return;try{openMomentBgCrop(f);$("#momentsBgFile").value=""}catch{showErr("朋友圈背景图片处理失败。")}};$("#momentComposeImagePick").onclick=()=>$("#momentComposeImageFile").click();$("#momentComposeImageFile").onchange=async()=>{const f=$("#momentComposeImageFile").files?.[0];if(!f)return;try{const data=await imageToData(f,1200,.84);$("#momentComposeImagePreview").innerHTML=`<img src="${data}" alt="预览">`;$("#momentComposeImagePreview").dataset.image=data}catch{showErr("朋友圈图片处理失败。")}};$("#momentsFeed").onclick=e=>{
   const b=e.target.closest("[data-moment-action]"),card=e.target.closest("[data-moment-id]");if(!b||!card)return;
   const action=b.dataset.momentAction,id=card.dataset.momentId,p=momentsData.posts.find(x=>x.id===id);
