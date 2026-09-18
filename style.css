@@ -2256,3 +2256,13 @@ html,body,#app,.app,.main{max-width:100%;min-width:0;overflow-x:hidden;}
 .generatedImageMessage .generatedImageBubble img{display:block!important;max-width:min(82vw,520px)!important;width:auto!important;height:auto!important;max-height:60vh!important;object-fit:contain!important;border-radius:inherit!important;box-shadow:none!important;background:#fff!important;}
 .generatedImageMessage .msgIdentity{flex:none;}
 .generatedImageMessage .readStatus{flex:none;}
+
+
+/* Iris v4.134 — generated AI photos stay inside the bubble and open full-screen on tap. */
+.generatedImageBubble{cursor:zoom-in!important;position:relative!important;}
+.generatedImageBubble img{cursor:zoom-in!important;}
+.generatedImageViewer{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;}
+.generatedImageViewer.hidden{display:none!important;}
+.generatedImageViewer img{display:block;max-width:96vw;max-height:90vh;width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.35);background:#fff;}
+.generatedImageViewerClose{position:absolute;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:28px;line-height:42px;z-index:2;}
+.generatedImageViewerHint{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:rgba(255,255,255,.68);font-size:11px;pointer-events:none;}
