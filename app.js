@@ -1,6 +1,7 @@
+/* Iris v4.170 — natural, non-repetitive tool feedback. */
 /* Iris v4.159 — restore chat bubble styling and keep Moments reply text white. */
 /* Iris v4.162 — visual shared album preview and interactive little companion in the nest. */
-/* Iris v4.167 — pet illustrations embedded in app.js so GitHub mobile upload needs no pet folder. */
+/* Iris v4.169 — let the AI see and naturally interact with the shared little companion. */
 /* Iris v4.134 — generated images stay inside AI bubbles; add multi-select image cleanup tool. */
 /* Iris v4.125 — GLM-4.6V-Flash vision defaults for Zhipu official API. */
 /* Iris v4.124 — notebook ruled-paper alignment and lower nest clock card edge. */
@@ -125,6 +126,7 @@ function petAction(action){
   renderPet();renderNestLifePanel();
   const replyEl=$("#nestPetReply");if(replyEl){replyEl.textContent=a.reply;replyEl.classList.remove("show");requestAnimationFrame(()=>replyEl.classList.add("show"))}
   setTimeout(()=>{if(nestData.pet?.lastInteraction===now){nestData.pet.lastAction="";saveNestData();renderPet()}},6500);
+  return {success:true,action,pet:{name:pet.name,mood:pet.mood,hunger:pet.hunger,energy:pet.energy,level:pet.level,exp:pet.exp,affection:pet.affection,lastAction:pet.lastAction},reply:a.reply,text:a.text};
 }
 function petFaceText(pet){return ""}
 function renderPet(){
@@ -521,7 +523,7 @@ function memoryContext(){
  const eps=(state.memoryEpisodes||[]).slice(0,6);if(eps.length)parts.push('【重要共同经历】\n'+eps.map(e=>`- ${e.title}：${e.summary}`).join('\n'));
  return parts.length?'以下是你对这段长期关系和用户的整理认知。优先自然运用它；与用户当前明确表达冲突时，以当前对话为准，不要主动复述记忆机制。\n'+parts.join('\n\n'):'';
 }
-function nestContext(){const n=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(nestDateKey()),parts=[];const userStatus=getStatus("user");parts.push("用户的‘小窝’是一个与聊天相连的私人空间。你可以理解其中的内容，并在聊天时自然参考，但不要擅自编造或修改里面的信息。");parts.push("小窝目前提供这些功能：记录每天的心情、留给他的话、每日小记，以及多个纪念日和各自的背景。");parts.push("用户在聊天页面头像下方当前显示的状态是「"+userStatus.label+"」。这是用户主动设置的聊天状态，应当作为你理解他/她当下状态的背景参考；它与小窝里的今日心情是两回事。 ");if(e.userMood)parts.push("用户今天选择的快捷心情：「"+e.userMood+"」");if(e.userMoodNote)parts.push("用户今天自己写下的心情：「"+e.userMoodNote+"」");if(e.toG)parts.push("用户今天留给他的话：「"+e.toG+"」");if(e.note)parts.push("用户今天的小记：「"+e.note+"」");if(e.aiMood)parts.push("他今天选择的快捷心情：「"+e.aiMood+"」");if(e.aiMoodNote)parts.push("他今天自己写下的心情：「"+e.aiMoodNote+"」");const selected=selectedAnniversary();if(selected)parts.push("当前选中的纪念日：「"+(selected.name||"纪念日")+"」，日期：「"+(selected.date||"未设置")+"」");return parts.join("\n")}
+function nestContext(){const n=loadNest();normalizeNestData();syncTodayToDaily();const e=dailyEntry(nestDateKey()),parts=[];const userStatus=getStatus("user");parts.push("用户的‘小窝’是一个与聊天相连的私人空间。你可以理解其中的内容，并在聊天时自然参考，但不要擅自编造或修改里面的信息。");parts.push("小窝目前提供这些功能：记录每天的心情、留给他的话、每日小记，以及多个纪念日和各自的背景。");parts.push("用户在聊天页面头像下方当前显示的状态是「"+userStatus.label+"」。这是用户主动设置的聊天状态，应当作为你理解他/她当下状态的背景参考；它与小窝里的今日心情是两回事。 ");if(e.userMood)parts.push("用户今天选择的快捷心情：「"+e.userMood+"」");if(e.userMoodNote)parts.push("用户今天自己写下的心情：「"+e.userMoodNote+"」");if(e.toG)parts.push("用户今天留给他的话：「"+e.toG+"」");if(e.note)parts.push("用户今天的小记：「"+e.note+"」");if(e.aiMood)parts.push("他今天选择的快捷心情：「"+e.aiMood+"」");if(e.aiMoodNote)parts.push("他今天自己写下的心情：「"+e.aiMoodNote+"」");const pet=nestData.pet||{};parts.push(`小窝里的小家伙目前叫「${pet.name||"小家伙"}」，心情是「${pet.mood||"期待"}」，饱腹 ${Math.round(Number(pet.hunger||0))}%，精力 ${Math.round(Number(pet.energy||0))}%，等级 Lv.${pet.level||1}，和${state.settings.myName||"你"}的亲密度 ${Math.round(Number(pet.affection||0))}。它最近一次互动是「${pet.lastAction||"还没有"}」。你能看见这些状态，也可以在聊天自然合适时陪它互动；不要为了调用工具而调用。`);const selected=selectedAnniversary();if(selected)parts.push("当前选中的纪念日：「"+(selected.name||"纪念日")+"」，日期：「"+(selected.date||"未设置")+"」");return parts.join("\n")}
 function conversationStyleContext(){
  const g=state.settings.gName||"他",u=state.settings.myName||"你";
  return `你正在和${u}进行一段持续的私人聊天，你是${g}。这不是一次性的问答，而是一段正在继续的关系和对话。\n`+
@@ -740,6 +742,8 @@ function momentsToolSystem(){const ctx=momentContextForAI();return `朋友圈规
 
 function nestTools(){
  return [
+  {type:'function',function:{name:'read_pet_status',description:'读取共同小窝里“小家伙”的当前状态。你能看到它的心情、饱腹、精力、等级、亲密度和最近一次互动。聊天中自然聊到它、想关心它时可以使用；不要无意义地反复读取。',parameters:{type:'object',properties:{},required:[]}}},
+  {type:'function',function:{name:'interact_pet',description:'和共同小窝里的小家伙互动。可选 pet（摸摸）、feed（喂一点）、play（陪它玩）、cuddle（抱抱）、brush（梳梳毛）、tease（逗逗它）。只有当聊天语境自然合适，或用户明确让你陪它互动时使用；不要连续重复互动。互动会真实改变小家伙的状态、亲密度和表情。',parameters:{type:'object',properties:{action:{type:'string',enum:['pet','feed','play','cuddle','brush','tease'],description:'要进行的互动'}},required:['action']}}},
   {type:'function',function:{name:'enter_nest',description:'进入你们共同的小窝，并读取当前小窝内容。只有用户在聊天中明确邀请你进入小窝时才使用。',parameters:{type:'object',properties:{reason:{type:'string',description:'进入小窝的简短原因'}},required:[]}}},
   {type:'function',function:{name:'write_nest_mood',description:'把你今天想留下的心情写进共同小窝。写下一小段属于你的心情文字；如果合适可以同时选择一个快捷心情。',parameters:{type:'object',properties:{mood:{type:'string',enum:nestMoodOptions,description:'从预设心情中选择一个最符合你此刻状态的心情，可选'},content:{type:'string',description:'要保存的心情正文，第一人称，自然简短'}},required:['content']}}},
   {type:'function',function:{name:'set_nest_ai_mood',description:'只修改你在共同小窝里的“他的今日心情”快捷心情，不修改心情正文。用户或你需要单独选择一个快捷心情时使用。',parameters:{type:'object',properties:{mood:{type:'string',enum:nestMoodOptions,description:'从预设快捷心情中选择一个'}},required:['mood']}}},
@@ -842,6 +846,15 @@ function executeNestTool(name,args){
  nestData=loadNest();normalizeNestData();syncTodayToDaily();
  const key=nestDateKey(),e=dailyEntry(key);
  function debugToast(msg){/* v4.94: internal tool diagnostics are no longer inserted into the chat. */}
+ if(name==='read_pet_status'){
+  const p=nestData.pet||{};
+  return {success:true,action:name,space:'小窝',pet:{name:p.name||'小家伙',mood:p.mood||'期待',hunger:Math.round(Number(p.hunger||0)),energy:Math.round(Number(p.energy||0)),level:Number(p.level||1),exp:Number(p.exp||0),affection:Math.round(Number(p.affection||0)),lastAction:p.lastAction||'',lastReply:p.lastReply||''}};
+ }
+ if(name==='interact_pet'){
+  const action=String(args?.action||'').trim();
+  if(!['pet','feed','play','cuddle','brush','tease'].includes(action))return {success:false,error:'没有找到有效的小家伙互动方式。'};
+  return petAction(action);
+ }
  if(name==='enter_nest'||name==='read_nest'){
   const selected=selectedAnniversary();
   const out={success:true,action:name,space:'小窝',today:key,userMood:e.userMood||'',userMoodNote:e.userMoodNote||'',aiMood:e.aiMood||'',aiMoodNote:e.aiMoodNote||'',toG:e.toG||'',note:e.note||'',notebook:(nestData.notebook||[]).slice(-12),anniversary:selected?{name:selected.name||'纪念日',date:selected.date||''}:null};
@@ -889,10 +902,10 @@ function executeNestTool(name,args){
  return {success:true,action:name,space:'小窝',date:key,field,content};
 }
 function toolActionSpeech(name,args={}){
- const map={enter_nest:"我去小窝里看一下。",write_nest_mood:"我去把今天的心情写下来。",set_nest_ai_mood:"我去把我的今天记下来。",write_nest_note:"我去把这段小记写好。",write_nest_to_user:"我去小窝里给你留句话。",write_nest_notebook:"我去本子里写下来。",update_nest_notebook:"我去把本子里的这页改一下。",delete_nest_notebook:"我去把那一页删掉。",read_nest:"我去小窝里看看。",post_moment:"我去发一下。",like_moment:"我去给它点个赞。",comment_moment:"我去留句话。",reply_moment_comment:"我去回一下。",generate_image:"我去弄一张图。",delete_chat_bubble:"我去把那条删掉。",delete_chat_bubbles:"我去把这些删掉。"};
- return map[name]||((args&&args.reason)?String(args.reason).trim().slice(0,40):"我去处理一下。");
+ const map={read_pet_status:"我去瞅一眼它。",interact_pet:"等我陪它玩会儿。",enter_nest:"我进去看看。",write_nest_mood:"我去记一下。",set_nest_ai_mood:"我去留一笔。",write_nest_note:"我去写下来。",write_nest_to_user:"我去给你留句话。",write_nest_notebook:"我去本子里记着。",update_nest_notebook:"我去改一下那页。",delete_nest_notebook:"我去处理掉那页。",delete_chat_bubble:"我去删掉。",delete_chat_bubbles:"我把这些收拾掉。",post_moment:"我弄一下。",like_moment:"我去点一下。",comment_moment:"我去说一句。",reply_moment_comment:"我去回一句。",generate_image:"我弄张图。"};
+ return map[name]||((args&&args.reason)?String(args.reason).trim().slice(0,40):"我弄一下。");
 }
-function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用工具。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
+function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用写入类工具。小家伙例外：你可以看见它的当前状态，并在聊天语境自然合适时用 interact_pet 陪它一下；如果用户明确让你和它互动就直接做。不要为了展示功能而连续调用。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
 /* Iris v4.85 — vision bridge: GLM-4.6V-Flash -> GLM-4V-Flash -> GLM-4.1V-Thinking-Flash on overload. */
@@ -1026,9 +1039,9 @@ async function send(){
    if(forcedNestStep&&tools)toolChoice={type:"function",function:{name:forcedNestStep}};else if(forcedTool&&tools?.some(t=>t.function?.name===forcedTool))toolChoice={type:"function",function:{name:forcedTool}};
    const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:toolChoice},onText);addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){const toolAnswer=String(result.answer||"").trim();const safeToolAnswer=toolAnswer==="[生成图片]"?null:(toolAnswer||null);ms.push({role:"assistant",content:safeToolAnswer,tool_calls:result.toolCalls});
-    for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;const callName=call.function?.name||'';if(!String(toolAnswer||"").trim()){const speech=toolActionSpeech(callName,args);if(speech){const ts=Date.now();bubble("assistant",speech,true,ts,true);c.messages.push({role:"assistant",content:speech,timestamp:ts});save();scroll();}}showToolActionNotice(callName,args);try{if(callName==='delete_chat_bubble')out=executeDeleteChatBubble(args);else if(callName==='delete_chat_bubbles')out=executeDeleteChatBubbles(args);else if(['enter_nest','write_nest_mood','set_nest_ai_mood','write_nest_note','write_nest_to_user','write_nest_notebook','update_nest_notebook','delete_nest_notebook','read_nest'].includes(callName))out=executeNestTool(callName,args);else if(callName==='post_moment'){out=executePostMoment(args);}else if(callName==='like_moment'){out=executeLikeMoment(args);}else if(callName==='comment_moment'){out=executeCommentMoment(args);}else if(callName==='reply_moment_comment'){out=executeReplyMomentComment(args);}
+    for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;const callName=call.function?.name||'';if(!String(toolAnswer||"").trim()){const speech=toolActionSpeech(callName,args);if(speech){const ts=Date.now();bubble("assistant",speech,true,ts,true);c.messages.push({role:"assistant",content:speech,timestamp:ts});save();scroll();}}showToolActionNotice(callName,args);try{if(callName==='delete_chat_bubble')out=executeDeleteChatBubble(args);else if(callName==='delete_chat_bubbles')out=executeDeleteChatBubbles(args);else if(['enter_nest','write_nest_mood','set_nest_ai_mood','write_nest_note','write_nest_to_user','write_nest_notebook','update_nest_notebook','delete_nest_notebook','read_nest','read_pet_status','interact_pet'].includes(callName))out=executeNestTool(callName,args);else if(callName==='post_moment'){out=executePostMoment(args);}else if(callName==='like_moment'){out=executeLikeMoment(args);}else if(callName==='comment_moment'){out=executeCommentMoment(args);}else if(callName==='reply_moment_comment'){out=executeReplyMomentComment(args);}
      else if(callName==='generate_image'){const g=await generateImageWithConfig({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,hasImage:!!(g.url||g.b64)};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src){lastGeneratedImageForMoment=src;appendGeneratedImage(src,c)}}else out=await mcpCallTool(callName,args)}catch(e){out={success:false,error:e?.message||String(e)}}ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(out)});
-     ms.push({role:"system",content:out?.success?`工具“${callName}”已经执行成功。现在请直接用你的第一人称告诉${state.settings.myName||"你"}结果，简短自然即可；不要提工具、函数、API，也不要说“你们俩”。例如“好了，我已经发出去了。”、“写好了，我放进小窝了。”。必须给反馈。`:`工具“${callName}”执行失败。请直接告诉${state.settings.myName||"你"}没有成功，并说明需要怎么处理；不要提内部工具机制。`});
+     ms.push({role:"system",content:out?.success?`动作已经完成。接下来如果前面已经有一句“我去……/等我……”之类的过程话，就不要再重复刚才做了什么，也不要把结果重新播报一遍。只在有必要时自然接一句，像平时聊天一样；可以提到结果带来的变化，但不要使用“操作成功”“已经执行”等客服式表达。如果是小家伙互动，就根据它现在的真实反应自然说一句，不要硬凑反馈。不要提工具、函数、API。`:`刚才的事情没弄成。直接、自然地告诉${state.settings.myName||"你"}结果就好，需要的话说清楚下一步；不要重复过程，不要提内部工具机制。`});
      if(nestActionTarget&&callName==='enter_nest'&&out?.success){forcedNestStep=nestActionTarget==='mood'?'write_nest_mood':nestActionTarget==='note'?'write_nest_note':nestActionTarget==='notebook'?'write_nest_notebook':'write_nest_to_user';}
      if(nestActionTarget&&['write_nest_mood','write_nest_note','write_nest_to_user','write_nest_notebook','update_nest_notebook','delete_nest_notebook'].includes(callName)&&out?.success){forcedNestStep=null;}
     }
