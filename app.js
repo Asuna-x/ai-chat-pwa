@@ -1,4 +1,4 @@
-/* Iris v4.151 — Moments top-cover alignment and drawer icon spacing. */
+/* Iris v4.156 — explicit tool requests + threaded moment replies. */
 /* Iris v4.151 — moments feed with editable cover, likes, favorites, and AI posting tool. */
 /* Iris v4.134 — generated images stay inside AI bubbles; add multi-select image cleanup tool. */
 /* Iris v4.125 — GLM-4.6V-Flash vision defaults for Zhipu official API. */
@@ -490,7 +490,7 @@ function normalizeMoments(){
   momentsData.posts=momentsData.posts.filter(x=>x&&typeof x==="object").map(x=>({
     id:String(x.id||crypto.randomUUID()),role:x.role==="user"?"user":"ai",content:String(x.content||""),imageUrl:typeof x.imageUrl==="string"?x.imageUrl:"",
     createdAt:Number(x.createdAt||Date.now()),likes:Math.max(0,Number(x.likes||0)),favorites:Math.max(0,Number(x.favorites||0)),liked:x.liked===true,favorited:x.favorited===true,aiLiked:x.aiLiked===true,
-    comments:Array.isArray(x.comments)?x.comments.filter(c=>c&&typeof c==="object").map(c=>({id:String(c.id||crypto.randomUUID()),role:c.role==="user"?"user":"ai",content:String(c.content||"").slice(0,300),createdAt:Number(c.createdAt||Date.now()),replies:Array.isArray(c.replies)?c.replies.filter(r=>r&&typeof r==="object").map(r=>({id:String(r.id||crypto.randomUUID()),role:r.role==="user"?"user":"ai",content:String(r.content||"").slice(0,300),createdAt:Number(r.createdAt||Date.now())})).slice(-10):[]})).slice(-30):[]
+    comments:Array.isArray(x.comments)?x.comments.filter(c=>c&&typeof c==="object").map(c=>({id:String(c.id||crypto.randomUUID()),role:c.role==="user"?"user":"ai",content:String(c.content||"").slice(0,300),createdAt:Number(c.createdAt||Date.now()),replies:Array.isArray(c.replies)?c.replies.filter(r=>r&&typeof r==="object").map(r=>({id:String(r.id||crypto.randomUUID()),role:r.role==="user"?"user":"ai",content:String(r.content||"").slice(0,300),createdAt:Number(r.createdAt||Date.now()),replyTo:String(r.replyTo||"").slice(0,120)})).slice(-10):[]})).slice(-30):[]
   })).slice(-100);
 }
 function saveMoments(){normalizeMoments();localStorage.setItem(momentsStorageKey,JSON.stringify(momentsData))}
@@ -518,7 +518,7 @@ function renderMoments(){
     const likedByUser=post.liked===true,likedByAI=post.aiLiked===true;
     const likeLabel=likedByUser?"已赞":"赞",favLabel=post.favorited?"已收藏":"收藏";
     const image=post.imageUrl?`<div class="momentsPostImage"><img src="${escapeHtml(post.imageUrl)}" alt="朋友圈图片" loading="lazy"></div>`:"";
-    const comments=Array.isArray(post.comments)&&post.comments.length?`<div class="momentComments">${post.comments.map(c=>{const replies=Array.isArray(c.replies)&&c.replies.length?`<div class="momentReplies">${c.replies.map(r=>`<div class="momentReply"><b>${escapeHtml(momentsAuthor(r))}${r.replyTo?` <em>回复${escapeHtml(momentsAuthor(c))}</em>`:""}</b><span>${escapeHtml(r.content)}</span></div>`).join("")}</div>`:"";return `<div class="momentComment" data-comment-id="${escapeHtml(c.id)}"><div><b>${escapeHtml(momentsAuthor(c))}</b><span>${escapeHtml(c.content)}</span><button type="button" data-moment-action="reply-comment">回复</button></div>${replies}</div>`}).join("")}</div>`:"";
+    const comments=Array.isArray(post.comments)&&post.comments.length?`<div class="momentComments">${post.comments.map(c=>{const replies=Array.isArray(c.replies)&&c.replies.length?`<div class="momentReplies">${c.replies.map(r=>`<div class="momentReply" data-parent-comment-id="${escapeHtml(c.id)}" data-reply-id="${escapeHtml(r.id)}"><b>${escapeHtml(momentsAuthor(r))}${r.replyTo?` <em>回复${escapeHtml(momentsAuthor(c))}</em>`:""}</b><span>${escapeHtml(r.content)}</span><button type="button" data-moment-action="reply-comment">回复</button></div>`).join("")}</div>`:"";return `<div class="momentComment" data-comment-id="${escapeHtml(c.id)}"><div><b>${escapeHtml(momentsAuthor(c))}</b><span>${escapeHtml(c.content)}</span><button type="button" data-moment-action="reply-comment">回复</button></div>${replies}</div>`}).join("")}</div>`:"";
     return `<article class="momentPost" data-moment-id="${escapeHtml(post.id)}">
       <div class="momentIdentity"><div class="momentAvatar">${momentsAvatar(post)}</div><div><b>${escapeHtml(momentsAuthor(post))}</b><small>${momentsRelativeTime(post.createdAt)}</small></div></div>
       ${post.content?`<div class="momentContent">${escapeHtml(post.content)}</div>`:""}${image}
@@ -534,7 +534,7 @@ function closeMoments(){const d=$("#moments");if(d?.open)d.close()}
 function toggleMomentReaction(id,kind){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);if(!p)return;if(kind==="like"){p.liked=!p.liked;p.likes=Math.max(0,p.likes+(p.liked?1:-1))}else if(kind==="favorite"){p.favorited=!p.favorited;p.favorites=Math.max(0,p.favorites+(p.favorited?1:-1))}saveMoments();renderMoments()}
 function aiLikeMoment(id){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);if(!p||p.aiLiked)return false;p.aiLiked=true;p.likes=Math.max(0,Number(p.likes||0)+1);saveMoments();addMomentNotification("like",id,"");renderMoments();return true}
 function addMomentComment(id,role,content){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);const text=String(content||"").trim().slice(0,300);if(!p||!text)return false;p.comments=Array.isArray(p.comments)?p.comments:[];const comment={id:crypto.randomUUID(),role:role==="user"?"user":"ai",content:text,createdAt:Date.now(),replies:[]};p.comments.push(comment);p.comments=p.comments.slice(-30);saveMoments();if(role==="ai")addMomentNotification("comment",id,text);renderMoments();return comment}
-function addMomentReply(id,commentId,role,content){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);const text=String(content||"").trim().slice(0,300);if(!p||!text)return false;const c=(p.comments||[]).find(x=>x.id===commentId);if(!c)return false;c.replies=Array.isArray(c.replies)?c.replies:[];c.replies.push({id:crypto.randomUUID(),role:role==="user"?"user":"ai",content:text,createdAt:Date.now()});c.replies=c.replies.slice(-10);saveMoments();if(role==="ai")addMomentNotification("reply",id,text);renderMoments();return true}
+function addMomentReply(id,commentId,role,content,replyTo=""){normalizeMoments();const p=momentsData.posts.find(x=>x.id===id);const text=String(content||"").trim().slice(0,300);if(!p||!text)return false;const c=(p.comments||[]).find(x=>x.id===commentId);if(!c)return false;c.replies=Array.isArray(c.replies)?c.replies:[];c.replies.push({id:crypto.randomUUID(),role:role==="user"?"user":"ai",content:text,createdAt:Date.now(),replyTo:String(replyTo||"").slice(0,120)});c.replies=c.replies.slice(-10);saveMoments();if(role==="ai")addMomentNotification("reply",id,text);renderMoments();return true}
 async function autoAiReplyToUserComment(postId,commentId,userText){
   try{
     const base=String(state.settings.apiBase||"").trim(),key=String(state.settings.apiKey||"").trim(),model=String(state.settings.model||"").trim();
@@ -809,6 +809,25 @@ async function generateImageWithConfig(options){
  return {url:imageUrl,b64};
 }
 
+function explicitToolRequest(text){
+ const t=String(text||"").trim();if(!t)return null;
+ if(/朋友圈|动态/.test(t)&&/(发|发布|发一条|发个|晒|分享)/.test(t))return"post_moment";
+ if(/朋友圈|动态/.test(t)&&/(点赞|点个赞|赞一下)/.test(t))return"like_moment";
+ if(/朋友圈|动态/.test(t)&&/(评论|留一句|说句话)/.test(t)&&!/(回复|回我|回复我)/.test(t))return"comment_moment";
+ if(/朋友圈|动态/.test(t)&&/(回复|回我|回复我)/.test(t))return"reply_moment_comment";
+ if(/(生成|画|制作).*(图|图片)|生成图片/.test(t))return"generate_image";
+ if(/(删除|删掉|移除).*(消息|气泡)/.test(t))return"delete_chat_bubble";
+ if(/(批量删除|全部删除|清空).*(图片|图片消息|气泡)/.test(t))return"delete_chat_bubbles";
+ if(/(进入|打开).*(小窝)/.test(t))return"enter_nest";
+ if(/(写|记录).*(心情)/.test(t))return"write_nest_mood";
+ if(/(设置|改成|写).*(今日小记|小记)/.test(t))return"write_nest_note";
+ if(/(写|记录).*(本子|我们的本子)/.test(t))return"write_nest_notebook";
+ if(/(删除).*(本子|笔记)/.test(t))return"delete_nest_notebook";
+ if(/(写|说|告诉).*(想对我说|给我写)/.test(t))return"write_nest_to_user";
+ if(/(读|看看|查看).*(小窝)/.test(t))return"read_nest";
+ return null;
+}
+
 async function send(){
  if(state.busy)return;
  const i=$("#input"),text=i.value.trim();
@@ -840,12 +859,12 @@ async function send(){
  try{
   const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);
   if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);systemParts.push(conversationStyleContext());systemParts.push(chatInterfaceContext(c));const mc=memoryContext();if(mc)systemParts.push(mc);const nc=nestContext();if(nc)systemParts.push(nc);systemParts.push(momentsToolSystem());if(nestActionTarget)systemParts.push(nestToolSystem()+` 本轮用户明确要求执行“${nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':nestActionTarget==='notebook'?'我们的本子':'今天想对他说'}”写入动作。请先进入小窝，再调用对应写入工具；工具执行成功后，再用自然聊天语气告诉用户已经写好了，不要复述工具调用过程。`);if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});ms.push(...buildConversationContext(c));
-  let tools=[];if(state.settings.mcpNestEnabled!==false){const nt=nestTools().filter(t=>state.settings.deleteChatBubbleEnabled!==false||!['delete_chat_bubble','delete_chat_bubbles'].includes(t.function?.name));tools.push(...nt);}const momentToolNames=['post_moment','like_moment','comment_moment','reply_moment_comment'];for(const mt of nestTools().filter(t=>momentToolNames.includes(t.function?.name)))if(!tools.some(t=>t.function?.name===mt.function?.name))tools.push(mt);if(state.settings.mcpEnabled===true&&state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){const gtool=nestTools().find(x=>x.function?.name==="generate_image");if(gtool)tools.push(gtool)}tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);if(!tools.length)tools=null;
+  let tools=[];const ntAll=nestTools().filter(t=>state.settings.deleteChatBubbleEnabled!==false||!['delete_chat_bubble','delete_chat_bubbles'].includes(t.function?.name));if(state.settings.mcpNestEnabled!==false||explicitToolRequest(text))tools.push(...ntAll);const momentToolNames=['post_moment','like_moment','comment_moment','reply_moment_comment'];for(const mt of nestTools().filter(t=>momentToolNames.includes(t.function?.name)))if(!tools.some(t=>t.function?.name===mt.function?.name))tools.push(mt);if(state.settings.mcpEnabled===true&&state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){const gtool=nestTools().find(x=>x.function?.name==="generate_image");if(gtool)tools.push(gtool)}tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);if(!tools.length)tools=null;
   let displayQueue=Promise.resolve();const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v||v==="[生成图片]")return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();await sleep(Math.min(1500,Math.max(80,Number(state.settings.replyDelay??360)+Math.min(90,v.length)*7)))})};const usageTotal={prompt:0,completion:0,total:0,requests:0};let rounds=0,fullAnswer="";
-  let forcedNestStep=nestActionTarget?'enter_nest':null;
+  let forcedNestStep=nestActionTarget?'enter_nest':null;const forcedTool=explicitToolRequest(text);
   while(rounds++<4){let answer="",pendingRound="";const onText=(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound),count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound};
    let toolChoice=tools?"auto":undefined;
-   if(forcedNestStep&&tools)toolChoice={type:"function",function:{name:forcedNestStep}};
+   if(forcedNestStep&&tools)toolChoice={type:"function",function:{name:forcedNestStep}};else if(forcedTool&&tools?.some(t=>t.function?.name===forcedTool))toolChoice={type:"function",function:{name:forcedTool}};
    const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:toolChoice},onText);addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){const toolAnswer=String(result.answer||"").trim();const safeToolAnswer=toolAnswer==="[生成图片]"?null:(toolAnswer||null);ms.push({role:"assistant",content:safeToolAnswer,tool_calls:result.toolCalls});
     for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;const callName=call.function?.name||'';try{if(callName==='delete_chat_bubble')out=executeDeleteChatBubble(args);else if(callName==='delete_chat_bubbles')out=executeDeleteChatBubbles(args);else if(['enter_nest','write_nest_mood','set_nest_ai_mood','write_nest_note','write_nest_to_user','write_nest_notebook','update_nest_notebook','delete_nest_notebook','read_nest'].includes(callName))out=executeNestTool(callName,args);else if(callName==='post_moment'){out=executePostMoment(args);}else if(callName==='like_moment'){out=executeLikeMoment(args);}else if(callName==='comment_moment'){out=executeCommentMoment(args);}else if(callName==='reply_moment_comment'){out=executeReplyMomentComment(args);}
@@ -895,7 +914,7 @@ $("#momentsBgFile").onchange=async()=>{const f=$("#momentsBgFile").files?.[0];if
   const b=e.target.closest("[data-moment-action]"),card=e.target.closest("[data-moment-id]");if(!b||!card)return;
   const action=b.dataset.momentAction,id=card.dataset.momentId,p=momentsData.posts.find(x=>x.id===id);
   if(action==="comment"){openMomentCommentDialog(id);return}
-  if(action==="reply-comment"){const comment= b.closest("[data-comment-id]"); const commentId=comment?.dataset.commentId; const author=comment?.querySelector("b")?.textContent||"这条评论"; if(commentId)openMomentCommentDialog(id,commentId,author); return}
+  if(action==="reply-comment"){const reply=b.closest(".momentReply");const parent=reply?.dataset.parentCommentId;const target=reply||b.closest("[data-comment-id]");const commentId=parent||target?.dataset.commentId;const author=target?.querySelector("b")?.textContent||"这条评论";if(commentId)openMomentCommentDialog(id,commentId,author);return}
   if(action==="edit"){if(!p||p.role!=="user")return;openMomentEditDialog(p);return}
   if(action==="delete"){if(!p||p.role!=="user")return;if(confirm("删除这条朋友圈？"))deleteUserMoment(id);return}
   toggleMomentReaction(id,action)
