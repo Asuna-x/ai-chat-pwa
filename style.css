@@ -2266,3 +2266,48 @@ html,body,#app,.app,.main{max-width:100%;min-width:0;overflow-x:hidden;}
 .generatedImageViewer img{display:block;max-width:96vw;max-height:90vh;width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.35);background:#fff;}
 .generatedImageViewerClose{position:absolute;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:28px;line-height:42px;z-index:2;}
 .generatedImageViewerHint{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:rgba(255,255,255,.68);font-size:11px;pointer-events:none;}
+
+/* Iris v4.136 — 猫耳线条气泡：细线猫耳 + 胡须，保持原有气泡逻辑与横向布局不变。 */
+body.bubble-cat .message .bubble{
+  padding:10px 14px!important;
+  border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)!important;
+  border-radius:18px!important;
+  box-shadow:0 7px 22px color-mix(in srgb,var(--shadow) 62%,transparent)!important;
+  background:color-mix(in srgb,var(--card) 92%,transparent)!important;
+}
+body.bubble-cat .message.assistant .bubble{
+  border-radius:18px 18px 18px 8px!important;
+}
+body.bubble-cat .message.user .bubble{
+  background:color-mix(in srgb,var(--user) 90%,var(--card))!important;
+  border-radius:18px 18px 8px 18px!important;
+}
+body.bubble-cat .message .bubble::before,
+body.bubble-cat .message .bubble::after{
+  content:"";
+  position:absolute;
+  width:11px;
+  height:11px;
+  top:-6px;
+  border:1.25px solid color-mix(in srgb,var(--ink) 34%,transparent);
+  background:inherit;
+  transform:rotate(45deg);
+  z-index:-1;
+}
+body.bubble-cat .message.assistant .bubble::before{left:13px;border-right:0;border-bottom:0;border-radius:4px 0 0 0;}
+body.bubble-cat .message.assistant .bubble::after{right:13px;border-left:0;border-bottom:0;border-radius:0 4px 0 0;}
+body.bubble-cat .message.user .bubble::before{left:13px;border-right:0;border-bottom:0;border-radius:4px 0 0 0;}
+body.bubble-cat .message.user .bubble::after{right:13px;border-left:0;border-bottom:0;border-radius:0 4px 0 0;}
+body.bubble-cat .message .bubble{overflow:visible!important;}
+body.bubble-cat .message .bubble::marker{display:none;}
+/* 胡须只在有文字的普通气泡上出现，图片气泡不加装饰线，避免遮挡照片。 */
+body.bubble-cat .message.assistant:not(.generatedImageMessage) .bubble{margin-left:4px;}
+body.bubble-cat .message.user .bubble{margin-right:4px;}
+body.bubble-cat .message.assistant:not(.generatedImageMessage) .bubble:focus-visible,
+body.bubble-cat .message.user .bubble:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 40%,transparent);outline-offset:2px;}
+/* 用独立的背景伪元素模拟两侧胡须，不改变文字盒尺寸。 */
+body.bubble-cat .message.assistant:not(.generatedImageMessage) .bubble:before{box-shadow:none;}
+body.bubble-cat .message.user .bubble:before{box-shadow:none;}
+/* 猫耳主题的小预览按钮 */
+#bubbleGrid [data-bubble="cat"]{position:relative;}
+#bubbleGrid [data-bubble="cat"]::before{content:"⌁";display:block;font-size:12px;line-height:10px;transform:rotate(-18deg);margin-bottom:2px;}
