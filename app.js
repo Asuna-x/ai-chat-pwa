@@ -1,3 +1,4 @@
+/* Iris v4.142 — refined white cat bubble theme. */
 /* Iris v4.134 — generated images stay inside AI bubbles; add multi-select image cleanup tool. */
 /* Iris v4.125 — GLM-4.6V-Flash vision defaults for Zhipu official API. */
 /* Iris v4.124 — notebook ruled-paper alignment and lower nest clock card edge. */

@@ -2449,3 +2449,106 @@ body.bubble-cat .generatedImageMessage .generatedImageBubble .catDecor{display:n
 .tokenTypeStats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0 10px;}
 .tokenTypeStats span{display:block;padding:8px 6px;border-radius:11px;background:color-mix(in srgb,var(--soft) 72%,transparent);border:1px solid var(--line);font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 @media(max-width:420px){.tokenTypeStats{grid-template-columns:repeat(2,1fr);}}
+
+/* Iris v4.142 — 猫猫气泡重做：按参考图使用白色轻盈气泡、弧线猫耳、三道胡须和淡淡猫爪。 */
+body.bubble-cat .message .bubble{
+  position:relative!important;
+  box-sizing:border-box!important;
+  background:rgba(255,255,255,.96)!important;
+  color:#555!important;
+  border:0!important;
+  border-radius:22px!important;
+  box-shadow:0 10px 30px rgba(70,70,70,.10),0 1px 0 rgba(255,255,255,.95) inset!important;
+}
+body.bubble-cat .message.assistant .bubble{
+  background:rgba(255,255,255,.96)!important;
+  border-radius:22px 22px 22px 7px!important;
+}
+body.bubble-cat .message.user .bubble{
+  background:rgba(255,255,255,.96)!important;
+  border-radius:22px 22px 7px 22px!important;
+  color:#555!important;
+}
+/* 两只猫耳：不要三角贴片，改成参考图那种细细的弧线。 */
+body.bubble-cat .catEar{
+  top:-15px!important;
+  width:23px!important;
+  height:19px!important;
+  border:0!important;
+  opacity:.72!important;
+}
+body.bubble-cat .catEar::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-top:2px solid #858585;
+  border-radius:50% 50% 0 0;
+}
+body.bubble-cat .catEar::after{
+  content:"";
+  position:absolute;
+  left:5px!important;
+  top:5px!important;
+  width:13px!important;
+  height:11px!important;
+  border-top:1.3px solid #aaa!important;
+  border-radius:50% 50% 0 0!important;
+  opacity:1!important;
+}
+body.bubble-cat .catEarL{left:22px!important;transform:rotate(-27deg)!important;}
+body.bubble-cat .catEarR{right:22px!important;transform:rotate(27deg)!important;}
+/* 胡须：三根细线，贴着气泡两侧向外伸。 */
+body.bubble-cat .catWhisker{
+  top:52%!important;
+  width:25px!important;
+  height:24px!important;
+  opacity:.62!important;
+}
+body.bubble-cat .catWhisker::before,
+body.bubble-cat .catWhisker::after{
+  content:"";
+  position:absolute;
+  left:0!important;
+  width:22px!important;
+  height:1.2px!important;
+  background:#8a8a8a!important;
+  border-radius:2px!important;
+  transform-origin:left center;
+}
+body.bubble-cat .catWhisker::before{top:4px!important;transform:rotate(-10deg)!important;box-shadow:2px 8px 0 #8a8a8a,1px 16px 0 #8a8a8a;}
+body.bubble-cat .catWhisker::after{display:none!important;}
+body.bubble-cat .catWhiskerL{left:-21px!important;transform:none!important;}
+body.bubble-cat .catWhiskerR{right:-21px!important;transform:scaleX(-1)!important;}
+body.bubble-cat .message.user .catWhiskerL{left:auto!important;right:-21px!important;transform:scaleX(-1)!important;}
+body.bubble-cat .message.user .catWhiskerR{right:auto!important;left:-21px!important;transform:none!important;}
+/* 右下角淡淡猫爪：用圆点组合，不再显示一个突兀的“•”。 */
+body.bubble-cat .catPaw{
+  right:-24px!important;
+  bottom:9px!important;
+  width:11px!important;
+  height:11px!important;
+  font-size:0!important;
+  letter-spacing:0!important;
+  border-radius:50%!important;
+  background:#999!important;
+  opacity:.28!important;
+  transform:rotate(-18deg)!important;
+  text-shadow:none!important;
+}
+body.bubble-cat .catPaw::before{
+  content:"";
+  position:absolute;
+  width:5px;height:5px;border-radius:50%;
+  background:#999;
+  left:-7px;top:-7px;
+  box-shadow:7px -4px 0 #999,14px 0 0 #999,20px 7px 0 #999;
+}
+body.bubble-cat .message.user .catPaw{
+  left:-24px!important;right:auto!important;transform:scaleX(-1) rotate(-18deg)!important;
+}
+/* 猫主题下不要让装饰把图片消息变成另一种黑色气泡。 */
+body.bubble-cat .generatedImageMessage .generatedImageBubble{
+  background:rgba(255,255,255,.96)!important;
+  border-radius:22px 22px 22px 7px!important;
+  box-shadow:0 10px 30px rgba(70,70,70,.10)!important;
+}
