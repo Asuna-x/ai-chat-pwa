@@ -3077,3 +3077,84 @@ dialog#moments.momentsDialog::backdrop{background:rgba(0,0,0,.62);backdrop-filte
 .momentComposerTools{padding:10px 0 4px}.momentComposerTools button{padding:8px 12px;border-radius:9px;background:#242424;color:#ccc;font-size:12px}
 .momentComposeImagePreview{min-height:0;display:flex;gap:8px}.momentComposeImagePreview img{width:86px;height:86px;object-fit:cover;border-radius:6px;background:#222}
 @media(min-width:800px){.momentComposerDialog{width:min(100vw,760px)!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;border-radius:22px 22px 0 0!important}.momentsFeed{padding-left:34px!important;padding-right:34px!important}}
+
+
+/* Iris v4.149 — Moments cover reaches the very top; controls overlay the cover; drawer icon alignment. */
+dialog#moments.momentsDialog{
+  outline:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+dialog#moments.momentsDialog:focus{outline:none!important;}
+.momentsApp{
+  position:relative!important;
+  isolation:isolate!important;
+  background:#181818!important;
+}
+/* Put the cover at the first pixel of the Moments page. The top controls float above it. */
+.momentsTop{
+  position:absolute!important;
+  inset:0 0 auto 0!important;
+  width:100%!important;
+  height:calc(58px + env(safe-area-inset-top))!important;
+  padding:env(safe-area-inset-top) 14px 0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  z-index:20!important;
+  pointer-events:none!important;
+}
+.momentsTop .momentsBack,.momentsTop .momentsCamera{
+  pointer-events:auto!important;
+  outline:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+.momentsTop .momentsBack:focus,.momentsTop .momentsCamera:focus{outline:none!important;box-shadow:none!important;border:0!important;}
+.momentsCover{
+  position:relative!important;
+  z-index:1!important;
+  margin:0!important;
+  padding-top:env(safe-area-inset-top)!important;
+  box-sizing:border-box!important;
+  height:min(72vw,440px)!important;
+  min-height:300px!important;
+  background-image:var(--moments-cover)!important;
+  background-size:cover!important;
+  background-position:center top!important;
+  border:0!important;
+}
+.momentsCoverShade{z-index:1!important;}
+.momentsCover #momentsBgFile{position:absolute!important;z-index:3!important;}
+.momentsProfile{z-index:5!important;}
+/* Remove any browser/focus blue edge from the Moments shell and controls. */
+.momentsDialog *, .momentsDialog button{outline-color:transparent!important;}
+/* The drawer already supplies the icon frame through ::before; don't create a second icon. */
+.drawer .bottom .momentsDrawerBtn{
+  min-height:50px!important;
+  margin:4px 0!important;
+  padding:9px 13px 9px 48px!important;
+}
+.drawer .bottom .momentsDrawerBtn:before{display:none!important;content:none!important;}
+.drawer .bottom .momentsDrawerBtn .momentsDrawerIcon{
+  position:absolute!important;
+  left:13px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:29px!important;
+  height:29px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:11px!important;
+  background:rgba(255,246,250,.12)!important;
+  border:1px solid rgba(255,225,237,.13)!important;
+  color:#e2b6c9!important;
+  font-size:15px!important;
+  line-height:1!important;
+}
+.drawer .bottom .momentsDrawerBtn span:last-child{display:block!important;line-height:1.2!important;}
