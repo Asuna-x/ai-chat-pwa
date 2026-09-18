@@ -3361,7 +3361,7 @@ dialog#moments.momentsDialog{overflow:hidden!important;}
 .nestSharedAlbumGrid,.nestSharedAlbumHomeGrid{min-width:0;overflow:hidden}
 
 
-/* Iris v4.166 — use the selected cute cat illustrations as the companion's actual states. */
+/* Iris v4.167 — embedded companion illustrations require no external pet folder. */
 .nestPetFace{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;width:112px!important;height:104px!important;overflow:visible!important;display:flex!important;align-items:center!important;justify-content:center!important}
 .nestPetFace:before,.nestPetFace:after{display:none!important}
 .petIllustration{display:block;width:auto;height:auto;object-fit:contain;user-select:none;-webkit-user-drag:none}
