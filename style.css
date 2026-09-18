@@ -2929,3 +2929,93 @@ body.bubble-cat .catPaw i:nth-child(3){left:10px!important;top:2px!important;}
 body.bubble-cat .catPaw i:nth-child(4){left:15px!important;top:6px!important;}
 body.bubble-cat .catPaw b{left:6px!important;top:8px!important;width:9px!important;height:8px!important;background:#969696!important;}
 body.bubble-cat .message.user .catPaw{left:auto!important;right:-20px!important;transform:rotate(-17deg)!important;}
+
+/* Iris v4.146 — reference final micro-tuning */
+body.bubble-cat .message .bubble{
+  border:0!important;
+  outline:0!important;
+  box-shadow:0 5px 16px rgba(70,70,70,.055)!important;
+}
+
+/* tiny symmetric whiskers around the upper-right face, slightly below it */
+body.bubble-cat .catWhisker{
+  top:-1px!important;
+  width:11px!important;
+  height:10px!important;
+  opacity:.72!important;
+}
+body.bubble-cat .catWhisker::before{
+  content:""!important;
+  left:0!important;
+  top:2px!important;
+  width:9px!important;
+  height:1px!important;
+  background:#777!important;
+  border-radius:99px!important;
+  box-shadow:0 3px 0 #777,0 6px 0 #777!important;
+  transform:none!important;
+}
+body.bubble-cat .catWhisker::after{display:none!important;}
+/* AI: paired around the upper-right face */
+body.bubble-cat .message.assistant .catWhiskerL{
+  display:block!important;
+  left:auto!important;
+  right:49px!important;
+  transform:scaleX(-1) rotate(-3deg)!important;
+}
+body.bubble-cat .message.assistant .catWhiskerR{
+  display:block!important;
+  left:auto!important;
+  right:31px!important;
+  transform:rotate(-3deg)!important;
+}
+/* User mirrors the same pair to the upper-left */
+body.bubble-cat .message.user .catWhiskerL{
+  display:block!important;
+  left:31px!important;
+  right:auto!important;
+  transform:scaleX(-1) rotate(-3deg)!important;
+}
+body.bubble-cat .message.user .catWhiskerR{
+  display:block!important;
+  left:49px!important;
+  right:auto!important;
+  transform:rotate(-3deg)!important;
+}
+
+/* smaller, darker paw tucked into the lower-right corner */
+body.bubble-cat .catPaw{
+  right:-13px!important;
+  bottom:-2px!important;
+  width:14px!important;
+  height:13px!important;
+  opacity:.62!important;
+  transform:rotate(-14deg)!important;
+}
+body.bubble-cat .catPaw i{
+  width:3px!important;
+  height:3px!important;
+  background:#686868!important;
+}
+body.bubble-cat .catPaw i:nth-child(1){left:0!important;top:4px!important;}
+body.bubble-cat .catPaw i:nth-child(2){left:4px!important;top:0!important;}
+body.bubble-cat .catPaw i:nth-child(3){left:8px!important;top:1px!important;}
+body.bubble-cat .catPaw i:nth-child(4){left:11px!important;top:5px!important;}
+body.bubble-cat .catPaw b{
+  left:4px!important;top:7px!important;width:7px!important;height:6px!important;background:#686868!important;
+}
+body.bubble-cat .message.user .catPaw{left:auto!important;right:-13px!important;transform:rotate(-14deg)!important;}
+
+/* keep the face emoticon small and quiet */
+body.bubble-cat .catFace{
+  min-width:29px!important;
+  width:29px!important;
+  height:15px!important;
+  line-height:15px!important;
+  font-size:6px!important;
+  padding:0 3px!important;
+  border-radius:8px!important;
+  color:#8a8a8a!important;
+  box-shadow:0 1px 4px rgba(70,70,70,.05)!important;
+}
+body.bubble-cat .catFace::after{width:5px!important;height:5px!important;bottom:-2px!important;left:12px!important;}
