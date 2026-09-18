@@ -260,7 +260,7 @@ if("serviceWorker"in navigator){
         <div class="nestCard nestNotebookCard" id="nestNotebookCard" role="button" tabindex="0" aria-label="打开我们的本子"><div class="nestCardHead"><span>我们的本子</span><span class="nestCardArrow">›</span></div><div class="nestTextPreview" id="nestNotebookPreview">想留下来的话，就写在这里。</div></div><div class="nestCard nestStoryCard" id="nestStoryCard" role="button" tabindex="0" aria-label="打开我们的故事"><div class="nestCardHead"><span>我们的故事</span><span class="nestCardArrow">›</span></div><div class="nestStorySubline">每一个重要的瞬间，都是我们故事的一部分。</div><div id="nestStoryPreview" class="nestStoryPreview"></div></div>
         <div class="nestAnniversaryCard"><div><span>纪念日</span><strong id="nestCountdown">还没有设置纪念日</strong></div><button id="nestAnniversaryOpen">›</button></div>
         <div class="nestLifeCard"><div class="nestCardHead"><span>他现在在做什么</span><span class="nestLifeDot">●</span></div><div id="nestLifeActivity" class="nestLifeActivity">正在自己的小世界里待着</div><div class="nestLifeActions"><button type="button" id="nestSurpriseBtn">给我一个小惊喜</button><button type="button" id="nestAlbumOpen">我们的相册 ›</button></div></div>
-        <div class="nestPetCard" id="nestPetCard"><div class="nestCardHead"><span>我们的小家伙</span><strong id="nestPetLevel">Lv.1</strong></div><div class="nestPetMain"><div class="nestPetFace" id="nestPetFace">(｡･ω･｡)</div><div class="nestPetInfo"><b id="nestPetName">小家伙</b><span id="nestPetMood">期待</span><small id="nestPetNote">它一直在小窝里等着你。</small></div></div><div class="nestPetStats"><label><span>心情</span><i><em id="nestPetMoodBar"></em></i></label><label><span>饱腹</span><i><em id="nestPetHunger"></em></i></label><label><span>精力</span><i><em id="nestPetEnergy"></em></i></label></div><div class="nestPetActions"><button type="button" data-pet-action="pet">摸摸</button><button type="button" data-pet-action="feed">喂它</button><button type="button" data-pet-action="play">陪它玩</button></div></div>
+        <div class="nestPetCard" id="nestPetCard" role="button" tabindex="0" aria-label="打开我们的小家伙"><div class="nestCardHead"><span>我们的小家伙</span><strong id="nestPetLevel">Lv.1</strong></div><div class="nestPetMain"><div class="nestPetFace" id="nestPetFace">(｡･ω･｡)</div><div class="nestPetInfo"><b id="nestPetName">小家伙</b><span id="nestPetMood">期待</span><small id="nestPetNote">它一直在小窝里等着你。</small></div></div><div class="nestPetHint">点进来陪它玩一会儿 ›</div></div>
         <div class="nestAlbumHomeCard" id="nestAlbumPreview"><div class="nestCardHead"><span>我们的相册</span><button type="button" data-album-open>查看全部 ›</button></div><div id="nestSharedAlbumHomeGrid" class="nestSharedAlbumHomeGrid"></div></div>
       </div>
       </section>
@@ -268,6 +268,19 @@ if("serviceWorker"in navigator){
     <section class="nestPage hidden" id="nestAlbumPage">
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>我们的相册</h2><span></span></div>
       <div class="nestSubBody"><div class="nestStoryIntro">一起留下来的画面，会慢慢变成我们的相册。</div><div id="nestSharedAlbumGrid" class="nestSharedAlbumGrid"></div></div>
+    </section>
+
+    <section class="nestPage hidden" id="nestPetPage">
+      <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>我们的小家伙</h2><span></span></div>
+      <div class="nestSubBody">
+        <div class="nestPetDetailCard">
+          <div class="nestPetDetailScene"><div class="nestPetBig"><div class="petEar petEarL"></div><div class="petEar petEarR"></div><div class="petBody"><div class="petFace" id="nestPetDetailFace">(｡･ω･｡)</div><div class="petBlush petBlushL"></div><div class="petBlush petBlushR"></div></div><div class="petPaw petPawL"></div><div class="petPaw petPawR"></div></div></div>
+          <div class="nestPetDetailName"><b id="nestPetDetailName">小家伙</b><span id="nestPetDetailNote">它在小窝里等着你，点下面的按钮和它一起玩。</span></div>
+          <div class="nestPetStats nestPetStatsDetail"><label><span>心情</span><i><em id="nestPetMoodBarDetail"></em></i></label><label><span>饱腹</span><i><em id="nestPetHungerDetail"></em></i></label><label><span>精力</span><i><em id="nestPetEnergyDetail"></em></i></label></div>
+          <div class="nestPetDetailMood"><span>现在</span><b id="nestPetMoodDetail">期待</b><strong id="nestPetLevelDetail">Lv.1</strong></div>
+          <div class="nestPetActions nestPetActionsDetail"><button type="button" data-pet-action="pet">摸摸它</button><button type="button" data-pet-action="feed">喂它一点</button><button type="button" data-pet-action="play">陪它玩</button></div>
+        </div>
+      </div>
     </section>
 
     <section class="nestPage hidden" id="nestMoodPage">
