@@ -3259,3 +3259,21 @@ dialog#moments.momentsDialog{overflow:hidden!important;}
 
 /* v4.159: restore the chat bubble text styling; the Moments reply text is the part that stays white. */
 .momentReply span{color:#fff!important;}
+
+/* v4.161 shared-life cards */
+.nestLifeCard{margin:14px 0;padding:16px 17px;border-radius:20px;background:rgba(255,255,255,.56);border:1px solid rgba(255,255,255,.5);box-shadow:0 8px 24px rgba(70,50,40,.06)}
+.nestLifeDot{font-size:9px;opacity:.5}.nestLifeActivity{font-size:15px;line-height:1.6;padding:8px 0 12px}.nestLifeActions{display:flex;gap:8px}.nestLifeActions button{flex:1;border:0;border-radius:13px;padding:10px 8px;background:rgba(255,255,255,.7);color:inherit}.nestLifeEvent{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.05)}.nestLifeEvent time{font-size:11px;opacity:.5;white-space:nowrap}.nestLifeEvent span{font-size:13px;line-height:1.45}.nestLifeEmpty,.nestAlbumEmpty{padding:28px 10px;text-align:center;opacity:.55}.nestSharedAlbumGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.nestAlbumItem{margin:0;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.55)}.nestAlbumItem img{display:block;width:100%;aspect-ratio:1;object-fit:cover}.nestAlbumItem figcaption{padding:8px 9px;font-size:12px;line-height:1.4}.nestLifeCard .nestCardHead{display:flex;justify-content:space-between;align-items:center}
+
+/* Iris v4.162 — nest companion + home album visualization. */
+.nestPetCard,.nestAlbumHomeCard{margin:14px 0;padding:16px 17px;border-radius:20px;background:rgba(255,255,255,.56);border:1px solid rgba(255,255,255,.5);box-shadow:0 8px 24px rgba(70,50,40,.06);box-sizing:border-box;overflow:hidden}
+.nestPetCard .nestCardHead,.nestAlbumHomeCard .nestCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.nestPetCard .nestCardHead strong{font-size:10px;font-weight:700;opacity:.55}
+.nestPetMain{display:flex;align-items:center;gap:14px;padding:13px 0 10px}
+.nestPetFace{width:72px;height:72px;flex:0 0 72px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,250,252,.76);border:1px solid rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 7px 18px rgba(105,73,91,.07);font:22px/1 Georgia,serif;color:#725665}
+.nestPetInfo{min-width:0;display:flex;flex-direction:column;gap:3px}.nestPetInfo b{font-size:15px}.nestPetInfo span{font-size:11px;opacity:.68}.nestPetInfo small{font-size:10px;line-height:1.45;opacity:.55}
+.nestPetStats{display:grid;gap:7px;margin:2px 0 13px}.nestPetStats label{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:8px;font-size:9px;opacity:.65}.nestPetStats i{height:6px;border-radius:99px;background:rgba(100,70,82,.08);overflow:hidden}.nestPetStats em{display:block;height:100%;width:0;border-radius:inherit;background:rgba(171,119,143,.58);transition:width .25s ease}
+.nestPetActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.nestPetActions button{border:0;border-radius:12px;padding:9px 6px;background:rgba(255,255,255,.72);color:inherit;font-size:10px}
+.nestAlbumHomeCard .nestCardHead button{border:0;background:transparent;color:inherit;opacity:.58;font-size:10px;padding:4px 0}.nestSharedAlbumHomeGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:11px}.nestSharedAlbumHomeGrid img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:rgba(255,255,255,.5)}.nestAlbumHomeEmpty{grid-column:1/-1;text-align:center;padding:18px 8px;font-size:10px;line-height:1.5;opacity:.52}
+@media(max-width:390px){.nestPetFace{width:64px;height:64px;flex-basis:64px}.nestPetMain{gap:11px}.nestSharedAlbumHomeGrid{gap:6px}}
+#nestHome{overflow-x:hidden}
+#nestHome .nestHomeInner{overflow-x:hidden}
