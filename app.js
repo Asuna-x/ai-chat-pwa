@@ -518,7 +518,7 @@ function renderMoments(){
     const likedByUser=post.liked===true,likedByAI=post.aiLiked===true;
     const likeLabel=likedByUser?"已赞":"赞",favLabel=post.favorited?"已收藏":"收藏";
     const image=post.imageUrl?`<div class="momentsPostImage"><img src="${escapeHtml(post.imageUrl)}" alt="朋友圈图片" loading="lazy"></div>`:"";
-    const comments=Array.isArray(post.comments)&&post.comments.length?`<div class="momentComments">${post.comments.map(c=>{const replies=Array.isArray(c.replies)&&c.replies.length?`<div class="momentReplies">${c.replies.map(r=>`<div class="momentReply"><b>${escapeHtml(momentsAuthor(r))}</b><span>${escapeHtml(r.content)}</span></div>`).join("")}</div>`:"";return `<div class="momentComment" data-comment-id="${escapeHtml(c.id)}"><div><b>${escapeHtml(momentsAuthor(c))}</b><span>${escapeHtml(c.content)}</span><button type="button" data-moment-action="reply-comment">回复</button></div>${replies}</div>`}).join("")}</div>`:"";
+    const comments=Array.isArray(post.comments)&&post.comments.length?`<div class="momentComments">${post.comments.map(c=>{const replies=Array.isArray(c.replies)&&c.replies.length?`<div class="momentReplies">${c.replies.map(r=>`<div class="momentReply"><b>${escapeHtml(momentsAuthor(r))}${r.replyTo?` <em>回复${escapeHtml(momentsAuthor(c))}</em>`:""}</b><span>${escapeHtml(r.content)}</span></div>`).join("")}</div>`:"";return `<div class="momentComment" data-comment-id="${escapeHtml(c.id)}"><div><b>${escapeHtml(momentsAuthor(c))}</b><span>${escapeHtml(c.content)}</span><button type="button" data-moment-action="reply-comment">回复</button></div>${replies}</div>`}).join("")}</div>`:"";
     return `<article class="momentPost" data-moment-id="${escapeHtml(post.id)}">
       <div class="momentIdentity"><div class="momentAvatar">${momentsAvatar(post)}</div><div><b>${escapeHtml(momentsAuthor(post))}</b><small>${momentsRelativeTime(post.createdAt)}</small></div></div>
       ${post.content?`<div class="momentContent">${escapeHtml(post.content)}</div>`:""}${image}
@@ -894,7 +894,7 @@ $("#momentsBgFile").onchange=async()=>{const f=$("#momentsBgFile").files?.[0];if
   const b=e.target.closest("[data-moment-action]"),card=e.target.closest("[data-moment-id]");if(!b||!card)return;
   const action=b.dataset.momentAction,id=card.dataset.momentId,p=momentsData.posts.find(x=>x.id===id);
   if(action==="comment"){const text=prompt("评论这条动态");if(text){const cmt=addMomentComment(id,"user",text);if(cmt&&cmt.id)autoAiReplyToUserComment(id,cmt.id,text)}return}
-  if(action==="reply-comment"){const comment= b.closest("[data-comment-id]"); const commentId=comment?.dataset.commentId; const text=prompt("回复这条评论"); if(commentId&&text){const cmt=addMomentReply(id,commentId,"user",text);if(cmt&&cmt.id)autoAiReplyToUserComment(id,cmt.id,text)} return}
+  if(action==="reply-comment"){const comment= b.closest("[data-comment-id]"); const commentId=comment?.dataset.commentId; const text=prompt("回复这条评论"); if(commentId&&text){const cmt=addMomentReply(id,commentId,"user",text);if(cmt&&cmt.id)autoAiReplyToUserComment(id,commentId,text,cmt.id)} return}
   if(action==="edit"){if(!p||p.role!=="user")return;openMomentEditDialog(p);return}
   if(action==="delete"){if(!p||p.role!=="user")return;if(confirm("删除这条朋友圈？"))deleteUserMoment(id);return}
   toggleMomentReaction(id,action)
