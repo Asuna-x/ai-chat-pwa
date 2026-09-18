@@ -1,4 +1,4 @@
-/* Iris v4.158 — first-person AI voice, tool feedback, proactive interval control, and fixed AI bubble text color. */
+/* Iris v4.159 — restore chat bubble styling and keep Moments reply text white. */
 /* Iris v4.156 — explicit tool requests + threaded moment replies. */
 /* Iris v4.151 — moments feed with editable cover, likes, favorites, and AI posting tool. */
 /* Iris v4.134 — generated images stay inside AI bubbles; add multi-select image cleanup tool. */

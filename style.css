@@ -3257,5 +3257,5 @@ dialog#moments.momentsDialog{overflow:hidden!important;}
 .aiPresence::before{content:"·";margin-right:3px;opacity:.55}
 @media(max-width:430px){.aiPresence{max-width:82px}}
 
-/* v4.158: AI message text remains white/bright and is not tinted by the living presence layer. */
-.message.assistant .bubble, .message.assistant .bubble *{color:#fff !important;}
+/* v4.159: restore the chat bubble text styling; the Moments reply text is the part that stays white. */
+.momentReply span{color:#fff!important;}
