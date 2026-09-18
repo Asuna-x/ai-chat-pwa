@@ -133,7 +133,7 @@ if("serviceWorker"in navigator){
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="memoryPage">
-      <div class="subIntro"><b>记忆</b><small>这里保存长期记忆。聊天时会自动带入这些记忆；对话变长后，Iris 会自动整理旧记录，减少每次发送的上下文。</small></div>
+      <div class="subIntro"><b>记忆</b><small>这里只放会影响以后聊天的长期信息。真正值得留下的共同经历，会放在小窝里的“我们的故事”。</small></div>
       <div class="settingsSectionTitle">添加记忆</div>
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>记住一件事</span><textarea id="memoryInput" rows="3" placeholder="例如：我喜欢晚上安静地聊天。"></textarea></label>
@@ -142,7 +142,7 @@ if("serviceWorker"in navigator){
       <div class="settingsSectionTitle">Iris 的长期认知</div>
       <div class="settingsGroup settingsFormGroup" id="memoryList"></div>
       <div class="settingsGroup settingsActionGroup"><button class="settingsAction danger" id="clearMemories"><span>清空全部记忆</span><em>›</em></button></div>
-      <p class="settingsNote">Iris 不会把每句话都当成记忆。聊天过程中会定期把重要内容整理成“关于你、关于我们、关系与相处、最近状态”和共同经历，并合并重复信息。这样记忆可以越来越完整，但每次聊天只会带入真正有用的部分。</p>
+      <p class="settingsNote">Iris 会定期合并重复内容，只保留真正长期有用的信息。共同经历不在这里展开，去小窝看“我们的故事”就好。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="themePage">
@@ -260,7 +260,7 @@ if("serviceWorker"in navigator){
         <div class="nestCard nestNotebookCard" id="nestNotebookCard" role="button" tabindex="0" aria-label="打开我们的本子"><div class="nestCardHead"><span>我们的本子</span><span class="nestCardArrow">›</span></div><div class="nestTextPreview" id="nestNotebookPreview">想留下来的话，就写在这里。</div></div><div class="nestCard nestStoryCard" id="nestStoryCard" role="button" tabindex="0" aria-label="打开我们的故事"><div class="nestCardHead"><span>我们的故事</span><span class="nestCardArrow">›</span></div><div class="nestStorySubline">每一个重要的瞬间，都是我们故事的一部分。</div><div id="nestStoryPreview" class="nestStoryPreview"></div></div>
         <div class="nestAnniversaryCard"><div><span>纪念日</span><strong id="nestCountdown">还没有设置纪念日</strong></div><button id="nestAnniversaryOpen">›</button></div>
         <div class="nestLifeCard"><div class="nestCardHead"><span>他现在在做什么</span><span class="nestLifeDot">●</span></div><div id="nestLifeActivity" class="nestLifeActivity">正在自己的小世界里待着</div><div class="nestLifeActions"><button type="button" id="nestSurpriseBtn">给我一个小惊喜</button><button type="button" id="nestAlbumOpen">我们的相册 ›</button></div></div>
-        <div class="nestPetCard" id="nestPetCard" role="button" tabindex="0" aria-label="打开我们的小家伙"><div class="nestCardHead"><span>我们的小家伙</span><strong id="nestPetLevel">Lv.1</strong></div><div class="nestPetMain"><div class="nestPetFace" id="nestPetFace">(｡･ω･｡)</div><div class="nestPetInfo"><b id="nestPetName">小家伙</b><span id="nestPetMood">期待</span><small id="nestPetNote">它一直在小窝里等着你。</small></div></div><div class="nestPetHint">点进来陪它玩一会儿 ›</div></div>
+        <div class="nestPetCard" id="nestPetCard" role="button" tabindex="0" aria-label="打开我们的小家伙"><div class="nestCardHead"><span>我们的小家伙</span><strong id="nestPetLevel">Lv.1</strong></div><div class="nestPetMain"><div class="nestPetFace" id="nestPetFace" data-mood="期待"></div><div class="nestPetInfo"><b id="nestPetName">小家伙</b><span id="nestPetMood">期待</span><small id="nestPetNote">它一直在小窝里等着你。</small></div></div><div class="nestPetHint">点进来陪它玩一会儿 ›</div></div>
         <div class="nestAlbumHomeCard" id="nestAlbumPreview"><div class="nestCardHead"><span>我们的相册</span><button type="button" data-album-open>查看全部 ›</button></div><div id="nestSharedAlbumHomeGrid" class="nestSharedAlbumHomeGrid"></div></div>
       </div>
       </section>
@@ -274,7 +274,7 @@ if("serviceWorker"in navigator){
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>我们的小家伙</h2><span></span></div>
       <div class="nestSubBody">
         <div class="nestPetDetailCard">
-          <div class="nestPetDetailScene"><div class="nestPetBig"><div class="petEar petEarL"></div><div class="petEar petEarR"></div><div class="petBody"><div class="petFace" id="nestPetDetailFace">(｡･ω･｡)</div><div class="petBlush petBlushL"></div><div class="petBlush petBlushR"></div></div><div class="petPaw petPawL"></div><div class="petPaw petPawR"></div></div></div>
+          <div class="nestPetDetailScene"><div class="nestPetBig"><div class="petEar petEarL"></div><div class="petEar petEarR"></div><div class="petBody"><div class="petFace" id="nestPetDetailFace" data-mood="期待"></div><div class="petBlush petBlushL"></div><div class="petBlush petBlushR"></div></div><div class="petPaw petPawL"></div><div class="petPaw petPawR"></div></div></div>
           <div class="nestPetDetailName"><b id="nestPetDetailName">小家伙</b><span id="nestPetDetailNote">它在小窝里等着你，点下面的按钮和它一起玩。</span></div>
           <div class="nestPetStats nestPetStatsDetail"><label><span>心情</span><i><em id="nestPetMoodBarDetail"></em></i></label><label><span>饱腹</span><i><em id="nestPetHungerDetail"></em></i></label><label><span>精力</span><i><em id="nestPetEnergyDetail"></em></i></label></div>
           <div class="nestPetDetailMood"><span>现在</span><b id="nestPetMoodDetail">期待</b><strong id="nestPetLevelDetail">Lv.1</strong></div>

@@ -3288,3 +3288,30 @@ dialog#moments.momentsDialog{overflow:hidden!important;}
 .petBody{width:166px;height:166px;border-radius:48% 48% 42% 42%;background:#f5ece8;border:2px solid rgba(105,78,85,.25);box-shadow:0 13px 25px rgba(80,55,60,.1);position:relative;z-index:2;display:flex;align-items:center;justify-content:center}.petFace{font:34px/1.2 Georgia,serif;color:#6e5660;letter-spacing:-1px}.petBlush{position:absolute;top:91px;width:25px;height:12px;border-radius:50%;background:rgba(222,150,164,.22)}.petBlushL{left:25px}.petBlushR{right:25px}.petPaw{position:absolute;bottom:2px;width:54px;height:35px;border-radius:50%;background:#f2e6e2;border:2px solid rgba(105,78,85,.2);z-index:3}.petPawL{left:36px;transform:rotate(-9deg)}.petPawR{right:36px;transform:rotate(9deg)}
 .nestPetDetailName{padding:17px 2px 13px;display:flex;flex-direction:column;gap:5px}.nestPetDetailName b{font-size:20px}.nestPetDetailName span{font-size:11px;line-height:1.6;opacity:.56}.nestPetStatsDetail{margin:4px 0 17px}.nestPetDetailMood{display:flex;align-items:center;gap:8px;margin:3px 0 15px;font-size:11px;opacity:.68}.nestPetDetailMood b{font-size:14px;opacity:1}.nestPetDetailMood strong{margin-left:auto;font-size:10px;opacity:.55}.nestPetActionsDetail button{padding:12px 6px;font-size:11px;background:rgba(255,255,255,.78);box-shadow:0 4px 12px rgba(70,50,40,.05)}
 .nestAlbumActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:7px 8px 9px}.nestAlbumActions button{border:0;border-radius:9px;padding:6px 2px;background:rgba(255,255,255,.75);color:inherit;font-size:10px}.nestAlbumItem figcaption{min-height:18px}
+
+
+/* Iris v4.164 — softer, more detailed companion illustration. */
+.nestPetDetailScene{height:330px!important;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.92),rgba(247,239,234,.48) 62%,rgba(239,226,221,.24))!important}
+.nestPetBig{width:270px!important;height:300px!important;transform:translateY(4px)}
+.petEar{top:28px!important;width:76px!important;height:94px!important;border-radius:72% 72% 38% 38%!important;background:#eee5df!important;border-width:2px!important;box-shadow:inset 0 0 0 7px rgba(255,255,255,.22)}
+.petEar:after{inset:15px!important;background:#e8cfd3!important;opacity:.72!important}
+.petEarL{left:35px!important;transform:rotate(-23deg)!important}.petEarR{right:35px!important;transform:rotate(23deg)!important}
+.petBody{width:205px!important;height:205px!important;border-radius:49% 49% 43% 43%!important;background:linear-gradient(145deg,#fbf3ef,#eadfd9)!important;border:2px solid rgba(105,78,85,.22)!important;box-shadow:0 20px 38px rgba(80,55,60,.12)!important}
+.petFace{position:relative!important;width:145px!important;height:100px!important;color:transparent!important;font-size:0!important}
+.petFace:before,.petFace:after{content:"";position:absolute;top:34px;width:15px;height:21px;border-radius:50%;background:#5c4c53;box-shadow:0 1px 0 rgba(255,255,255,.45) inset}
+.petFace:before{left:30px}.petFace:after{right:30px}
+.petFace{filter:drop-shadow(0 1px 0 rgba(255,255,255,.35))}
+.petFace[data-mood="开心"]:before,.petFace[data-mood="开心"]:after{height:8px;top:41px;border-radius:50%;background:transparent;border-top:3px solid #5c4c53;box-shadow:none}
+.petFace[data-mood="难过"]:before,.petFace[data-mood="难过"]:after{top:40px;background:transparent;border-top:3px solid #5c4c53;box-shadow:none}
+.petFace[data-mood="难过"]:before{transform:rotate(18deg)}.petFace[data-mood="难过"]:after{transform:rotate(-18deg)}
+.petFace[data-mood="满足"]:before,.petFace[data-mood="满足"]:after{height:10px;top:39px;border-radius:0 0 50% 50%;background:transparent;border-bottom:3px solid #5c4c53;box-shadow:none}
+.petFace:global{}
+.petFace{--nose:#a97883}
+.petFace + .petBlush{ }
+.petBody:after{content:"";position:absolute;left:50%;top:91px;width:12px;height:9px;transform:translateX(-50%) rotate(45deg);background:#a97883;border-radius:65% 35% 65% 35%}
+.petPaw{width:66px!important;height:43px!important;background:#eee3dd!important;box-shadow:0 7px 12px rgba(80,55,60,.07)}
+.petPawL{left:31px!important}.petPawR{right:31px!important}
+.nestPetDetailName{padding-top:20px!important}.nestPetDetailName b{font-size:21px!important}.nestPetDetailName span{font-size:12px!important;opacity:.62!important}
+.nestPetActionsDetail{gap:8px!important}.nestPetActionsDetail button{min-height:44px!important;font-size:12px!important;border-radius:14px!important}
+/* Keep the companion view vertical on small screens. */
+@media(max-width:430px){.nestPetDetailScene{height:310px!important}.nestPetBig{transform:scale(.92) translateY(4px)!important}}
