@@ -2367,3 +2367,34 @@ footer{background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--
   .generatedImageMessage .generatedImageBubble{max-width:calc(100% - 42px)!important;}
   .generatedImageMessage .generatedImageGrid img{max-width:100%!important;max-height:58vh!important;}
 }
+
+
+/* Iris v4.139 — true edge-to-edge background, stable viewport while messages scroll, darker identities. */
+html,body{min-height:100%;overscroll-behavior:none;}
+body{background:var(--bg)!important;}
+.app,.main{height:100dvh!important;min-height:100dvh!important;}
+.main{position:relative!important;isolation:isolate!important;overflow:hidden!important;background:transparent!important;}
+/* The background belongs to the viewport, not the scrolling message layer. */
+.main:before{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:-2!important;background-image:var(--bg-image)!important;background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important;background-attachment:initial!important;opacity:var(--bg-image-opacity,1)!important;pointer-events:none!important;transform:translateZ(0);}
+.main:after{display:none!important;}
+/* Let the selected image remain visible behind the chrome; no blur over the photo. */
+header{height:calc(68px + env(safe-area-inset-top))!important;min-height:calc(68px + env(safe-area-inset-top))!important;padding-top:env(safe-area-inset-top)!important;background:color-mix(in srgb,var(--card) 20%,transparent)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-bottom-color:color-mix(in srgb,var(--ink) 18%,transparent)!important;}
+.messages{position:relative!important;z-index:1!important;min-height:0!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important;background:transparent!important;}
+footer{position:relative!important;z-index:2!important;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--card) 18%,transparent) 38%,color-mix(in srgb,var(--card) 24%,transparent))!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+.composer{background:color-mix(in srgb,var(--card) 78%,transparent)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+/* Names and status labels stay readable on photo backgrounds. */
+.msgIdentity .msgName{color:color-mix(in srgb,var(--ink) 88%,#000)!important;opacity:1!important;font-weight:650!important;text-shadow:0 1px 3px color-mix(in srgb,var(--card) 72%,transparent)!important;}
+.msgStatus{color:color-mix(in srgb,var(--ink) 78%,#000)!important;opacity:1!important;font-weight:600!important;text-shadow:0 1px 3px color-mix(in srgb,var(--card) 72%,transparent)!important;}
+.msgStatus.online i{background:#4f8f5b!important;box-shadow:0 0 0 1px color-mix(in srgb,#4f8f5b 28%,transparent)!important;}
+.msgStatus.busy i{background:#b94f46!important;}
+.msgStatus.away i{background:#ad7d19!important;}
+.msgStatus.invisible i{background:#6f747a!important;}
+.readStatus{color:#347844!important;opacity:1!important;font-weight:650!important;text-shadow:0 1px 3px color-mix(in srgb,var(--card) 72%,transparent)!important;}
+.message .msgTime{color:color-mix(in srgb,var(--ink) 70%,#000)!important;opacity:.9!important;text-shadow:0 1px 3px color-mix(in srgb,var(--card) 72%,transparent)!important;}
+.head b{color:color-mix(in srgb,var(--ink) 92%,#000)!important;text-shadow:0 1px 3px color-mix(in srgb,var(--card) 70%,transparent)!important;}
+.head small{color:color-mix(in srgb,var(--ink) 72%,#000)!important;opacity:1!important;text-shadow:0 1px 3px color-mix(in srgb,var(--card) 70%,transparent)!important;}
+@media(max-width:799px){
+  .main:before{position:fixed!important;background-attachment:initial!important;}
+  header{padding-left:max(10px,env(safe-area-inset-left))!important;padding-right:max(10px,env(safe-area-inset-right))!important;}
+  .messages{padding-bottom:16px!important;}
+}
