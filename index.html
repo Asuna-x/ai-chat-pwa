@@ -335,5 +335,21 @@ if("serviceWorker"in navigator){
     <div class="momentComposerTools"><button type="button" id="momentComposeImagePick">图片</button><input id="momentComposeImageFile" type="file" accept="image/*" hidden></div>
   </form>
 </dialog>
+<dialog id="momentBgCropDialog" class="momentBgCropDialog">
+  <div class="momentCropPanel">
+    <div class="momentCropTop"><button type="button" id="momentBgCropCancel">取消</button><b>调整背景范围</b><button type="button" id="momentBgCropSave">使用</button></div>
+    <div class="momentCropHint">拖动白框选择显示区域，四角可以调整大小</div>
+    <div class="momentCropStage"><canvas id="momentBgCropCanvas"></canvas><div id="momentCropBox" class="momentCropBox"><i data-crop-handle="tl"></i><i data-crop-handle="tr"></i><i data-crop-handle="bl"></i><i data-crop-handle="br"></i></div></div>
+    <button type="button" id="momentBgCropReset" class="momentCropReset">重新框选</button>
+  </div>
+</dialog>
+<dialog id="momentEditDialog" class="momentEditDialog">
+  <form method="dialog" class="momentEditPanel">
+    <div class="momentEditTop"><button type="button" id="momentEditCancel">取消</button><b>编辑动态</b><button type="button" id="momentEditSave">保存</button></div>
+    <textarea id="momentEditText" maxlength="500" placeholder="分享这一刻…"></textarea>
+    <div class="momentEditPreview" id="momentEditPreview"></div>
+    <div class="momentComposerTools"><button type="button" id="momentEditImagePick">更换图片</button><input id="momentEditImageFile" type="file" accept="image/*" hidden></div>
+  </form>
+</dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
-<script src="./api.js?v=4.149"></script><script src="./app.js?v=4.149"></script></body></html>
+<script src="./api.js?v=4.150"></script><script src="./app.js?v=4.150"></script></body></html>

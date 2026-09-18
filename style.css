@@ -3158,3 +3158,24 @@ dialog#moments.momentsDialog:focus{outline:none!important;}
   line-height:1!important;
 }
 .drawer .bottom .momentsDrawerBtn span:last-child{display:block!important;line-height:1.2!important;}
+
+/* Iris v4.150 — Moments owner edit/delete, AI interaction context, and cover crop editor. */
+.momentOwnerAction{opacity:.82!important}
+.momentOwnerAction.danger{color:#c77b7b!important}
+.momentBgCropDialog,.momentEditDialog{width:100vw;max-width:none;height:auto;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#171717;color:#f5f5f5;position:fixed;left:0;right:0;bottom:0;top:auto}
+.momentBgCropDialog::backdrop,.momentEditDialog::backdrop{background:rgba(0,0,0,.58);backdrop-filter:blur(2px)}
+.momentCropPanel,.momentEditPanel{padding:0 14px max(14px,env(safe-area-inset-bottom));background:#171717}
+.momentCropTop,.momentEditTop{height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2a2a2a}
+.momentCropTop button,.momentEditTop button{border:0;background:transparent;color:#bbb;font-size:14px;padding:8px 4px}
+.momentCropTop button:last-child,.momentEditTop button:last-child{color:#fff;font-weight:700}
+.momentCropHint{text-align:center;color:#888;font-size:11px;padding:10px 0 8px}
+.momentCropStage{position:relative;width:100%;min-height:180px;display:grid;place-items:center;overflow:hidden;touch-action:none}
+#momentBgCropCanvas{display:block;max-width:100%;height:auto;border-radius:3px}
+.momentCropBox{position:absolute;border:1px solid rgba(255,255,255,.96);box-shadow:0 0 0 9999px rgba(0,0,0,.42);cursor:move;touch-action:none}
+.momentCropBox:after{content:"";position:absolute;inset:0;border:1px dashed rgba(255,255,255,.35);pointer-events:none}
+.momentCropBox i{position:absolute;width:18px;height:18px;border:2px solid #fff;border-radius:50%;background:#171717;z-index:2}
+.momentCropBox i[data-crop-handle="tl"]{left:-9px;top:-9px;cursor:nwse-resize}.momentCropBox i[data-crop-handle="tr"]{right:-9px;top:-9px;cursor:nesw-resize}.momentCropBox i[data-crop-handle="bl"]{left:-9px;bottom:-9px;cursor:nesw-resize}.momentCropBox i[data-crop-handle="br"]{right:-9px;bottom:-9px;cursor:nwse-resize}
+.momentCropReset{display:block;margin:8px auto 0;padding:7px 12px;border:0;border-radius:9px;background:#252525;color:#aaa;font-size:12px}
+#momentEditText{width:100%;min-height:150px;resize:none;border:0;outline:0;background:transparent;color:#f5f5f5;font-size:16px;line-height:1.65;padding:15px 0}
+.momentEditPreview{display:flex;gap:8px;min-height:0}.momentEditPreview img{width:86px;height:86px;object-fit:cover;border-radius:7px;background:#222}
+@media(min-width:800px){.momentBgCropDialog,.momentEditDialog{width:min(760px,100vw);left:50%;right:auto;transform:translateX(-50%);border-radius:22px 22px 0 0}.momentCropPanel,.momentEditPanel{padding-left:22px;padding-right:22px}.momentCropStage{min-height:320px}}
