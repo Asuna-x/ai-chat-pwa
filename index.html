@@ -274,11 +274,12 @@ if("serviceWorker"in navigator){
       <div class="nestSubTop"><button class="nestIconBtn" data-nest-back>‹</button><h2>我们的小家伙</h2><span></span></div>
       <div class="nestSubBody">
         <div class="nestPetDetailCard">
-          <div class="nestPetDetailScene"><div class="nestPetBig"><div class="petEar petEarL"></div><div class="petEar petEarR"></div><div class="petBody"><div class="petFace" id="nestPetDetailFace" data-mood="期待"></div><div class="petBlush petBlushL"></div><div class="petBlush petBlushR"></div></div><div class="petPaw petPawL"></div><div class="petPaw petPawR"></div></div></div>
+          <div class="nestPetDetailScene"><div class="nestPetBig" id="nestPetBig"></div><div class="nestPetFloatingHint" aria-hidden="true">小家伙会记得你陪它做过的事</div></div>
           <div class="nestPetDetailName"><b id="nestPetDetailName">小家伙</b><span id="nestPetDetailNote">它在小窝里等着你，点下面的按钮和它一起玩。</span></div>
           <div class="nestPetStats nestPetStatsDetail"><label><span>心情</span><i><em id="nestPetMoodBarDetail"></em></i></label><label><span>饱腹</span><i><em id="nestPetHungerDetail"></em></i></label><label><span>精力</span><i><em id="nestPetEnergyDetail"></em></i></label></div>
           <div class="nestPetDetailMood"><span>现在</span><b id="nestPetMoodDetail">期待</b><strong id="nestPetLevelDetail">Lv.1</strong></div>
-          <div class="nestPetActions nestPetActionsDetail"><button type="button" data-pet-action="pet">摸摸它</button><button type="button" data-pet-action="feed">喂它一点</button><button type="button" data-pet-action="play">陪它玩</button></div>
+          <div id="nestPetReply" class="nestPetReply" aria-live="polite"></div>
+          <div class="nestPetActions nestPetActionsDetail"><button type="button" data-pet-action="pet">摸摸</button><button type="button" data-pet-action="feed">喂一点</button><button type="button" data-pet-action="play">玩一会儿</button><button type="button" data-pet-action="cuddle">抱抱</button><button type="button" data-pet-action="brush">梳梳毛</button><button type="button" data-pet-action="tease">逗逗它</button></div>
         </div>
       </div>
     </section>
@@ -377,4 +378,4 @@ if("serviceWorker"in navigator){
   </form>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
-<script src="./api.js?v=4.151"></script><script src="./app.js?v=4.167"></script></body></html>
+<script src="./api.js?v=4.151"></script><script src="./app.js?v=4.168"></script></body></html>

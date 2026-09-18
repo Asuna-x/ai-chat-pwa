@@ -40,6 +40,9 @@ function normalizeNestData(){
   nestData.pet.level=Math.max(1,Number(nestData.pet.level||1));
   nestData.pet.exp=Math.max(0,Number(nestData.pet.exp||0));
   nestData.pet.lastInteraction=Number(nestData.pet.lastInteraction||0);
+  nestData.pet.affection=Math.max(0,Number(nestData.pet.affection||0));
+  nestData.pet.lastAction=String(nestData.pet.lastAction||"");
+  nestData.pet.lastReply=String(nestData.pet.lastReply||"");
   const op=Number(nestData.notebookOpacity);
   nestData.notebookOpacity=Number.isFinite(op)?Math.max(0.45,Math.min(1,op)):0.90;
 }
@@ -89,7 +92,7 @@ const petIllustrations={
 function petIllustrationKey(pet){
   const transient={pet:"petted",feed:"eating",play:"excited"};
   if(pet.lastAction&&Date.now()-Number(pet.lastInteraction||0)<7000&&transient[pet.lastAction])return transient[pet.lastAction];
-  const moodMap={"开心":"happy","难过":"sad","平静":"good","期待":"normal","疲惫":"tired","烦躁":"angry","想念":"shy","甜甜的":"spoiled","满足":"spoiled"};
+  const moodMap={"开心":"happy","超开心":"excited","难过":"sad","平静":"good","期待":"normal","疲惫":"tired","烦躁":"angry","想念":"shy","甜甜的":"spoiled","满足":"spoiled","好奇":"curious","乖乖":"good"};
   if(Number(pet.energy||0)<=20)return "sleep";
   if(Number(pet.energy||0)<=35)return "tired";
   if(Number(pet.hunger||0)<=18)return "sad";
@@ -99,9 +102,43 @@ function petIllustrationHtml(pet,detail=false){
   const key=petIllustrationKey(pet),src=petIllustrations[key]||petIllustrations.normal;
   return `<img class="petIllustration ${detail?"petIllustrationDetail":"petIllustrationHome"}" src="${src}" alt="${escapeHtml(pet.name||"小家伙")}当前状态" draggable="false">`;
 }
-function petAction(action){normalizeNestData();const pet=nestData.pet;const now=Date.now();if(action==="pet"){pet.mood="开心";pet.energy=Math.min(100,pet.energy+4)}else if(action==="feed"){pet.hunger=Math.min(100,pet.hunger+18);pet.mood="满足"}else if(action==="play"){pet.energy=Math.max(0,pet.energy-8);pet.hunger=Math.max(0,pet.hunger-5);pet.mood="开心";pet.exp+=10;if(pet.exp>=100){pet.exp-=100;pet.level+=1}}pet.lastInteraction=now;pet.lastAction=action;saveNestData();recordSharedEvent("pet",action==="pet"?"我摸了摸小家伙，它开心了一会儿":action==="feed"?"我给小家伙喂了点东西":"我陪小家伙玩了一会儿");renderPet();renderNestLifePanel();setTimeout(()=>{if(nestData.pet?.lastInteraction===now){renderPet()}},7200)}
+function petAction(action){
+  normalizeNestData();
+  const pet=nestData.pet,now=Date.now();
+  pet.affection=Math.max(0,Number(pet.affection||0));
+  const actions={
+    pet:{mood:"开心",energy:5,hunger:0,exp:3,image:"petted",text:"我摸了摸小家伙，它舒服得眯起了眼睛。",reply:"喵……再摸一会儿。"},
+    feed:{mood:"满足",energy:2,hunger:20,exp:4,image:"eating",text:"我给小家伙喂了点东西，它吃得很认真。",reply:"好吃。还想再来一点。"},
+    play:{mood:"超开心",energy:-12,hunger:-6,exp:12,image:"excited",text:"我陪小家伙玩了一会儿，它一下子精神起来了。",reply:"再来一次！"},
+    cuddle:{mood:"甜甜的",energy:4,hunger:0,exp:8,image:"spoiled",text:"我抱了抱小家伙，它安安静静靠了过来。",reply:"这样靠着你就很好。"},
+    brush:{mood:"满足",energy:3,hunger:0,exp:6,image:"good",text:"我慢慢给小家伙梳了梳毛，它舒服得不想动了。",reply:"舒服……不要停。"},
+    tease:{mood:"开心",energy:-5,hunger:0,exp:7,image:"curious",text:"我逗了逗小家伙，它歪着脑袋盯着我看。",reply:"你又逗我。"}
+  };
+  const a=actions[action]||actions.pet;
+  pet.mood=a.mood;
+  pet.energy=Math.max(0,Math.min(100,Number(pet.energy||0)+a.energy));
+  pet.hunger=Math.max(0,Math.min(100,Number(pet.hunger||0)+a.hunger));
+  pet.exp+=a.exp;pet.affection+=a.exp;pet.lastInteraction=now;pet.lastAction=action;pet.lastReply=a.reply;
+  if(pet.exp>=100){pet.exp-=100;pet.level=Math.max(1,Number(pet.level||1)+1);pet.mood="超开心";pet.affection+=15}
+  saveNestData();
+  recordSharedEvent("pet",a.text);
+  renderPet();renderNestLifePanel();
+  const replyEl=$("#nestPetReply");if(replyEl){replyEl.textContent=a.reply;replyEl.classList.remove("show");requestAnimationFrame(()=>replyEl.classList.add("show"))}
+  setTimeout(()=>{if(nestData.pet?.lastInteraction===now){nestData.pet.lastAction="";saveNestData();renderPet()}},6500);
+}
 function petFaceText(pet){return ""}
-function renderPet(){normalizeNestData();const pet=nestData.pet||{};const name=$("#nestPetName"),mood=$("#nestPetMood"),hunger=$("#nestPetHunger"),energy=$("#nestPetEnergy"),level=$("#nestPetLevel"),face=$("#nestPetFace"),detailFace=$("#nestPetDetailFace"),detailBig=$("#nestPetBig"),detailName=$("#nestPetDetailName"),detailMood=$("#nestPetMoodDetail"),detailLevel=$("#nestPetLevelDetail"),detailHunger=$("#nestPetHungerDetail"),detailEnergy=$("#nestPetEnergyDetail"),note=$("#nestPetNote"),detailNote=$("#nestPetDetailNote"),moodBar=$("#nestPetMoodBar"),detailMoodBar=$("#nestPetMoodBarDetail");if(name)name.textContent=pet.name||"小家伙";if(detailName)detailName.textContent=pet.name||"小家伙";if(mood)mood.textContent=pet.mood||"期待";if(detailMood)detailMood.textContent=pet.mood||"期待";if(detailLevel)detailLevel.textContent="Lv."+(pet.level||1);if(hunger)hunger.style.width=Math.round(pet.hunger||0)+"%";if(detailHunger)detailHunger.style.width=Math.round(pet.hunger||0)+"%";if(energy)energy.style.width=Math.round(pet.energy||0)+"%";if(detailEnergy)detailEnergy.style.width=Math.round(pet.energy||0)+"%";if(level)level.textContent="Lv."+(pet.level||1);if(face){face.innerHTML=petIllustrationHtml(pet,false);face.dataset.mood=pet.mood||"期待"}if(detailFace){detailFace.innerHTML="";detailFace.dataset.mood=pet.mood||"期待"}if(detailBig){detailBig.innerHTML=petIllustrationHtml(pet,true);detailBig.dataset.mood=pet.mood||"期待"}if(moodBar)moodBar.style.width=Math.round(Math.max(0,Math.min(100,(nestMoodOptions.indexOf(pet.mood)+1)*12.5)))+"%";if(detailMoodBar)detailMoodBar.style.width=Math.round(Math.max(0,Math.min(100,(nestMoodOptions.indexOf(pet.mood)+1)*12.5)))+"%";if(note)note.textContent=pet.lastInteraction?"刚刚陪过它。":"它一直在小窝里等着你。";if(detailNote)detailNote.textContent=pet.lastInteraction?"刚刚和你互动过，现在正精神地看着你。":"它在小窝里等着你，点下面的按钮和它一起玩。"}
+function renderPet(){
+  normalizeNestData();const pet=nestData.pet||{};
+  const name=$("#nestPetName"),mood=$("#nestPetMood"),hunger=$("#nestPetHunger"),energy=$("#nestPetEnergy"),level=$("#nestPetLevel"),face=$("#nestPetFace"),detailBig=$("#nestPetBig"),detailName=$("#nestPetDetailName"),detailMood=$("#nestPetMoodDetail"),detailLevel=$("#nestPetLevelDetail"),detailHunger=$("#nestPetHungerDetail"),detailEnergy=$("#nestPetEnergyDetail"),note=$("#nestPetNote"),detailNote=$("#nestPetDetailNote"),moodBar=$("#nestPetMoodBar"),detailMoodBar=$("#nestPetMoodBarDetail"),reply=$("#nestPetReply");
+  if(name)name.textContent=pet.name||"小家伙";if(detailName)detailName.textContent=pet.name||"小家伙";if(mood)mood.textContent=pet.mood||"期待";if(detailMood)detailMood.textContent=pet.mood||"期待";if(detailLevel)detailLevel.textContent="Lv."+(pet.level||1);if(hunger)hunger.style.width=Math.round(pet.hunger||0)+"%";if(detailHunger)detailHunger.style.width=Math.round(pet.hunger||0)+"%";if(energy)energy.style.width=Math.round(pet.energy||0)+"%";if(detailEnergy)detailEnergy.style.width=Math.round(pet.energy||0)+"%";if(level)level.textContent="Lv."+(pet.level||1);
+  if(face){face.innerHTML=petIllustrationHtml(pet,false);face.dataset.mood=pet.mood||"期待"}
+  if(detailBig){detailBig.innerHTML=petIllustrationHtml(pet,true);detailBig.dataset.mood=pet.mood||"期待"}
+  const moodScore={"难过":18,"疲惫":28,"烦躁":38,"期待":50,"平静":62,"好奇":68,"乖乖":74,"开心":82,"满足":88,"甜甜的":94,"超开心":100};
+  const score=moodScore[pet.mood]||55;if(moodBar)moodBar.style.width=score+"%";if(detailMoodBar)detailMoodBar.style.width=score+"%";
+  if(note)note.textContent=pet.lastAction?({pet:"刚刚摸过它。",feed:"刚刚喂过它。",play:"刚刚陪它疯玩了一会儿。",cuddle:"刚刚抱过它。",brush:"刚刚给它梳了毛。",tease:"刚刚逗过它。"}[pet.lastAction]||"刚刚陪过它。"):"它在小窝里等着你。";
+  if(detailNote)detailNote.textContent=pet.lastAction?(({pet:"它舒服得眯起了眼睛。",feed:"它吃饱以后心情很好。",play:"它还想继续玩，尾巴都快摇起来了。",cuddle:"它很喜欢这样靠着你。",brush:"它现在舒服得懒得动。",tease:"它歪着脑袋还在研究你。"}[pet.lastAction])||"它刚刚和你互动过。"):"它在小窝里等着你，慢慢和它熟起来吧。";
+  if(reply){reply.textContent=pet.lastReply||"";reply.classList.toggle("show",!!pet.lastReply)}
+}
 function maybeProactiveContact(){
   const base=String(state.settings.apiBase||"").trim(),key=String(state.settings.apiKey||"").trim(),model=String(state.settings.model||"").trim();
   if(!base||!key||!model||state.busy)return;
