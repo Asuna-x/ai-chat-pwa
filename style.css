@@ -3315,3 +3315,47 @@ dialog#moments.momentsDialog{overflow:hidden!important;}
 .nestPetActionsDetail{gap:8px!important}.nestPetActionsDetail button{min-height:44px!important;font-size:12px!important;border-radius:14px!important}
 /* Keep the companion view vertical on small screens. */
 @media(max-width:430px){.nestPetDetailScene{height:310px!important}.nestPetBig{transform:scale(.92) translateY(4px)!important}}
+
+/* Iris v4.165 — companion home illustration + cleaner, more human-feeling pet detail. */
+.nestPetFace{position:relative;width:84px!important;height:84px!important;flex:0 0 84px!important;border-radius:46% 46% 42% 42%!important;background:linear-gradient(145deg,#fff7f2,#eaded8)!important;border:1px solid rgba(105,78,85,.18)!important;box-shadow:inset 0 4px 8px rgba(255,255,255,.8),0 9px 20px rgba(80,55,60,.09)!important;color:transparent!important;font-size:0!important;overflow:visible!important}
+.nestPetFace:before{content:"";position:absolute;left:22px;top:29px;width:9px;height:13px;border-radius:50%;background:#554950;box-shadow:31px 0 0 #554950}
+.nestPetFace:after{content:"";position:absolute;left:36px;top:48px;width:11px;height:7px;border-bottom:2px solid #a97883;border-radius:0 0 50% 50%;box-shadow:-17px -1px 0 -1px rgba(222,150,164,.45),17px -1px 0 -1px rgba(222,150,164,.45)}
+.nestPetFace[data-mood="开心"]:before{height:5px;top:34px;border-radius:50%;background:transparent;border-top:2px solid #554950;box-shadow:31px 0 0 transparent,31px 0 0 -1px #554950}
+.nestPetFace[data-mood="开心"]:after{top:47px;height:9px;border-bottom:2px solid #a97883}
+.nestPetFace[data-mood="难过"]:after{top:51px;border-bottom:0;border-top:2px solid #a97883;border-radius:50% 50% 0 0}
+.nestPetFace[data-mood="满足"]:after{top:46px;width:14px;height:9px;left:34px;border-bottom:2px solid #a97883}
+.nestPetMain{min-height:102px!important}
+.nestPetInfo{padding-right:2px}
+
+/* Give the detailed companion a little more character without introducing an empty block. */
+.nestPetDetailScene{height:350px!important}
+.nestPetBig{width:285px!important;height:315px!important}
+.petEar{background:linear-gradient(145deg,#f7eee9,#e8d9d5)!important}
+.petBody{background:radial-gradient(circle at 38% 25%,#fffaf6 0,#f8eee9 34%,#e7dbd6 100%)!important}
+.petFace:after{content:"";position:absolute;left:50%;top:58px;width:15px;height:10px;transform:translateX(-50%);border-bottom:3px solid #a97883;border-radius:0 0 60% 60%}
+.petFace[data-mood="开心"]:after{top:55px;width:20px;height:13px;border-bottom:3px solid #a97883}
+.petFace[data-mood="难过"]:after{top:64px;border-bottom:0;border-top:3px solid #a97883;border-radius:60% 60% 0 0}
+.petFace[data-mood="满足"]:after{top:57px;width:17px;height:10px;border-bottom:3px solid #a97883}
+
+/* Prevent accidental horizontal overflow inside the shared album. */
+.nestSharedAlbumGrid,.nestSharedAlbumHomeGrid{min-width:0;overflow:hidden}
+
+/* Iris v4.165 — companion home illustration + cleaner, more human-feeling pet detail. */
+.nestPetFace{position:relative;width:84px!important;height:84px!important;flex:0 0 84px!important;border-radius:46% 46% 42% 42%!important;background:linear-gradient(145deg,#fff7f2,#eaded8)!important;border:1px solid rgba(105,78,85,.18)!important;box-shadow:inset 0 4px 8px rgba(255,255,255,.8),0 9px 20px rgba(80,55,60,.09)!important;color:transparent!important;font-size:0!important;overflow:visible!important}
+.nestPetFace:before{content:"";position:absolute;left:22px;top:29px;width:9px;height:13px;border-radius:50%;background:#554950;box-shadow:31px 0 0 #554950}
+.nestPetFace:after{content:"";position:absolute;left:36px;top:48px;width:11px;height:7px;border-bottom:2px solid #a97883;border-radius:0 0 50% 50%;box-shadow:-17px -1px 0 -1px rgba(222,150,164,.45),17px -1px 0 -1px rgba(222,150,164,.45)}
+.nestPetFace[data-mood="开心"]:before{height:5px;top:34px;border-radius:50%;background:transparent;border-top:2px solid #554950;box-shadow:31px 0 0 transparent,31px 0 0 -1px #554950}
+.nestPetFace[data-mood="开心"]:after{top:47px;height:9px;border-bottom:2px solid #a97883}
+.nestPetFace[data-mood="难过"]:after{top:51px;border-bottom:0;border-top:2px solid #a97883;border-radius:50% 50% 0 0}
+.nestPetFace[data-mood="满足"]:after{top:46px;width:14px;height:9px;left:34px;border-bottom:2px solid #a97883}
+.nestPetMain{min-height:102px!important}
+.nestPetInfo{padding-right:2px}
+.nestPetDetailScene{height:350px!important}
+.nestPetBig{width:285px!important;height:315px!important}
+.petEar{background:linear-gradient(145deg,#f7eee9,#e8d9d5)!important}
+.petBody{background:radial-gradient(circle at 38% 25%,#fffaf6 0,#f8eee9 34%,#e7dbd6 100%)!important}
+.petFace:after{content:"";position:absolute;left:50%;top:58px;width:15px;height:10px;transform:translateX(-50%);border-bottom:3px solid #a97883;border-radius:0 0 60% 60%}
+.petFace[data-mood="开心"]:after{top:55px;width:20px;height:13px;border-bottom:3px solid #a97883}
+.petFace[data-mood="难过"]:after{top:64px;border-bottom:0;border-top:3px solid #a97883;border-radius:60% 60% 0 0}
+.petFace[data-mood="满足"]:after{top:57px;width:17px;height:10px;border-bottom:3px solid #a97883}
+.nestSharedAlbumGrid,.nestSharedAlbumHomeGrid{min-width:0;overflow:hidden}
