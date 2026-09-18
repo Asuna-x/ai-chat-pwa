@@ -2398,3 +2398,18 @@ footer{position:relative!important;z-index:2!important;background:linear-gradien
   header{padding-left:max(10px,env(safe-area-inset-left))!important;padding-right:max(10px,env(safe-area-inset-right))!important;}
   .messages{padding-bottom:16px!important;}
 }
+
+/* Iris v4.140 — keep the original title/header geometry; only unify its color with the area above it. */
+html,body{background:var(--bg)!important;}
+header{height:68px!important;min-height:68px!important;padding-top:0!important;background:color-mix(in srgb,var(--card) 86%,transparent)!important;border-bottom-color:color-mix(in srgb,var(--line) 85%,transparent)!important;}
+footer{background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--card) 34%,transparent) 30%,color-mix(in srgb,var(--card) 54%,transparent))!important;}
+body.bg-chrome-transparent header{background:transparent!important;border-bottom-color:color-mix(in srgb,var(--ink) 16%,transparent)!important;}
+body.bg-chrome-transparent footer{background:transparent!important;}
+body.bg-chrome-transparent .composer{background:color-mix(in srgb,var(--card) 14%,transparent)!important;border-color:color-mix(in srgb,var(--line) 55%,transparent)!important;}
+/* The custom photo is the only background layer; 100% means the uploaded image itself. */
+.main:before{opacity:var(--bg-image-opacity,1)!important;}
+@media(max-width:799px){
+  header{height:72px!important;min-height:72px!important;padding-top:4px!important;}
+}
+/* Generated image avatar is explicitly the AI identity, matching ordinary assistant bubbles. */
+.generatedImageMessage .msgIdentity[data-role="ai"] .msgavatar{order:1!important;}
