@@ -726,12 +726,21 @@ async function autoAiReactToUserPost(postId){
  if(p.aiLiked)return;
  try{
   aiLikeMoment(postId);
+  const c=chat();
+  const recent=(c?.messages||[]).slice(-8).map(m=>`${m.role==='user'?(state.settings.myName||'你'):(state.settings.gName||'他')}：${typeof m.content==='string'?m.content:'[图片]'}`).join('\n');
   const ctx=momentContextForAI();
+  const persona=String(state.settings.systemPrompt||'').trim();
   const result=await window.GChatAPI.chat({baseUrl:base,apiKey:key,model,messages:[
-   {role:'system',content:`你是${state.settings.gName||'他'}本人。现在你刚刚看到对方发的一条朋友圈。你已经自然地点了赞。请写一句你真的会留下的短评论，直接对她说，不要旁观者口吻，不要说“用户”“你们”“这条朋友圈”，不要分析，像恋人之间随手留的一句话。只输出评论正文，20字以内。`},
-   {role:'user',content:`对方刚发的动态：${p.content||'[图片]'}\n朋友圈上下文：${ctx}`}
-  ],temperature:0.8});
-  const text=String(result.answer||'').trim().replace(/^['“”"]|['“”"]$/g,'').slice(0,80);
+   {role:'system',content:`你就是${state.settings.gName||'他'}本人。现在你刚看到${state.settings.myName||'你'}发的朋友圈，并且已经顺手点了赞。现在只考虑要不要在下面留一句话。
+回复必须像你平时和${state.settings.myName||'你'}说话时的口吻：亲近、自然、有具体反应，但不要故意撒娇、不要营业感、不要像点评照片。不要使用“用户”“对方”“她/他”“这条动态”“这条朋友圈”“朋友圈上下文”等词，不要解释，不要分析，不要总结，不要加引号。不要使用“不错”“挺好”“好看”“哈哈”“注意安全”这类万能套话，除非上下文真的需要。可以接住动态里具体的东西，或者只是很随意地说一句。只输出一句，最好10～25字；如果确实没什么可说的，可以只输出空字符串，不要硬凑评论。${persona?`
+他的设定：${persona.slice(0,1800)}`:''}`},
+   {role:'user',content:`刚发的内容：${p.content||'[图片]'}
+最近聊天：
+${recent||'暂无'}
+最近朋友圈情况：
+${ctx.slice(0,4000)}`}
+  ],temperature:0.75});
+  const text=String(result.answer||'').trim().replace(/^['“”"\s]+|['“”"]+$/g,'').replace(/^(回复|评论)：/,'').trim().slice(0,80);
   if(text)addMomentComment(postId,'ai',text);
   setAiPresence(text?'刚看完你的朋友圈':'刚看了你的朋友圈',120000);
  }catch(e){console.warn('auto moment reaction failed',e)}
@@ -1032,18 +1041,20 @@ async function send(){
   const ms=[];const systemParts=[];const nestActionTarget=nestChatWriteTarget(text);
   if(state.settings.systemPrompt)systemParts.push(state.settings.systemPrompt);systemParts.push(conversationStyleContext());systemParts.push(chatInterfaceContext(c));const mc=memoryContext();if(mc)systemParts.push(mc);const nc=nestContext();if(nc)systemParts.push(nc);systemParts.push(momentsToolSystem());systemParts.push(`重要的第一人称规则：你就是“${state.settings.gName||"他"}”本人，不是旁观者。回复时直接用“我、你、我们”描述关系和刚刚发生的事。绝对不要说“你们俩好甜”“你们很幸福”“用户刚刚……”这类旁观者式描述，除非用户明确要求你分析第三方。任何朋友圈、小窝互动都要像是你亲自做的。`);if(nestActionTarget)systemParts.push(nestToolSystem()+` 本轮用户明确要求执行“${nestActionTarget==='mood'?'他的今日心情':nestActionTarget==='note'?'今日小记':nestActionTarget==='notebook'?'我们的本子':'今天想对他说'}”写入动作。请先进入小窝，再调用对应写入工具；工具执行成功后，必须明确给用户一个自然的结果反馈，例如“好了，我已经写进去了。”；不要只调用工具后沉默，也不要复述工具调用过程。`);if(systemParts.length)ms.push({role:"system",content:systemParts.join("\n\n")});ms.push(...buildConversationContext(c));
   let tools=[];const ntAll=nestTools().filter(t=>state.settings.deleteChatBubbleEnabled!==false||!['delete_chat_bubble','delete_chat_bubbles'].includes(t.function?.name));if(state.settings.mcpNestEnabled!==false||explicitToolRequest(text))tools.push(...ntAll);const momentToolNames=['post_moment','like_moment','comment_moment','reply_moment_comment'];for(const mt of nestTools().filter(t=>momentToolNames.includes(t.function?.name)))if(!tools.some(t=>t.function?.name===mt.function?.name))tools.push(mt);if(state.settings.mcpEnabled===true&&state.settings.mcpServerUrl){try{const ext=await mcpListTools();tools.push(...ext)}catch(e){console.warn('MCP tool discovery failed',e)}}if(state.settings.imageGenEnabled===true&&state.settings.imageGenBase&&state.settings.imageGenKey&&state.settings.imageGenModel){const gtool=nestTools().find(x=>x.function?.name==="generate_image");if(gtool)tools.push(gtool)}tools=tools.filter((t,i,a)=>a.findIndex(x=>x.function?.name===t.function?.name)===i);if(!tools.length)tools=null;
-  let displayQueue=Promise.resolve();const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v||v==="[生成图片]")return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();await sleep(Math.min(1500,Math.max(80,Number(state.settings.replyDelay??360)+Math.min(90,v.length)*7)))})};const usageTotal={prompt:0,completion:0,total:0,requests:0};let rounds=0,fullAnswer="";
+  let displayQueue=Promise.resolve();const pushSentence=(sentence)=>{const v=String(sentence||"").trim();if(!v||v==="[生成图片]")return;displayQueue=displayQueue.then(async()=>{const ts=Date.now();bubble("assistant",v,true,ts,true);c.messages.push({role:"assistant",content:v,timestamp:ts});save();scroll();await sleep(Math.min(1500,Math.max(80,Number(state.settings.replyDelay??360)+Math.min(90,v.length)*7)))})};const usageTotal={prompt:0,completion:0,total:0,requests:0};let rounds=0,fullAnswer="";let toolActionFinished=false;
   let forcedNestStep=nestActionTarget?'enter_nest':null;const forcedTool=explicitToolRequest(text);
   while(rounds++<4){let answer="",pendingRound="";const onText=(part,all)=>{answer=all;pendingRound+=part;const parts=splitReply(pendingRound),ready=/[。！？!?；;\n]\s*$/.test(pendingRound),count=ready?parts.length:Math.max(0,parts.length-1);for(let j=0;j<count;j++)pushSentence(parts[j]);pendingRound=count?parts.slice(count).join(""):pendingRound};
-   let toolChoice=tools?"auto":undefined;
-   if(forcedNestStep&&tools)toolChoice={type:"function",function:{name:forcedNestStep}};else if(forcedTool&&tools?.some(t=>t.function?.name===forcedTool))toolChoice={type:"function",function:{name:forcedTool}};
-   const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools,tool_choice:toolChoice},onText);addUsageTotals(usageTotal,result.usage);
+   const activeTools=toolActionFinished&&!forcedNestStep?null:tools;
+   let toolChoice=activeTools?"auto":undefined;
+   if(forcedNestStep&&activeTools)toolChoice={type:"function",function:{name:forcedNestStep}};else if(!toolActionFinished&&forcedTool&&activeTools?.some(t=>t.function?.name===forcedTool))toolChoice={type:"function",function:{name:forcedTool}};
+   const result=await window.GChatAPI.chatStream({baseUrl:state.settings.apiBase,apiKey:state.settings.apiKey,model:state.settings.model,messages:ms,temperature:state.settings.temperature,signal:controller.signal,tools:activeTools,tool_choice:toolChoice},onText);addUsageTotals(usageTotal,result.usage);
    if(result.toolCalls?.length){const toolAnswer=String(result.answer||"").trim();const safeToolAnswer=toolAnswer==="[生成图片]"?null:(toolAnswer||null);ms.push({role:"assistant",content:safeToolAnswer,tool_calls:result.toolCalls});
-    let toolSpeechShown=false; let anyToolSuccess=false; let anyToolFailed=false;
+    let anyToolSuccess=false; let anyToolFailed=false;const seenToolCalls=new Set();
     for(const call of result.toolCalls){let args={};try{args=JSON.parse(call.function?.arguments||"{}")}catch{}let out;const callName=call.function?.name||'';
-      // 同一轮可能返回多个重复工具调用；过程话只显示一次，避免“我去点一下”刷屏。
-      if(!String(toolAnswer||"").trim()&&!toolSpeechShown){const speech=toolActionSpeech(callName,args);if(speech){const ts=Date.now();bubble("assistant",speech,true,ts,true);c.messages.push({role:"assistant",content:speech,timestamp:ts});save();scroll();toolSpeechShown=true;}}
-      showToolActionNotice(callName,args);try{if(callName==='delete_chat_bubble')out=executeDeleteChatBubble(args);else if(callName==='delete_chat_bubbles')out=executeDeleteChatBubbles(args);else if(['enter_nest','write_nest_mood','set_nest_ai_mood','write_nest_note','write_nest_to_user','write_nest_notebook','update_nest_notebook','delete_nest_notebook','read_nest','read_pet_status','interact_pet'].includes(callName))out=executeNestTool(callName,args);else if(callName==='post_moment'){out=executePostMoment(args);}else if(callName==='like_moment'){out=executeLikeMoment(args);}else if(callName==='comment_moment'){out=executeCommentMoment(args);}else if(callName==='reply_moment_comment'){out=executeReplyMomentComment(args);}
+      const dedupeKey=callName+"::"+JSON.stringify(args,Object.keys(args).sort());
+      if(seenToolCalls.has(dedupeKey)){const duplicateResult={success:true,tool:callName,duplicate:true};ms.push({role:"tool",tool_call_id:call.id,name:call.function?.name,content:JSON.stringify(duplicateResult)});continue;}
+      seenToolCalls.add(dedupeKey);
+      try{if(callName==='delete_chat_bubble')out=executeDeleteChatBubble(args);else if(callName==='delete_chat_bubbles')out=executeDeleteChatBubbles(args);else if(['enter_nest','write_nest_mood','set_nest_ai_mood','write_nest_note','write_nest_to_user','write_nest_notebook','update_nest_notebook','delete_nest_notebook','read_nest','read_pet_status','interact_pet'].includes(callName))out=executeNestTool(callName,args);else if(callName==='post_moment'){out=executePostMoment(args);}else if(callName==='like_moment'){out=executeLikeMoment(args);}else if(callName==='comment_moment'){out=executeCommentMoment(args);}else if(callName==='reply_moment_comment'){out=executeReplyMomentComment(args);}
      else if(callName==='generate_image'){const g=await generateImageWithConfig({baseUrl:state.settings.imageGenBase,apiKey:state.settings.imageGenKey,model:state.settings.imageGenModel,prompt:args.prompt,size:args.size,signal:controller.signal});out={success:true,tool:'generate_image',url:g.url,hasImage:!!(g.url||g.b64)};const src=g.url||(g.b64?'data:image/png;base64,'+g.b64:'');if(src){lastGeneratedImageForMoment=src;appendGeneratedImage(src,c)}}else out=await mcpCallTool(callName,args)}catch(e){out={success:false,error:e?.message||String(e)}}
       if(out?.success)anyToolSuccess=true; else anyToolFailed=true;
       // 所有 tool message 必须连续跟在 assistant.tool_calls 后面，中间不能插 system/user message。
@@ -1051,8 +1062,9 @@ async function send(){
       if(nestActionTarget&&callName==='enter_nest'&&out?.success){forcedNestStep=nestActionTarget==='mood'?'write_nest_mood':nestActionTarget==='note'?'write_nest_note':nestActionTarget==='notebook'?'write_nest_notebook':'write_nest_to_user';}
       if(nestActionTarget&&['write_nest_mood','write_nest_note','write_nest_to_user','write_nest_notebook','update_nest_notebook','delete_nest_notebook'].includes(callName)&&out?.success){forcedNestStep=null;}
     }
-    // tool 消息全部补齐后，再放下一条 system 指令，避免 API 把它误认为打断了 tool_calls。
-    ms.push({role:"system",content:anyToolFailed&&!anyToolSuccess?`刚才的事情没弄成。直接、自然地告诉${state.settings.myName||"你"}结果就好，需要的话说清楚下一步；不要重复过程，不要提内部工具机制。`:`动作已经完成。接下来如果前面已经有一句“我去……/等我……”之类的过程话，就不要再重复刚才做了什么，也不要把结果重新播报一遍。只在有必要时自然接一句，像平时聊天一样；可以提到结果带来的变化，但不要使用“操作成功”“已经执行”等客服式表达。如果是小家伙互动，就根据它现在的真实反应自然说一句，不要硬凑反馈。不要提工具、函数、API。`});
+    // 工具调用结束后，下一轮只负责正常聊天，不再让模型继续调用同一组工具。
+    ms.push({role:"system",content:anyToolFailed&&!anyToolSuccess?`刚才那件事没弄成。现在只用正常聊天的方式告诉${state.settings.myName||"你"}结果，简短、自然，不要提工具、函数、API，也不要重复过程。`:`刚才的动作已经完成。现在只像平时和${state.settings.myName||"你"}聊天一样自然接一句；不要说“我去……”“操作成功”“已经执行”等过程话或客服式表达，不要复述工具调用。比如“好，给你点上了。”、“嗯，我看到了。”、“好啦。”这类就够了，也可以只说一句很自然的话。`});
+    toolActionFinished=true;
     continue
    }
    if(forcedNestStep&&nestActionTarget){
