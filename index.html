@@ -81,7 +81,6 @@ if("serviceWorker"in navigator){
       <div class="settingsGroup settingsFormGroup">
         <label class="settingsField"><span>Temperature</span><input id="temperature" type="number" min="0" max="2" step=".1"></label>
         <label class="settingsField"><span>主动联系间隔</span><select id="proactiveInterval"><option value="0">关闭</option><option value="5">5 分钟</option><option value="10">10 分钟</option><option value="30">30 分钟</option><option value="60">1 小时</option><option value="120">2 小时</option><option value="180">3 小时</option></select><small style="display:block;padding:7px 2px 0;color:var(--muted);line-height:1.5">你一段时间没回来时，他可以主动来找你一次。这里只控制最短间隔，不会保证每次都会发。</small></label>
-        <label class="settingsField"><span>后台主动联系服务</span><input id="proactiveBackendUrl" placeholder="https://你的-worker.workers.dev"><small style="display:block;padding:7px 2px 0;color:var(--muted);line-height:1.5">填好后台服务地址后，即使 Iris 没打开，后台也会按上面的间隔生成消息；重新打开时会自动收进当前聊天。留空则继续使用本机模式。</small></label>
       </div>
     </section>
 
