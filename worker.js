@@ -1,4 +1,4 @@
-/* Iris v4.171 — Cloudflare Worker for server-side proactive contact.
+/* Iris v4.172 — Cloudflare Worker for server-side proactive contact.
    Required secrets/vars:
    AI_API_KEY = your AI provider key
    Optional vars: AI_BASE_URL (default https://api.deepseek.com), AI_MODEL (default deepseek-chat)
@@ -138,7 +138,7 @@ export default {
     try {
       if (request.method === "POST" && path === "/sync") return await sync(request, env);
       if (request.method === "GET" && path === "/pending") return await pending(request, env);
-      return json({ ok: true, service: "Iris proactive backend", version: "4.171" });
+      return json({ ok: true, service: "Iris proactive backend", version: "4.172" });
     } catch (e) {
       return json({ error: String(e?.message || e) }, 500);
     }
