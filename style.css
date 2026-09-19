@@ -3387,3 +3387,6 @@ dialog#moments.momentsDialog{overflow:hidden!important;}
 .nestPetActionsDetail button:active{transform:scale(.96)}
 @keyframes petRoomFloat{0%,100%{transform:translateY(1px)}50%{transform:translateY(-4px)}}
 @media(max-width:430px){.nestPetDetailScene{height:325px!important;min-height:325px!important}.nestPetBig{height:278px!important}.nestPetBig>.petIllustrationDetail{width:270px!important;height:270px!important}.nestPetFloatingHint{font-size:8px;bottom:9px;right:9px}.nestPetActionsDetail{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+
+/* Iris 4.182 voice controls */
+.settingsField output{float:right;color:var(--accent);font-size:11px;font-weight:700}.inlineActions{display:flex;gap:8px;padding:12px 14px;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}.voicePlayBtn{position:absolute;right:8px;top:8px;width:28px;height:28px;border:0;border-radius:50%;background:color-mix(in srgb,var(--soft) 82%,transparent);color:var(--muted);font-size:13px;display:grid;place-items:center;opacity:.78}.voicePlayBtn:active{transform:scale(.94)}.message.assistant .bubble{position:relative;padding-right:42px}.voicePlayBtn.speaking{color:var(--accent);opacity:1}
