@@ -474,6 +474,14 @@ function renderMemories(){
  const list=(state.memories||[]).slice().sort((a,b)=>(Number(b.importance||0)-Number(a.importance||0))||(Number(b.updatedAt||0)-Number(a.updatedAt||0)));
  if(list.length){const title=document.createElement('div');title.className='memorySubTitle';title.textContent='长期记忆';box.appendChild(title);list.slice(0,80).forEach(m=>{const row=document.createElement('div');row.className='memoryItem';const icon=document.createElement('div');icon.className='memoryItemIcon';icon.textContent=m.type==='preference'?'○':m.type==='relationship'?'♡':m.type==='plan'?'□':m.type==='episode'?'◆':'·';const wrap=document.createElement('div');wrap.className='memoryItemBody';const text=document.createElement('div');text.className='memoryText';text.textContent=m.text||'';const meta=document.createElement('small');meta.className='memoryMeta';meta.textContent=(m.source==='auto'?'Iris 自动整理':'手动添加')+' · 重要度 '+(m.importance||3);const del=document.createElement('button');del.type='button';del.className='memoryDelete';del.textContent='删除';del.onclick=()=>{state.memories=state.memories.filter(x=>x.id!==m.id);save();renderMemories()};wrap.append(text,meta);row.append(icon,wrap,del);box.appendChild(row)})}
 }
+function compactMemoryText(text){
+ const v=String(text||'').replace(/\s+/g,' ').replace(/^[-•·]+\s*/,'').trim();
+ if(v.length<=20)return v;
+ const cut=v.slice(0,20);
+ const punct=/[，。！？、；：,.!?;:]/g;
+ const last=[...cut.matchAll(punct)].map(m=>m.index+1).filter(i=>i>=8).pop();
+ return (last?cut.slice(0,last):cut).trim();
+}
 function isStableMemoryCandidate(text,type='fact'){
  const v=String(text||'').trim();
  if(!v||v.length<4||v.length>220)return false;
@@ -519,7 +527,7 @@ async function autoUpdateLongTermMemory(c){
 function memoryContext(){
  memoryNormalize();const p=state.memoryProfile,parts=[];
  if(p.core)parts.push('【关于我们】\n'+p.core);if(p.user)parts.push('【关于用户】\n'+p.user);if(p.relationship)parts.push('【关系与相处】\n'+p.relationship);if(p.current)parts.push('【最近状态】\n'+p.current);
- const relevant=(state.memories||[]).filter(m=>Number(m.importance||0)>=1.2).slice().sort((a,b)=>(Number(b.importance||0)-Number(a.importance||0))||(Number(b.updatedAt||0)-Number(a.updatedAt||0))).slice(0,18);if(relevant.length)parts.push('【补充长期记忆】\n'+relevant.map(m=>`- ${compactMemoryText(m.text)}`).join('\n'));
+ const relevant=(state.memories||[]).slice().sort((a,b)=>(Number(b.importance||0)-Number(a.importance||0))||(Number(b.updatedAt||0)-Number(a.updatedAt||0))).slice(0,18);if(relevant.length)parts.push('【补充长期记忆】\n'+relevant.map(m=>`- ${compactMemoryText(m.text)}`).join('\n'));
  const eps=(state.memoryEpisodes||[]).slice(0,6);if(eps.length)parts.push('【重要共同经历】\n'+eps.map(e=>`- ${e.title}：${e.summary}`).join('\n'));
  return parts.length?'以下是你对这段长期关系和用户的整理认知。优先自然运用它；与用户当前明确表达冲突时，以当前对话为准，不要主动复述记忆机制。\n'+parts.join('\n\n'):'';
 }
