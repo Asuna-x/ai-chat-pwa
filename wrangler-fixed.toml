@@ -1,0 +1,14 @@
+name = "iris-proactive"
+main = "worker.js"
+compatibility_date = "2026-09-17"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "IRIS_KV"
+id = "993af29358a34e7687437db57f0ebc7a"
+
+[vars]
+AI_BASE_URL = "https://api.deepseek.com"
+AI_MODEL = "deepseek-chat"
