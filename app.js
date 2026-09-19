@@ -1,4 +1,4 @@
-/* Iris v4.170 — natural, non-repetitive tool feedback. */
+/* Iris v4.178 — continue moment replies as real context-aware conversation. */
 /* Iris v4.159 — restore chat bubble styling and keep Moments reply text white. */
 /* Iris v4.162 — visual shared album preview and interactive little companion in the nest. */
 /* Iris v4.169 — let the AI see and naturally interact with the shared little companion. */
@@ -677,15 +677,67 @@ async function autoAiReplyToUserComment(postId,commentId,userText){
   try{
     const base=String(state.settings.apiBase||"").trim(),key=String(state.settings.apiKey||"").trim(),model=String(state.settings.model||"").trim();
     if(!base||!key||!model)return;
-    const p=momentsData.posts.find(x=>x.id===postId);if(!p)return;
-    const prompt=`你在你们的朋友圈里。用户刚刚在一条动态下留言：${userText}\n动态正文：${p.content||"[图片]"}\n请直接写一条自然、像你本人会回复她的短回复。只输出回复正文，不要解释，不要加引号。`;
-    let answer="";
-    const result=await window.GChatAPI.chatStream({baseUrl:base,apiKey:key,model,messages:[{role:"system",content:`你是${state.settings.gName||"他"}。这是朋友圈评论区，回复要自然、简短、像真实聊天。`},{role:"user",content:prompt}],temperature:state.settings.temperature},(part,all)=>{answer=String(all||part||"")});
-    answer=String(result?.answer||answer||"").trim().replace(/^['“”"\s]+|['“”"]+$/g,"").slice(0,300);
+    normalizeMoments();const p=momentsData.posts.find(x=>x.id===postId);if(!p)return;
+    const target=(p.comments||[]).find(c=>c.id===commentId);if(!target)return;
+
+    // 这里把评论区当成一条真正的“小聊天”，重点只放在当前这条评论串，
+    // 不再让整条朋友圈/其他评论把“上一句”冲淡。
+    const parentLine=`${momentsAuthor(target)}：${String(target.content||"").slice(0,220)}`;
+    const replyLines=(target.replies||[]).slice(-12).map(r=>`${momentsAuthor(r)}：${String(r.content||"").slice(0,220)}`);
+    const conversationLines=[parentLine,...replyLines];
+    const latestUser=String(userText||"").trim().slice(0,260);
+    const previousLine=replyLines.length>=2?replyLines[replyLines.length-2]:parentLine;
+    const recent=(chat()?.messages||[]).slice(-8).map(m=>{
+      const who=m.role==='user'?(state.settings.myName||'你'):(state.settings.gName||'他');
+      const body=typeof m.content==='string'?m.content:(Array.isArray(m.content)?'[图片/附件]':'');
+      return `${who}：${String(body||'').slice(0,220)}`;
+    }).join("\n");
+    const persona=String(state.settings.systemPrompt||'').trim();
+
+    const prompt=`你现在正在和${state.settings.myName||'你'}在朋友圈评论区继续聊天。
+这不是一次新的评论生成，也不是让你评价朋友圈。你要做的事情只有一个：接住对方刚刚发来的最后一句话，然后像你平时聊天一样自然地回下去。
+
+【当前这条评论串，按发生顺序】
+${conversationLines.join("\n")}
+
+【上一句】
+${previousLine}
+
+【对方刚刚发来的最后一句】
+${state.settings.myName||'你'}：${latestUser}
+
+【聊天里的辅助参考】
+${recent||'暂无'}
+
+【你的设定】
+${persona||'没有额外设定。'}
+
+非常重要：把【对方刚刚发来的最后一句】当成你现在正在面对的一句话，不要重新回答整条朋友圈。
+如果她是在接你上一句话，就继续那个话题；如果她在逗你，就接着逗；如果她在追问，就回答她；如果她只是说了一句带情绪的话，就回应那个情绪。
+不要假装没听懂，不要突然换话题，不要重新介绍自己，不要把聊天变成“评论朋友圈”。
+不要使用“用户、对方、这条动态、这条评论、朋友圈、评论区”等旁观者词，不要解释自己正在回复。
+不要使用“收到、好的、明白了、说什么呀、怎么啦、嘿嘿、哈哈”等空泛的万能接话，除非前面的具体语境真的自然需要它。
+不要复述对方刚才的话，也不要为了显得自然硬塞口头禅。
+只输出你真正会发出去的一句话，不要引号、前缀或换行。长度按真实聊天来，通常8～40字，不必刻意凑字数。`;
+
+    const call=async(extra="")=>{
+      let answer="";
+      const result=await window.GChatAPI.chatStream({baseUrl:base,apiKey:key,model,messages:[
+        {role:"system",content:`你就是${state.settings.gName||'他'}本人。你正在和${state.settings.myName||'你'}继续一段已经开始的聊天。评论区只是聊天发生的地方，不是任务说明。你必须接住上一句的具体内容和情绪。`},
+        {role:"user",content:prompt+(extra?`\n\n补充要求：${extra}`:"")}
+      ],temperature:0.82},(part,all)=>{answer=String(all||part||"")});
+      return String(result?.answer||answer||"").trim().replace(/^['“”"\s]+|['“”"]+$/g,"").replace(/^(回复|评论)\s*[:：]\s*/,'').replace(/\s+/g,' ').slice(0,300);
+    };
+
+    let answer=await call();
+    // 对明显的“没接住上下文”的空话自动重试一次，不把这种坏结果写进评论区。
+    const generic=/^(嘿嘿|哈哈|哈哈哈|说什么呀|说什么呢|怎么啦|怎么了|嗯嗯|哦哦|好的|收到|明白了)[！!。\s]*$/i;
+    if(!answer||generic.test(answer)){
+      answer=await call('刚才的回答没有接住上下文。请直接回应对方最后一句里具体说到的事情，像真实聊天一样继续，不要用空泛短句。');
+    }
     if(answer){addMomentReply(postId,commentId,"ai",answer);renderMomentNotificationBadge();}
   }catch(e){console.warn("auto moment reply failed",e)}
 }
-
 function momentContextForAI(){
   normalizeMoments();
   return momentsData.posts.slice().sort((a,b)=>b.createdAt-a.createdAt).slice(0,10).map(p=>{
@@ -738,7 +790,9 @@ async function autoAiReactToUserPost(postId){
 最近聊天：
 ${recent||'暂无'}
 最近朋友圈情况：
-${ctx.slice(0,4000)}`}
+${ctx.slice(0,4000)}
+
+如果要评论，请像你们平时私下聊天一样接一句具体的话。不要写成“朋友圈点评”，不要用“不错、挺好、好看、哈哈、注意安全”之类万能套话，也不要为了凑评论硬说。` }
   ],temperature:0.75});
   const text=String(result.answer||'').trim().replace(/^['“”"\s]+|['“”"]+$/g,'').replace(/^(回复|评论)：/,'').trim().slice(0,80);
   if(text)addMomentComment(postId,'ai',text);
