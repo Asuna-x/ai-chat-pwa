@@ -86,17 +86,30 @@ if("serviceWorker"in navigator){
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="voicePage">
-      <div class="subIntro"><b>语音</b><small>让 Iris 用你选择的声音说话。声音由当前设备/浏览器提供。</small></div>
+      <div class="subIntro"><b>语音</b><small>可直接接 ElevenLabs。API Key 只保存在这台设备的本地设置里，不需要后端。</small></div>
       <div class="settingsSectionTitle">朗读</div>
       <div class="settingsGroup settingsFormGroup">
-        <label class="settingsSwitch"><span><b>自动朗读 Iris 的回复</b><small>每次回复完成后尝试自动播放。iPhone Safari 可能需要先手动试听一次。</small></span><input id="voiceAutoRead" type="checkbox"><i></i></label>
-        <label class="settingsField"><span>声音</span><select id="voiceSelect"><option value="">系统默认</option></select></label>
-        <label class="settingsField"><span>语速 <output id="voiceRateOut">1.0×</output></span><input id="voiceRate" type="range" min="0.5" max="2" step="0.05" value="1"></label>
-        <label class="settingsField"><span>音调 <output id="voicePitchOut">1.0</output></span><input id="voicePitch" type="range" min="0.5" max="2" step="0.05" value="1"></label>
-        <label class="settingsField"><span>音量 <output id="voiceVolumeOut">100%</output></span><input id="voiceVolume" type="range" min="0" max="1" step="0.05" value="1"></label>
+        <label class="settingsSwitch"><span><b>自动朗读 Iris 的回复</b><small>每次回复完成后自动生成并播放语音。</small></span><input id="voiceAutoRead" type="checkbox"><i></i></label>
+        <label class="settingsField"><span>语音服务</span><select id="voiceProvider"><option value="system">iPhone 系统语音</option><option value="elevenlabs">ElevenLabs</option></select></label>
+        <div id="elevenVoiceFields">
+          <label class="settingsField"><span>ElevenLabs API Key</span><input id="elevenApiKey" type="password" placeholder="xi-..." autocomplete="off"></label>
+          <label class="settingsField"><span>Voice ID</span><input id="elevenVoiceId" type="text" placeholder="例如 JBFqnCBsd6RMkjVDRZzb" autocomplete="off"></label>
+          <label class="settingsField"><span>模型</span><select id="elevenModel"><option value="eleven_flash_v2_5">Eleven Flash v2.5（更快）</option><option value="eleven_multilingual_v2">Eleven Multilingual v2（中文更稳）</option><option value="eleven_v3">Eleven v3（表现力更强）</option></select></label>
+          <label class="settingsField"><span>稳定性 <output id="elevenStabilityOut">50%</output></span><input id="elevenStability" type="range" min="0" max="1" step="0.05" value="0.5"></label>
+          <label class="settingsField"><span>相似度 <output id="elevenSimilarityOut">75%</output></span><input id="elevenSimilarity" type="range" min="0" max="1" step="0.05" value="0.75"></label>
+          <label class="settingsField"><span>表现力 <output id="elevenStyleOut">0%</output></span><input id="elevenStyle" type="range" min="0" max="1" step="0.05" value="0"></label>
+          <label class="settingsField"><span>语速 <output id="elevenSpeedOut">1.00×</output></span><input id="elevenSpeed" type="range" min="0.7" max="1.2" step="0.05" value="1"></label>
+          <label class="settingsSwitch"><span><b>Speaker Boost</b><small>稍微增强声音相似度，但会增加一点延迟。</small></span><input id="elevenSpeakerBoost" type="checkbox" checked><i></i></label>
+          <div class="inlineActions"><button class="smallAction" id="elevenLoadVoices">读取我的声音</button></div>
+          <label class="settingsField"><span>声音列表</span><select id="elevenVoiceList"><option value="">先点击“读取我的声音”</option></select></label>
+        </div>
+        <label class="settingsField"><span>系统声音（备用）</span><select id="voiceSelect"><option value="">系统默认</option></select></label>
+        <label class="settingsField"><span>系统语速 <output id="voiceRateOut">1.0×</output></span><input id="voiceRate" type="range" min="0.5" max="2" step="0.05" value="1"></label>
+        <label class="settingsField"><span>系统音调 <output id="voicePitchOut">1.0</output></span><input id="voicePitch" type="range" min="0.5" max="2" step="0.05" value="1"></label>
+        <label class="settingsField"><span>系统音量 <output id="voiceVolumeOut">100%</output></span><input id="voiceVolume" type="range" min="0" max="1" step="0.05" value="1"></label>
         <div class="inlineActions"><button class="smallAction" id="voiceTest">试听</button><button class="smallAction" id="voiceStop">停止</button></div>
       </div>
-      <p class="settingsNote">如果系统没有提供你想要的音色，列表里不会出现。后面也可以再接第三方 TTS，让声音选择更多。</p>
+      <p class="settingsNote">ElevenLabs 直连模式会把 API Key 放在浏览器端，不适合公开发布到 GitHub。建议使用仅有 Text-to-Speech 权限并设置额度限制的 Key。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="visionPage">
@@ -393,4 +406,4 @@ if("serviceWorker"in navigator){
   </form>
 </dialog>
 <dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="speakBubble">语音</button><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
-<script src="./api.js?v=4.151"></script><script src="./app.js?v=4.184"></script></body></html>
+<script src="./api.js?v=4.151"></script><script src="./app.js?v=4.185"></script></body></html>
