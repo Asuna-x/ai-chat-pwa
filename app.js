@@ -979,7 +979,7 @@ function toolActionSpeech(name,args={}){
 function nestToolSystem(){return `小窝工具规则：这是客户端提供的真实工具，不是角色扮演。只有用户明确邀请你进入小窝或要求你写入时，才调用写入类工具。小家伙例外：你可以看见它的当前状态，并在聊天语境自然合适时用 interact_pet 陪它一下；如果用户明确让你和它互动就直接做。不要为了展示功能而连续调用。需要写入时直接调用对应工具，不要只说“我会去写”或“我无法进入”。工具执行成功后，再自然回复用户。不要向用户解释工具、API、函数或内部实现。`}
 function addUsageTotals(total,usage){const u=usage||{},up=Number(u.prompt_tokens||u.input_tokens||0),uc=Number(u.completion_tokens||u.output_tokens||0),ut=Number(u.total_tokens||0)||up+uc;total.prompt+=up;total.completion+=uc;total.total+=ut;total.requests+=1;return total}
 
-/* Iris v4.186 — vision bridge: GLM-4.6V-Flash -> GLM-4V-Flash -> GLM-4.1V-Thinking-Flash on overload. */
+/* Iris v4.182 — vision bridge: GLM-4.6V-Flash -> GLM-4V-Flash -> GLM-4.1V-Thinking-Flash on overload. */
 const IRIS_VISION_COOLDOWN_MS=90000;
 const irisVisionCooldowns=new Map();
 function visionModelIsZhipu(base){try{return new URL(base).hostname.toLowerCase()==='open.bigmodel.cn'}catch{return String(base||'').replace(/^https?:\/\//i,'').split('/')[0].toLowerCase()==='open.bigmodel.cn'}}
@@ -995,7 +995,7 @@ function markVisionCooling(model){if(model)irisVisionCooldowns.set(String(model)
 async function sendVisionMessage(c,text,attachments){
  const visionBase=String(state.settings.visionBase||state.settings.apiBase||'').trim(),visionKey=String(state.settings.visionKey||state.settings.apiKey||'').trim(),visionModel=String(state.settings.visionModel||state.settings.model||'').trim();
  const images=(attachments||[]).filter(a=>a&&a.kind==='image'&&typeof a.data==='string'&&a.data.startsWith('data:image/'));
- const fail=msg=>{const detail=String(msg||'未知错误');console.error('Iris v4.186 vision',detail);showErr('图片发送失败：'+detail);c.messages.push({role:'assistant',content:'图片发送失败：\n'+detail,timestamp:Date.now()});save();render()};
+ const fail=msg=>{const detail=String(msg||'未知错误');console.error('Iris v4.182 vision',detail);showErr('图片发送失败：'+detail);c.messages.push({role:'assistant',content:'图片发送失败：\n'+detail,timestamp:Date.now()});save();render()};
  if(!visionBase||!visionKey||!visionModel){fail('视觉配置不完整。请检查 Vision Base URL、API Key 和视觉模型。');return false}
  if(!images.length){fail('图片没有成功读取。请重新选择照片。');return false}
  showErr('图片已读取，正在识别…');const controller=new AbortController();state._abort=controller;state.busy=true;const btn=$('#send');if(btn){btn.disabled=false;btn.classList.add('loading');btn.textContent='…';btn.title='发送中'}updateTyping();const timeout=setTimeout(()=>controller.abort(),90000);
@@ -1087,7 +1087,7 @@ async function send(){
    save();render();
    const ok=await sendVisionMessage(c,text,attachments);
    if(ok){i.value="";state.attachments=[];renderAttachments();resize();save();render()}
-  }catch(e){console.error("Iris v4.186 image send",e);showErr("图片发送流程出错："+(e?.message||String(e)))}
+  }catch(e){console.error("Iris v4.182 image send",e);showErr("图片发送流程出错："+(e?.message||String(e)))}
   return;
  }
  /* Below this point is the existing text-only send path. */
@@ -1164,40 +1164,10 @@ function appendGeneratedImage(src,c,persist=true,messageIndex=null){const wrap=d
 function renderAttachments(){const box=$("#attachmentPreview");if(!box)return;const arr=state.attachments||[];box.classList.toggle("hidden",!arr.length);box.innerHTML=arr.map((a,i)=>a.kind==="image"?`<div class="attachChip imageChip"><img src="${a.data}"><span>${escapeHtml(a.name)}</span><button data-remove-attach="${i}">×</button></div>`:`<div class="attachChip"><span>文件 · ${escapeHtml(a.name)}</span><button data-remove-attach="${i}">×</button></div>`).join("");box.querySelectorAll("[data-remove-attach]").forEach(b=>b.onclick=()=>{state.attachments.splice(Number(b.dataset.removeAttach),1);renderAttachments()})}
 async function handleFiles(files){const list=Array.from(files||[]);for(const f of list){try{if(f.type.startsWith("image/")){const data=await imageToData(f,768,.6);if(!data)throw new Error("图片为空");const imageId=imageRefForData(data);state.attachments.push({kind:"image",name:f.name,data,imageId})}else if(/^(text\/|application\/(json|xml)|.*\/(javascript|css))/.test(f.type)||/\.(txt|md|json|csv|html|css|js|py|log|xml)$/i.test(f.name)){const text=await f.text();state.attachments.push({kind:"text",name:f.name,text:text.slice(0,30000)})}else{const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result||""));r.onerror=rej;r.readAsDataURL(f)});state.attachments.push({kind:"file",name:f.name,data})}}catch(e){console.error("Iris attachment read failed",e);showErr("读取图片失败："+f.name+"。如果是 HEIC/HEIF，请尝试在系统照片里选择兼容格式。")}}renderAttachments()}
 let irisSpeechVoices=[];
-let elevenAudio=null;
-let elevenObjectUrl="";
-let elevenVoices=[];
-let elevenPendingText="";
-const IRIS_SILENT_WAV="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
-function getElevenAudio(){
-  if(elevenAudio)return elevenAudio;
-  elevenAudio=document.createElement("audio");
-  elevenAudio.preload="auto";
-  elevenAudio.playsInline=true;
-  elevenAudio.setAttribute("playsinline","");
-  elevenAudio.addEventListener("ended",()=>document.querySelectorAll('.voicePlayBtn.speaking').forEach(b=>b.classList.remove('speaking')));
-  elevenAudio.addEventListener("error",()=>document.querySelectorAll('.voicePlayBtn.speaking').forEach(b=>b.classList.remove('speaking')));
-  document.body.appendChild(elevenAudio);
-  return elevenAudio;
-}
-async function unlockElevenAudio(){
-  const a=getElevenAudio();
-  try{
-    a.pause();
-    a.src=IRIS_SILENT_WAV;
-    a.volume=0;
-    a.currentTime=0;
-    await a.play();
-    a.pause();
-    a.currentTime=0;
-    a.volume=Math.max(0,Math.min(1,Number(state.settings.elevenVolume??1)));
-    return true;
-  }catch(e){console.warn("Iris ElevenLabs audio unlock failed",e);return false}
-}
 function refreshSpeechVoices(){
   if(!('speechSynthesis' in window))return;
   irisSpeechVoices=window.speechSynthesis.getVoices()||[];
-  const sel=document.querySelector('#systemVoiceSelect')||document.querySelector('#voiceSelect');if(!sel)return;
+  const sel=document.querySelector('#voiceSelect');if(!sel)return;
   const current=state.settings.voiceName||'';
   sel.innerHTML='<option value="">系统默认</option>';
   irisSpeechVoices.forEach((v,i)=>{const o=document.createElement('option');o.value=v.name;o.textContent=`${v.name}${v.lang?` · ${v.lang}`:''}`;o.dataset.voiceIndex=String(i);sel.appendChild(o)});
@@ -1211,109 +1181,35 @@ function getSpeechVoice(){
   const zh=irisSpeechVoices.find(v=>/^zh(?:-|_)/i.test(v.lang||''));
   return zh||irisSpeechVoices[0]||null;
 }
-function stopIrisSpeech(){
-  if('speechSynthesis' in window){try{window.speechSynthesis.cancel();}catch{}}
-  if(elevenAudio){try{elevenAudio.pause();}catch{} }
-  document.querySelectorAll('.voicePlayBtn.speaking').forEach(b=>b.classList.remove('speaking'));
-}
-function speakSystemIris(text,button=null){
+function stopIrisSpeech(){if('speechSynthesis' in window){try{window.speechSynthesis.cancel();}catch{}}document.querySelectorAll('.voicePlayBtn.speaking').forEach(b=>b.classList.remove('speaking'));}
+function speakIris(text,button=null){
   const value=String(text||'').replace(/\s+/g,' ').trim();
-  if(!value)return false;
-  if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){showErr('当前设备没有可用的系统朗读。');return false;}
+  if(!value||!('speechSynthesis' in window)){showErr('当前设备没有可用的系统朗读功能。');return false;}
   const synth=window.speechSynthesis;
-  try{
-    synth.cancel();
-    const voices=synth.getVoices()||[];if(voices.length)irisSpeechVoices=voices;
-    const u=new SpeechSynthesisUtterance(value),v=getSpeechVoice();
-    if(v)u.voice=v;u.lang=(v&&v.lang)||'zh-TW';
-    u.rate=Math.max(.5,Math.min(2,Number(state.settings.voiceRate??1)));
-    u.pitch=Math.max(.5,Math.min(2,Number(state.settings.voicePitch??1)));
-    u.volume=Math.max(0,Math.min(1,Number(state.settings.voiceVolume??1)));
-    if(button)button.classList.add('speaking');
-    const clear=()=>button?.classList.remove('speaking');u.onend=clear;u.oncancel=clear;
-    u.onerror=e=>{clear();console.warn('Iris system speech error',e);};
-    synth.speak(u);try{synth.resume();}catch{};return true;
-  }catch(e){button?.classList.remove('speaking');console.warn('Iris system speech start failed',e);return false;}
-}
-async function loadElevenVoices(showError=true){
-  const key=String(state.settings.elevenApiKey||'').trim();
-  if(!key){if(showError)showErr('请先填写 ElevenLabs API Key。');return false;}
-  try{
-    const r=await fetch('https://api.elevenlabs.io/v1/voices',{headers:{'xi-api-key':key,'Accept':'application/json'}});
-    const raw=await r.text();if(!r.ok)throw new Error(`HTTP ${r.status}: ${raw.slice(0,500)}`);
-    const data=JSON.parse(raw);elevenVoices=Array.isArray(data.voices)?data.voices:[];
-    const sel=$('#elevenVoiceSelect');if(sel){
-      const current=state.settings.elevenVoiceId||'';
-      sel.innerHTML='<option value="">请选择 ElevenLabs 声音</option>'+elevenVoices.map(v=>`<option value="${escapeHtml(v.voice_id)}">${escapeHtml(v.name||v.voice_id)}</option>`).join('');
-      if(current)sel.value=current;
-    }
-    if($('#elevenVoiceStatus'))$('#elevenVoiceStatus').textContent=`已加载 ${elevenVoices.length} 个声音`;
-    return true;
-  }catch(e){if(showError)showErr('ElevenLabs 声音读取失败：'+(e?.message||String(e)));return false;}
-}
-async function speakElevenIris(text,button=null){
-  const value=String(text||'').replace(/\s+/g,' ').trim();
-  const key=String(state.settings.elevenApiKey||'').trim(),voiceId=String(state.settings.elevenVoiceId||'').trim();
-  if(!value||!key||!voiceId)return false;
-  const a=getElevenAudio();
-  try{
-    if(button)button.classList.add('speaking');
-    const model=String(state.settings.elevenModel||'eleven_multilingual_v2');
-    const body={text:value,model_id:model,voice_settings:{stability:Number(state.settings.elevenStability??0.5),similarity_boost:Number(state.settings.elevenSimilarity??0.75),style:Number(state.settings.elevenStyle??0),use_speaker_boost:true}};
-    const speed=Math.max(.7,Math.min(1.2,Number(state.settings.elevenSpeed??1)));
-    const url=`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`;
-    const r=await fetch(url,{method:'POST',headers:{'xi-api-key':key,'Content-Type':'application/json','Accept':'audio/mpeg'},body:JSON.stringify(body)});
-    if(!r.ok){const raw=await r.text();throw new Error(`HTTP ${r.status}: ${raw.slice(0,700)}`)}
-    const blob=await r.blob();
-    if(elevenObjectUrl)URL.revokeObjectURL(elevenObjectUrl);
-    elevenObjectUrl=URL.createObjectURL(blob);
-    a.pause();a.src=elevenObjectUrl;a.load();a.playbackRate=speed;a.volume=Math.max(0,Math.min(1,Number(state.settings.elevenVolume??1)));
-    await a.play();
-    return true;
-  }catch(e){
-    button?.classList.remove('speaking');
-    if(e?.name==='NotAllowedError'){
-      elevenPendingText=value;
-      console.warn('Iris ElevenLabs autoplay blocked',e);
-      if(state.settings.voiceAutoRead===true) return false;
-    }
-    console.error('Iris ElevenLabs TTS failed',e);
-    if(state.settings.voiceAutoRead!==true)showErr('ElevenLabs 播放失败：'+(e?.message||String(e)));
-    return false;
-  }
-}
-async function speakIris(text,button=null){
-  const engine=String(state.settings.voiceEngine||'eleven');
-  if(engine==='eleven'&&state.settings.elevenApiKey&&state.settings.elevenVoiceId){
-    const ok=await speakElevenIris(text,button);if(ok)return true;
-    if(state.settings.voiceAutoRead===true)return false;
-  }
-  return speakSystemIris(text,button);
+  try{synth.cancel();synth.resume?.();}catch{}
+  const u=new SpeechSynthesisUtterance(value);
+  const v=getSpeechVoice();
+  if(v)u.voice=v;
+  u.lang=(v&&v.lang)||'zh-TW';
+  u.rate=Math.max(.5,Math.min(2,Number(state.settings.voiceRate??1)));
+  u.pitch=Math.max(.5,Math.min(2,Number(state.settings.voicePitch??1)));
+  u.volume=Math.max(0,Math.min(1,Number(state.settings.voiceVolume??1)));
+  if(button)button.classList.add('speaking');
+  const clear=()=>button?.classList.remove('speaking');
+  u.onend=clear;u.onerror=e=>{clear();console.warn('Iris speech error',e);};
+  try{synth.speak(u);return true;}catch(e){clear();showErr('语音播放失败，请先在系统设置中确认已启用语音。');return false;}
 }
 function speakSelectedBubble(){
   const s=state.selectedBubble;if(!s?.el)return;
-  const row=s.row;if(!row?.classList.contains('assistant')){showErr('只有他的消息可以播放语音。');return}
-  const text=s.el.dataset.text||s.el.textContent||'';speakIris(text);closeBubbleAction();
+  const row=s.row;
+  if(row?.classList.contains('assistant')){speakIris(s.el.dataset.text||s.el.textContent||'');closeBubbleAction();return;}
+  showErr('只有他的消息可以播放语音。');
 }
 function maybeAutoSpeak(text){if(state.settings.voiceAutoRead!==true)return;speakIris(text)}
 function fillVoiceSettings(){
-  state.settings.voiceAutoRead??=false;state.settings.voiceEngine??='eleven';state.settings.elevenApiKey??='';state.settings.elevenVoiceId??='';state.settings.elevenModel??='eleven_multilingual_v2';state.settings.elevenStability??=.5;state.settings.elevenSimilarity??=.75;state.settings.elevenStyle??=0;state.settings.elevenSpeed??=1;state.settings.elevenVolume??=1;state.settings.voiceName??='';state.settings.voiceRate??=1;state.settings.voicePitch??=1;state.settings.voiceVolume??=1;
-  if($('#voiceAutoRead'))$('#voiceAutoRead').checked=state.settings.voiceAutoRead===true;
-  if($('#voiceEngine'))$('#voiceEngine').value=state.settings.voiceEngine;
-  if($('#elevenApiKey'))$('#elevenApiKey').value=state.settings.elevenApiKey;
-  if($('#elevenVoiceSelect'))$('#elevenVoiceSelect').value=state.settings.elevenVoiceId||'';
-  if($('#elevenModel'))$('#elevenModel').value=state.settings.elevenModel;
-  if($('#elevenStability')){$('#elevenStability').value=state.settings.elevenStability;$('#elevenStabilityOut').textContent=Number(state.settings.elevenStability).toFixed(2)}
-  if($('#elevenSimilarity')){$('#elevenSimilarity').value=state.settings.elevenSimilarity;$('#elevenSimilarityOut').textContent=Number(state.settings.elevenSimilarity).toFixed(2)}
-  if($('#elevenStyle')){$('#elevenStyle').value=state.settings.elevenStyle;$('#elevenStyleOut').textContent=Number(state.settings.elevenStyle).toFixed(2)}
-  if($('#elevenSpeed')){$('#elevenSpeed').value=state.settings.elevenSpeed;$('#elevenSpeedOut').textContent=Number(state.settings.elevenSpeed).toFixed(2)+'×'}
-  if($('#elevenVolume')){$('#elevenVolume').value=state.settings.elevenVolume;$('#elevenVolumeOut').textContent=Math.round(Number(state.settings.elevenVolume)*100)+'%'}
-  refreshSpeechVoices();
-  if($('#voiceRate'))$('#voiceRate').value=state.settings.voiceRate;if($('#voiceRateOut'))$('#voiceRateOut').textContent=Number(state.settings.voiceRate).toFixed(2)+'×';
-  if($('#voicePitch'))$('#voicePitch').value=state.settings.voicePitch;if($('#voicePitchOut'))$('#voicePitchOut').textContent=Number(state.settings.voicePitch).toFixed(2);
-  if($('#voiceVolume'))$('#voiceVolume').value=state.settings.voiceVolume;if($('#voiceVolumeOut'))$('#voiceVolumeOut').textContent=Math.round(Number(state.settings.voiceVolume)*100)+'%';
-  if($('#voiceSummary'))$('#voiceSummary').textContent=state.settings.voiceAutoRead?'自动朗读':'手动播放';
-  if(state.settings.elevenApiKey)loadElevenVoices(false);
+  state.settings.voiceAutoRead??=false;state.settings.voiceName??='';state.settings.voiceRate??=1;state.settings.voicePitch??=1;state.settings.voiceVolume??=1;
+  if(!('speechSynthesis' in window)){if($('#voiceSummary'))$('#voiceSummary').textContent='设备不支持';return}
+  refreshSpeechVoices();if($('#voiceAutoRead'))$('#voiceAutoRead').checked=state.settings.voiceAutoRead===true;if($('#voiceRate'))$('#voiceRate').value=state.settings.voiceRate;if($('#voiceRateOut'))$('#voiceRateOut').textContent=Number(state.settings.voiceRate).toFixed(2)+'×';if($('#voicePitch'))$('#voicePitch').value=state.settings.voicePitch;if($('#voicePitchOut'))$('#voicePitchOut').textContent=Number(state.settings.voicePitch).toFixed(2);if($('#voiceVolume'))$('#voiceVolume').value=state.settings.voiceVolume;if($('#voiceVolumeOut'))$('#voiceVolumeOut').textContent=Math.round(Number(state.settings.voiceVolume)*100)+'%';if($('#voiceSummary'))$('#voiceSummary').textContent=state.settings.voiceAutoRead?'自动朗读':'手动播放';
 }
 function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showErr("当前 Safari 不支持语音识别，请尝试系统听写或其他浏览器。");return}if(state.recognition){state.recognition.stop();state.recognition=null;$("#mic").classList.remove("active");return}const r=new SR();r.lang="zh-TW";r.continuous=false;r.interimResults=true;state.recognition=r;$("#mic").classList.add("active");r.onresult=e=>{$("#input").value=Array.from(e.results).map(x=>x[0].transcript).join("");resize()};r.onerror=e=>{showErr("语音识别失败："+(e.error||"未知错误"));$("#mic").classList.remove("active");state.recognition=null};r.onend=()=>{$("#mic").classList.remove("active");state.recognition=null}}
 $("#openMoments").onclick=openMoments;$("#momentsClose").onclick=closeMoments;$("#momentsNotificationsOpen").onclick=openMomentNotifications;$("#momentNotificationsClose").onclick=()=>$("#momentNotificationsDialog")?.close();$("#momentNotificationsList").onclick=e=>{const b=e.target.closest("[data-notification-post]");if(!b)return;$("#momentNotificationsDialog")?.close();const id=b.dataset.notificationPost;renderMoments();setTimeout(()=>document.querySelector(`[data-moment-id="${CSS.escape(id)}"]`)?.scrollIntoView({behavior:"smooth",block:"center"}),80)};renderMomentNotificationBadge();$("#momentsComposeOpen").onclick=()=>{$("#momentsUserText").value="";$("#momentComposeImagePreview").innerHTML="";$("#momentComposeImageFile").value="";$("#momentComposerDialog")?.showModal()};$("#momentComposerClose").onclick=()=>$("#momentComposerDialog")?.close();$("#momentsCover").onclick=e=>{if(e.target.closest("#momentsAvatar,#momentsProfileName,#momentsProfileSignature,#momentsBgFile"))return;$("#momentsBgFile").click()};$("#momentsProfileSignature").onclick=e=>{e.stopPropagation();editMomentsSignature()};
@@ -1359,17 +1255,16 @@ $("#momentSignatureCancel").onclick=()=>$("#momentSignatureDialog")?.close();
 $("#momentSignatureText").oninput=()=>{$("#momentSignatureCount").textContent=String($("#momentSignatureText").value.length)};
 $("#momentSignatureSave").onclick=()=>{momentsData.signature=$("#momentSignatureText").value.trim().slice(0,80);saveMoments();renderMoments();$("#momentSignatureDialog")?.close()};
 
-$("#newChat").onclick=()=>{const c={id:crypto.randomUUID(),title:"新对话",messages:[],createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save();render();closeDrawer()};$("#cancelChatSelect").onclick=exitChatSelectMode;$("#renameSelected").onclick=renameSelectedChat;$("#deleteSelected").onclick=deleteSelectedChats;$("#openSettings").onclick=settings;$("#headerSettings").onclick=settings;$("#closeSettings").onclick=()=>$("#settings").close();$("#saveSettings").onclick=()=>{state.settings={...state.settings,myName:$("#myName").value.trim()||"你",gName:$("#gName").value.trim()||"他",gBio:$("#gBio").value.trim()||"你的私人 AI 对话空间",apiBase:$("#apiBase").value.trim(),apiKey:$("#apiKey").value.trim(),model:$("#model").value.trim(),systemPrompt:$("#systemPrompt").value,temperature:Number($("#temperature").value),proactiveIntervalHours:Number($("#proactiveInterval")?.value||state.settings.proactiveIntervalHours||60),bgOpacity:Number($("#bgOpacity").value),bgChromeTransparent:$("#bgChromeTransparent")?.checked===true,bubbleAiColor:$("#aiBubbleColor").value,bubbleAiOpacity:Number($("#aiBubbleOpacity").value),bubbleUserColor:$("#userBubbleColor").value,bubbleUserOpacity:Number($("#userBubbleOpacity").value),animations:$("#animations").checked,gNameOffset:Number($("#gNameOffset").value),userNameOffset:Number($("#userNameOffset").value),replyDelay:Number($("#replyDelay")?.value||state.settings.replyDelay||360),voiceAutoRead:$("#voiceAutoRead")?.checked===true,voiceEngine:$("#voiceEngine")?.value||state.settings.voiceEngine||"eleven",elevenApiKey:$("#elevenApiKey")?.value.trim()||"",elevenVoiceId:$("#elevenVoiceSelect")?.value||"",elevenModel:$("#elevenModel")?.value.trim()||"eleven_multilingual_v2",elevenStability:Number($("#elevenStability")?.value??.5),elevenSimilarity:Number($("#elevenSimilarity")?.value??.75),elevenStyle:Number($("#elevenStyle")?.value??0),elevenSpeed:Number($("#elevenSpeed")?.value??1),elevenVolume:Number($("#elevenVolume")?.value??1),voiceName:$("#systemVoiceSelect")?.value||state.settings.voiceName||"",voiceRate:Number($("#voiceRate")?.value||1),voicePitch:Number($("#voicePitch")?.value||1),voiceVolume:Number($("#voiceVolume")?.value??1),mcpNestEnabled:$("#mcpNestEnabled")?.checked!==false,deleteChatBubbleEnabled:$("#deleteChatBubbleEnabled")?.checked!==false,mcpEnabled:$("#mcpEnabled")?.checked===true,mcpServerUrl:$("#mcpServerUrl")?.value.trim()||"",mcpServerToken:$("#mcpServerToken")?.value.trim()||"",visionEnabled:$("#visionEnabled")?.checked===true,visionBase:$("#visionBase")?.value.trim()||"https://open.bigmodel.cn/api/paas/v4/",visionKey:$("#visionKey")?.value.trim()||state.settings.visionKey||state.settings.apiKey||"",visionModel:$("#visionModel")?.value.trim()||"GLM-4.6V-Flash",imageGenEnabled:$("#imageGenEnabled")?.checked===true,imageGenBase:$("#imageGenBase")?.value.trim()||"",imageGenKey:$("#imageGenKey")?.value.trim()||"",imageGenModel:$("#imageGenModel")?.value.trim()||""};save();$("#settings").close();render()};$("#addModel").onclick=()=>{const m=$("#model").value.trim();if(!m)return;state.settings.models=[...new Set([...(state.settings.models||[]),m])];save();renderModels();$("#modelSelect").value=m};$("#removeModel").onclick=()=>{const m=$("#model").value.trim();state.settings.models=(state.settings.models||[]).filter(x=>x!==m);save();renderModels()};$("#modelSelect").onchange=()=>$("#model").value=$("#modelSelect").value;$("#exportChat").onclick=exportChat;$("#clearCurrent").onclick=()=>{const c=chat();if(c&&confirm("确定清空当前对话吗？")){c.messages=[];c.title="新对话";save();render();$("#settings").close()}};
+$("#newChat").onclick=()=>{const c={id:crypto.randomUUID(),title:"新对话",messages:[],createdAt:Date.now()};state.chats.unshift(c);state.current=c.id;save();render();closeDrawer()};$("#cancelChatSelect").onclick=exitChatSelectMode;$("#renameSelected").onclick=renameSelectedChat;$("#deleteSelected").onclick=deleteSelectedChats;$("#openSettings").onclick=settings;$("#headerSettings").onclick=settings;$("#closeSettings").onclick=()=>$("#settings").close();$("#saveSettings").onclick=()=>{state.settings={...state.settings,myName:$("#myName").value.trim()||"你",gName:$("#gName").value.trim()||"他",gBio:$("#gBio").value.trim()||"你的私人 AI 对话空间",apiBase:$("#apiBase").value.trim(),apiKey:$("#apiKey").value.trim(),model:$("#model").value.trim(),systemPrompt:$("#systemPrompt").value,temperature:Number($("#temperature").value),proactiveIntervalHours:Number($("#proactiveInterval")?.value||state.settings.proactiveIntervalHours||60),bgOpacity:Number($("#bgOpacity").value),bgChromeTransparent:$("#bgChromeTransparent")?.checked===true,bubbleAiColor:$("#aiBubbleColor").value,bubbleAiOpacity:Number($("#aiBubbleOpacity").value),bubbleUserColor:$("#userBubbleColor").value,bubbleUserOpacity:Number($("#userBubbleOpacity").value),animations:$("#animations").checked,gNameOffset:Number($("#gNameOffset").value),userNameOffset:Number($("#userNameOffset").value),replyDelay:Number($("#replyDelay")?.value||state.settings.replyDelay||360),voiceAutoRead:$("#voiceAutoRead")?.checked===true,voiceName:$("#voiceSelect")?.value||"",voiceRate:Number($("#voiceRate")?.value||1),voicePitch:Number($("#voicePitch")?.value||1),voiceVolume:Number($("#voiceVolume")?.value??1),mcpNestEnabled:$("#mcpNestEnabled")?.checked!==false,deleteChatBubbleEnabled:$("#deleteChatBubbleEnabled")?.checked!==false,mcpEnabled:$("#mcpEnabled")?.checked===true,mcpServerUrl:$("#mcpServerUrl")?.value.trim()||"",mcpServerToken:$("#mcpServerToken")?.value.trim()||"",visionEnabled:$("#visionEnabled")?.checked===true,visionBase:$("#visionBase")?.value.trim()||"https://open.bigmodel.cn/api/paas/v4/",visionKey:$("#visionKey")?.value.trim()||state.settings.visionKey||state.settings.apiKey||"",visionModel:$("#visionModel")?.value.trim()||"GLM-4.6V-Flash",imageGenEnabled:$("#imageGenEnabled")?.checked===true,imageGenBase:$("#imageGenBase")?.value.trim()||"",imageGenKey:$("#imageGenKey")?.value.trim()||"",imageGenModel:$("#imageGenModel")?.value.trim()||""};save();$("#settings").close();render()};$("#addModel").onclick=()=>{const m=$("#model").value.trim();if(!m)return;state.settings.models=[...new Set([...(state.settings.models||[]),m])];save();renderModels();$("#modelSelect").value=m};$("#removeModel").onclick=()=>{const m=$("#model").value.trim();state.settings.models=(state.settings.models||[]).filter(x=>x!==m);save();renderModels()};$("#modelSelect").onchange=()=>$("#model").value=$("#modelSelect").value;$("#exportChat").onclick=exportChat;$("#clearCurrent").onclick=()=>{const c=chat();if(c&&confirm("确定清空当前对话吗？")){c.messages=[];c.title="新对话";save();render();$("#settings").close()}};
 $("#uploadUserAvatar").onclick=()=>$("#userAvatarFile").click();$("#userAvatarFile").onchange=()=>uploadImage($("#userAvatarFile"),"userAvatar",320,.8);$("#clearUserAvatar").onclick=()=>{state.settings.userAvatar="";save();renderAvatarPreviews();render()};$("#uploadAiAvatar").onclick=()=>$("#aiAvatarFile").click();$("#aiAvatarFile").onchange=()=>uploadImage($("#aiAvatarFile"),"aiAvatar",320,.8);$("#clearAiAvatar").onclick=()=>{state.settings.aiAvatar="";save();renderAvatarPreviews();render()};$("#uploadBg").onclick=()=>$("#bgFile").click();$("#bgFile").onchange=async()=>{const f=$("#bgFile").files?.[0];if(!f)return;try{state.settings.bgCustom=await imageToData(f,1200,.7);save();applyLook();renderBackgrounds();render()}catch{showErr("背景图片处理失败。")}};$("#clearBg").onclick=()=>{state.settings.bgCustom="";save();applyLook();renderBackgrounds();render()};$("#bgOpacity").oninput=e=>{state.settings.bgOpacity=Math.max(0,Math.min(100,Number(e.target.value)));$("#bgOpacityOut").value=e.target.value+"%";save();applyLook()};$("#bgChromeTransparent").onchange=e=>{state.settings.bgChromeTransparent=e.target.checked;save();applyLook()};$("#aiBubbleColor").oninput=e=>{state.settings.bubbleAiColor=e.target.value;$("#aiBubbleColorOut").value=e.target.value.toUpperCase();save();applyLook()};$("#userBubbleColor").oninput=e=>{state.settings.bubbleUserColor=e.target.value;$("#userBubbleColorOut").value=e.target.value.toUpperCase();save();applyLook()};$("#aiBubbleOpacity").oninput=e=>{state.settings.bubbleAiOpacity=Number(e.target.value);$("#aiBubbleOpacityOut").value=e.target.value+"%";save();applyLook()};$("#userBubbleOpacity").oninput=e=>{state.settings.bubbleUserOpacity=Number(e.target.value);$("#userBubbleOpacityOut").value=e.target.value+"%";save();applyLook()};$("#animations").onchange=()=>{state.settings.animations=$("#animations").checked;save();applyLook()};$("#gNameOffset").oninput=e=>{state.settings.gNameOffset=Number(e.target.value);$("#gNameOffsetOut").value=e.target.value+" px";save();applyLook()};$("#userNameOffset").oninput=e=>{state.settings.userNameOffset=Number(e.target.value);$("#userNameOffsetOut").value=e.target.value+" px";save();applyLook()};$("#resetTokenStats").onclick=resetTokenStats;$("#resetNameOffsets").onclick=()=>{state.settings.gNameOffset=0;state.settings.userNameOffset=0;$("#gNameOffset").value=0;$("#gNameOffsetOut").value="0 px";$("#userNameOffset").value=0;$("#userNameOffsetOut").value="0 px";save();applyLook()};document.querySelectorAll("#bubbleGrid [data-bubble]").forEach(b=>b.onclick=()=>{state.settings.bubble=b.dataset.bubble;save();renderBubbleStyles();applyLook()});document.querySelectorAll("#topAvatarGrid [data-top-avatar]").forEach(b=>b.onclick=()=>{state.settings.topAvatar=b.dataset.topAvatar;save();renderTopAvatar();render()});$("#openProfile").onclick=()=>openStatusPicker((state.settings.topAvatar||"user")==="user"?"user":"ai");$("#closeProfile").onclick=()=>$("#profile").close();$("#profileStart").onclick=()=>$("#profile").close();
-$("#exportAll").onclick=exportAll;$("#importAll").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{const f=e.target.files?.[0];if(f)importAll(f);e.target.value=""};$("#mic").onclick=setupVoice;$("#attach").onclick=()=>$("#fileInput").click();$("#fileInput").onchange=e=>{handleFiles(e.target.files).catch(err=>{console.error("Iris v4.186 file handler",err);showErr("图片选择失败："+(err?.message||String(err)))});e.target.value=""};$("#send").onclick=()=>{try{if(state.busy)stopThinking();else Promise.resolve(send()).catch(e=>{console.error("Iris v4.186 send click",e);showErr("发送流程出错："+(e?.message||String(e)))})}catch(e){console.error("Iris v4.186 send click sync",e);showErr("发送流程出错："+(e?.message||String(e)))} };$("#input").oninput=resize;$("#input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("#speakBubble").onclick=speakSelectedBubble;$("#editBubble").onclick=editSelectedMessage;$("#deleteBubble").onclick=deleteSelectedMessage;$("#copyBubble").onclick=async()=>{const s=state.selectedBubble;if(!s)return;try{await navigator.clipboard.writeText(s.el?.dataset.text||s.el?.textContent||"");closeBubbleAction()}catch{showErr("复制失败，请长按文字手动复制。")}};document.addEventListener("pointerdown",e=>{if(!e.target.closest(".bubbleAction")&&!e.target.closest(".bubble"))closeBubbleAction()});document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tabbody").forEach(x=>x.classList.add("hidden"));b.classList.add("active");$("#"+b.dataset.tab).classList.remove("hidden")});
+$("#exportAll").onclick=exportAll;$("#importAll").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{const f=e.target.files?.[0];if(f)importAll(f);e.target.value=""};$("#mic").onclick=setupVoice;$("#attach").onclick=()=>$("#fileInput").click();$("#fileInput").onchange=e=>{handleFiles(e.target.files).catch(err=>{console.error("Iris v4.182 file handler",err);showErr("图片选择失败："+(err?.message||String(err)))});e.target.value=""};$("#send").onclick=()=>{try{if(state.busy)stopThinking();else Promise.resolve(send()).catch(e=>{console.error("Iris v4.182 send click",e);showErr("发送流程出错："+(e?.message||String(e)))})}catch(e){console.error("Iris v4.182 send click sync",e);showErr("发送流程出错："+(e?.message||String(e)))} };$("#input").oninput=resize;$("#input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("#speakBubble").onclick=speakSelectedBubble;$("#editBubble").onclick=editSelectedMessage;$("#deleteBubble").onclick=deleteSelectedMessage;$("#copyBubble").onclick=async()=>{const s=state.selectedBubble;if(!s)return;try{await navigator.clipboard.writeText(s.el?.dataset.text||s.el?.textContent||"");closeBubbleAction()}catch{showErr("复制失败，请长按文字手动复制。")}};document.addEventListener("pointerdown",e=>{if(!e.target.closest(".bubbleAction")&&!e.target.closest(".bubble"))closeBubbleAction()});document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tabbody").forEach(x=>x.classList.add("hidden"));b.classList.add("active");$("#"+b.dataset.tab).classList.remove("hidden")});
 document.querySelectorAll("[data-settings-page]").forEach(b=>b.onclick=()=>settingsOpenPage(b.dataset.settingsPage));
 $("#addMemory").onclick=()=>{const v=$("#memoryInput").value.trim();if(!v)return;addMemory(v);$("#memoryInput").value=""};
-$("#proactiveInterval").onchange=()=>{state.settings.proactiveIntervalHours=Number($("#proactiveInterval").value||60);save()};$("#voiceAutoRead").onchange=async()=>{state.settings.voiceAutoRead=$("#voiceAutoRead").checked;save();if(state.settings.voiceAutoRead){await unlockElevenAudio();}if($("#voiceSummary"))$("#voiceSummary").textContent=state.settings.voiceAutoRead?"自动朗读":"手动播放"};$("#voiceEngine").onchange=()=>{state.settings.voiceEngine=$("#voiceEngine").value;save()};$("#elevenApiKey").onchange=()=>{state.settings.elevenApiKey=$("#elevenApiKey").value.trim();save()};$("#elevenLoadVoices").onclick=async()=>{state.settings.elevenApiKey=$("#elevenApiKey").value.trim();save();await loadElevenVoices(true)};$("#elevenVoiceSelect").onchange=()=>{state.settings.elevenVoiceId=$("#elevenVoiceSelect").value;save();unlockElevenAudio()};$("#elevenModel").onchange=()=>{state.settings.elevenModel=$("#elevenModel").value.trim()||"eleven_multilingual_v2";save()};$("#elevenStability").oninput=()=>{state.settings.elevenStability=Number($("#elevenStability").value);$("#elevenStabilityOut").textContent=state.settings.elevenStability.toFixed(2);save()};$("#elevenSimilarity").oninput=()=>{state.settings.elevenSimilarity=Number($("#elevenSimilarity").value);$("#elevenSimilarityOut").textContent=state.settings.elevenSimilarity.toFixed(2);save()};$("#elevenStyle").oninput=()=>{state.settings.elevenStyle=Number($("#elevenStyle").value);$("#elevenStyleOut").textContent=state.settings.elevenStyle.toFixed(2);save()};$("#elevenSpeed").oninput=()=>{state.settings.elevenSpeed=Number($("#elevenSpeed").value);$("#elevenSpeedOut").textContent=state.settings.elevenSpeed.toFixed(2)+"×";save()};$("#elevenVolume").oninput=()=>{state.settings.elevenVolume=Number($("#elevenVolume").value);$("#elevenVolumeOut").textContent=Math.round(state.settings.elevenVolume*100)+"%";save();if(elevenAudio)elevenAudio.volume=state.settings.elevenVolume};$("#systemVoiceSelect").onchange=()=>{state.settings.voiceName=$("#systemVoiceSelect").value;save()};$("#voiceRate").oninput=()=>{state.settings.voiceRate=Number($("#voiceRate").value);$("#voiceRateOut").textContent=state.settings.voiceRate.toFixed(2)+"×";save()};$("#voicePitch").oninput=()=>{state.settings.voicePitch=Number($("#voicePitch").value);$("#voicePitchOut").textContent=state.settings.voicePitch.toFixed(2);save()};$("#voiceVolume").oninput=()=>{state.settings.voiceVolume=Number($("#voiceVolume").value);$("#voiceVolumeOut").textContent=Math.round(state.settings.voiceVolume*100)+"%";save()};$("#voiceTest").onclick=()=>speakIris(`你好，我是${state.settings.gName||"他"}。这是现在的语音效果。`,$("#voiceTest"));$("#voiceStop").onclick=stopIrisSpeech;
-$("#toggleElevenKey").onclick=()=>{const i=$("#elevenApiKey"),b=$("#toggleElevenKey");if(!i||!b)return;i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};$("#mcpEnabled").onchange=()=>{state.settings.mcpEnabled=$("#mcpEnabled").checked;save();$("#mcpSummary").textContent=state.settings.mcpEnabled?"已启用":"关闭";refreshMcpUI(false)};$("#mcpNestEnabled").onchange=()=>{state.settings.mcpNestEnabled=$("#mcpNestEnabled").checked;save()};$("#deleteChatBubbleEnabled").onchange=()=>{state.settings.deleteChatBubbleEnabled=$("#deleteChatBubbleEnabled").checked;save()};$("#mcpServerUrl").onchange=()=>{state.settings.mcpServerUrl=$("#mcpServerUrl").value.trim();save()};$("#mcpServerToken").onchange=()=>{state.settings.mcpServerToken=$("#mcpServerToken").value.trim();save()};$("#toggleMcpToken").onclick=()=>{const i=$("#mcpServerToken"),b=$("#toggleMcpToken");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};$("#mcpTest").onclick=()=>refreshMcpUI(true);$("#mcpRefresh").onclick=()=>refreshMcpUI(true);$("#visionEnabled").onchange=()=>{state.settings.visionEnabled=$("#visionEnabled").checked;save()};$("#imageGenEnabled").onchange=()=>{state.settings.imageGenEnabled=$("#imageGenEnabled").checked;save()};["visionBase","visionKey","visionModel","imageGenBase","imageGenKey","imageGenModel"].forEach(id=>$("#"+id).onchange=()=>{state.settings[id]=$("#"+id).value.trim();save()});$("#toggleVisionKey").onclick=()=>{const i=$("#visionKey"),b=$("#toggleVisionKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};$("#toggleImageGenKey").onclick=()=>{const i=$("#imageGenKey"),b=$("#toggleImageGenKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
+$("#proactiveInterval").onchange=()=>{state.settings.proactiveIntervalHours=Number($("#proactiveInterval").value||60);save()};$("#voiceAutoRead").onchange=()=>{state.settings.voiceAutoRead=$("#voiceAutoRead").checked;save();if($("#voiceSummary"))$("#voiceSummary").textContent=state.settings.voiceAutoRead?"自动朗读":"手动播放"};$("#voiceSelect").onchange=()=>{state.settings.voiceName=$("#voiceSelect").value;save()};$("#voiceRate").oninput=()=>{state.settings.voiceRate=Number($("#voiceRate").value);$("#voiceRateOut").textContent=state.settings.voiceRate.toFixed(2)+"×";save()};$("#voicePitch").oninput=()=>{state.settings.voicePitch=Number($("#voicePitch").value);$("#voicePitchOut").textContent=state.settings.voicePitch.toFixed(2);save()};$("#voiceVolume").oninput=()=>{state.settings.voiceVolume=Number($("#voiceVolume").value);$("#voiceVolumeOut").textContent=Math.round(state.settings.voiceVolume*100)+"%";save()};$("#voiceTest").onclick=()=>speakIris(`你好，我是${state.settings.gName||"他"}。这是现在的语音效果。`,$("#voiceTest"));$("#voiceStop").onclick=stopIrisSpeech;$("#mcpEnabled").onchange=()=>{state.settings.mcpEnabled=$("#mcpEnabled").checked;save();$("#mcpSummary").textContent=state.settings.mcpEnabled?"已启用":"关闭";refreshMcpUI(false)};$("#mcpNestEnabled").onchange=()=>{state.settings.mcpNestEnabled=$("#mcpNestEnabled").checked;save()};$("#deleteChatBubbleEnabled").onchange=()=>{state.settings.deleteChatBubbleEnabled=$("#deleteChatBubbleEnabled").checked;save()};$("#mcpServerUrl").onchange=()=>{state.settings.mcpServerUrl=$("#mcpServerUrl").value.trim();save()};$("#mcpServerToken").onchange=()=>{state.settings.mcpServerToken=$("#mcpServerToken").value.trim();save()};$("#toggleMcpToken").onclick=()=>{const i=$("#mcpServerToken"),b=$("#toggleMcpToken");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};$("#mcpTest").onclick=()=>refreshMcpUI(true);$("#mcpRefresh").onclick=()=>refreshMcpUI(true);$("#visionEnabled").onchange=()=>{state.settings.visionEnabled=$("#visionEnabled").checked;save()};$("#imageGenEnabled").onchange=()=>{state.settings.imageGenEnabled=$("#imageGenEnabled").checked;save()};["visionBase","visionKey","visionModel","imageGenBase","imageGenKey","imageGenModel"].forEach(id=>$("#"+id).onchange=()=>{state.settings[id]=$("#"+id).value.trim();save()});$("#toggleVisionKey").onclick=()=>{const i=$("#visionKey"),b=$("#toggleVisionKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};$("#toggleImageGenKey").onclick=()=>{const i=$("#imageGenKey"),b=$("#toggleImageGenKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
 $("#clearMemories").onclick=()=>{if(!(state.memories||[]).length)return;if(!confirm("确定清空全部记忆吗？"))return;state.memories=[];save();renderMemories()};
 $("#settingsBack").onclick=settingsGoHome;
 $("#toggleApiKey").onclick=()=>{const i=$("#apiKey"),b=$("#toggleApiKey");i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"显示":"隐藏"};
-state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bgOpacity=Math.max(0,Math.min(100,Number(state.settings.bgOpacity)||0));state.settings.bgChromeTransparent??=false;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="他";if(state.settings.gName==="G")state.settings.gName="他";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0,byType:{chat:{prompt:0,completion:0,total:0,requests:0},vision:{prompt:0,completion:0,total:0,requests:0},memory:{prompt:0,completion:0,total:0,requests:0},summary:{prompt:0,completion:0,total:0,requests:0}}};state.settings.replyDelay??=360;state.settings.voiceAutoRead??=false;state.settings.voiceEngine??="eleven";state.settings.elevenApiKey??="";state.settings.elevenVoiceId??="";state.settings.elevenModel??="eleven_multilingual_v2";state.settings.elevenStability??=.5;state.settings.elevenSimilarity??=.75;state.settings.elevenStyle??=0;state.settings.elevenSpeed??=1;state.settings.elevenVolume??=1;state.settings.voiceName??="";state.settings.voiceRate??=1;state.settings.voicePitch??=1;state.settings.voiceVolume??=1;state.settings.proactiveIntervalHours??=60;state.settings.mcpNestEnabled??=true;state.settings.deleteChatBubbleEnabled??=true;state.settings.mcpEnabled??=false;state.settings.mcpServerUrl??="";state.settings.mcpServerToken??="";state.settings.visionEnabled??=true;state.settings.visionBase??="https://open.bigmodel.cn/api/paas/v4/";state.settings.visionKey??="";state.settings.visionModel??="GLM-4.6V-Flash";state.settings.imageGenEnabled??=true;state.settings.imageGenBase??="https://open.bigmodel.cn/api/paas/v4/";state.settings.imageGenKey??=state.settings.apiKey||"";state.settings.imageGenModel??="glm-image";irisLifeState.lastUserSeen??=Date.now();saveIrisLife();state.memories??=[];state.memoryProfile??={};state.memoryEpisodes??=[];memoryNormalize();normalizeNestData();syncTodayToDaily();saveNestData();normalizeMoments();saveMoments();renderNestLifePanel();renderSharedAlbum();if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
+state.settings.theme??="cream";state.settings.bg??="paper";state.settings.models??=[];state.settings.bgOpacity??=18;state.settings.bgOpacity=Math.max(0,Math.min(100,Number(state.settings.bgOpacity)||0));state.settings.bgChromeTransparent??=false;state.settings.bubble??="soft";state.settings.bubbleAiOpacity??=94;state.settings.bubbleUserOpacity??=90;state.settings.animations??=true;state.settings.myName??="你";state.settings.gName??="他";if(state.settings.gName==="G")state.settings.gName="他";state.settings.gBio??="你的私人 AI 对话空间";state.settings.topAvatar??="user";state.settings.gNameOffset??=0;state.settings.userNameOffset??=0;state.settings.gStatus??="online";state.settings.userStatus??="online";state.settings.tokenStats??={prompt:0,completion:0,total:0,requests:0,byType:{chat:{prompt:0,completion:0,total:0,requests:0},vision:{prompt:0,completion:0,total:0,requests:0},memory:{prompt:0,completion:0,total:0,requests:0},summary:{prompt:0,completion:0,total:0,requests:0}}};state.settings.replyDelay??=360;state.settings.voiceAutoRead??=false;state.settings.voiceName??="";state.settings.voiceRate??=1;state.settings.voicePitch??=1;state.settings.voiceVolume??=1;state.settings.proactiveIntervalHours??=60;state.settings.mcpNestEnabled??=true;state.settings.deleteChatBubbleEnabled??=true;state.settings.mcpEnabled??=false;state.settings.mcpServerUrl??="";state.settings.mcpServerToken??="";state.settings.visionEnabled??=true;state.settings.visionBase??="https://open.bigmodel.cn/api/paas/v4/";state.settings.visionKey??="";state.settings.visionModel??="GLM-4.6V-Flash";state.settings.imageGenEnabled??=true;state.settings.imageGenBase??="https://open.bigmodel.cn/api/paas/v4/";state.settings.imageGenKey??=state.settings.apiKey||"";state.settings.imageGenModel??="glm-image";irisLifeState.lastUserSeen??=Date.now();saveIrisLife();state.memories??=[];state.memoryProfile??={};state.memoryEpisodes??=[];memoryNormalize();normalizeNestData();syncTodayToDaily();saveNestData();normalizeMoments();saveMoments();renderNestLifePanel();renderSharedAlbum();if(!state.settings.model||state.settings.model==="deepseek-v4-flash")state.settings.model="deepseek-chat";if(!state.settings.apiBase)state.settings.apiBase="https://api.deepseek.com";ensure();ensureDates();save();render();
 
 if("speechSynthesis" in window)window.speechSynthesis.addEventListener("voiceschanged",refreshSpeechVoices);
 window.addEventListener("load",()=>{render();renderAiPresence();setTimeout(maybeProactiveContact,1400)});

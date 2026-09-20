@@ -86,32 +86,17 @@ if("serviceWorker"in navigator){
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="voicePage">
-      <div class="subIntro"><b>语音</b><small>优先使用 ElevenLabs。没有配置时仍可使用系统朗读。</small></div>
+      <div class="subIntro"><b>语音</b><small>让 Iris 用你选择的声音说话。声音由当前设备/浏览器提供。</small></div>
       <div class="settingsSectionTitle">朗读</div>
       <div class="settingsGroup settingsFormGroup">
-        <label class="settingsSwitch"><span><b>自动朗读 Iris 的回复</b><small>开启时，AI 回复完成后自动请求 ElevenLabs 并播放。iPhone 首次开启时会先解锁音频。</small></span><input id="voiceAutoRead" type="checkbox"><i></i></label>
-        <label class="settingsField"><span>语音引擎</span><select id="voiceEngine"><option value="eleven">ElevenLabs</option><option value="system">系统朗读</option></select></label>
-      </div>
-      <div class="settingsSectionTitle">ElevenLabs</div>
-      <div class="settingsGroup settingsFormGroup">
-        <label class="settingsField"><span>API Key</span><div class="passwordField"><input id="elevenApiKey" type="password" placeholder="xi-api-key…"><button type="button" id="toggleElevenKey">显示</button></div></label>
-        <div class="inlineActions"><button class="smallAction" id="elevenLoadVoices">读取声音</button><span id="elevenVoiceStatus" class="settingsNote" style="padding:8px 0">未读取</span></div>
-        <label class="settingsField"><span>声音</span><select id="elevenVoiceSelect"><option value="">请先读取声音</option></select></label>
-        <label class="settingsField"><span>模型</span><select id="elevenModel"><option value="eleven_multilingual_v2">Eleven Multilingual v2</option><option value="eleven_v3">Eleven v3</option></select></label>
-        <label class="settingsField"><span>稳定度 <output id="elevenStabilityOut">0.50</output></span><input id="elevenStability" type="range" min="0" max="1" step="0.05" value="0.5"></label>
-        <label class="settingsField"><span>相似度 <output id="elevenSimilarityOut">0.75</output></span><input id="elevenSimilarity" type="range" min="0" max="1" step="0.05" value="0.75"></label>
-        <label class="settingsField"><span>风格 <output id="elevenStyleOut">0.00</output></span><input id="elevenStyle" type="range" min="0" max="1" step="0.05" value="0"></label>
-        <label class="settingsField"><span>语速 <output id="elevenSpeedOut">1.00×</output></span><input id="elevenSpeed" type="range" min="0.7" max="1.2" step="0.05" value="1"></label>
-        <label class="settingsField"><span>音量 <output id="elevenVolumeOut">100%</output></span><input id="elevenVolume" type="range" min="0" max="1" step="0.05" value="1"></label>
-        <div class="inlineActions"><button class="smallAction" id="voiceTest">试听</button><button class="smallAction" id="voiceStop">停止</button></div>
-      </div>
-      <div class="settingsSectionTitle">系统朗读（备用）</div>
-      <div class="settingsGroup settingsFormGroup">
-        <label class="settingsField"><span>声音</span><select id="systemVoiceSelect"><option value="">系统默认</option></select></label>
+        <label class="settingsSwitch"><span><b>自动朗读 Iris 的回复</b><small>每次回复完成后尝试自动播放。iPhone Safari 可能需要先手动试听一次。</small></span><input id="voiceAutoRead" type="checkbox"><i></i></label>
+        <label class="settingsField"><span>声音</span><select id="voiceSelect"><option value="">系统默认</option></select></label>
         <label class="settingsField"><span>语速 <output id="voiceRateOut">1.0×</output></span><input id="voiceRate" type="range" min="0.5" max="2" step="0.05" value="1"></label>
         <label class="settingsField"><span>音调 <output id="voicePitchOut">1.0</output></span><input id="voicePitch" type="range" min="0.5" max="2" step="0.05" value="1"></label>
         <label class="settingsField"><span>音量 <output id="voiceVolumeOut">100%</output></span><input id="voiceVolume" type="range" min="0" max="1" step="0.05" value="1"></label>
+        <div class="inlineActions"><button class="smallAction" id="voiceTest">试听</button><button class="smallAction" id="voiceStop">停止</button></div>
       </div>
+      <p class="settingsNote">如果系统没有提供你想要的音色，列表里不会出现。后面也可以再接第三方 TTS，让声音选择更多。</p>
     </section>
 
     <section class="settingsPage subSettingsPage hidden" id="visionPage">
@@ -407,5 +392,5 @@ if("serviceWorker"in navigator){
     <div class="momentComposerTools"><button type="button" id="momentEditImagePick">更换图片</button><input id="momentEditImageFile" type="file" accept="image/*" hidden></div>
   </form>
 </dialog>
-<dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="speakBubble" type="button">语音</button><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
-<script src="./api.js?v=4.151"></script><script src="./app.js?v=4.186"></script></body></html>
+<dialog id="profile"><div class="profileModal"><button class="round profileClose" id="closeProfile">×</button><div class="profileAvatar" id="profileAvatar">他</div><h2 id="profileName">他</h2><p id="profileBio">你的私人 AI 对话空间</p><button class="profileStatusButton" id="profileStatusButton" type="button"><span class="statusDot online"></span><span id="profileStatusText">在线</span><span class="statusChevron">⌄</span></button><div class="statusPicker" id="statusPicker"></div><div class="profileStats"><div><small>当前模型</small><b id="profileModel">未设置</b></div><div><small>状态</small><b id="profileTheme">在线</b></div></div><button class="save full" id="profileStart">关闭</button></div></dialog><div id="bubbleAction" class="bubbleAction hidden"><button id="speakBubble">语音</button><button id="editBubble">编辑</button><button id="copyBubble">复制</button><button id="deleteBubble" class="danger">删除</button></div>
+<script src="./api.js?v=4.151"></script><script src="./app.js?v=4.184"></script></body></html>
